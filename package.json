@@ -17,7 +17,8 @@
     "prepublishOnly": "yarn build",
     "build": "tsc",
     "dev": "tsc -w",
-    "test": "jest"
+    "test": "jest",
+    "release": "release-it"
   },
   "release-it": {
     "git": {
