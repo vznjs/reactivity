@@ -1,0 +1,28 @@
+{
+  "private": false,
+  "version": "0.0.0",
+  "name": "@vzn/reactivity",
+  "description": "The VZN of perfect JS reactivity system",
+  "author": "Maciej Kwaśniak <kmaciek17@gmail.com>",
+  "license": "MIT",
+  "repository": "https://github.com/vznjs/reactivity",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "prepublishOnly": "yarn build",
+    "build": "tsc",
+    "dev": "tsc -w",
+    "test": "jest"
+  },
+  "devDependencies": {
+    "@types/jest": "^26.0.23",
+    "jest": "^26.6.3",
+    "ts-jest": "^26.5.6",
+    "typescript": "^4.2.4"
+  }
+}
