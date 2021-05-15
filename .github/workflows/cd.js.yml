@@ -1,23 +1,22 @@
 # This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
 
-name: Node.js CI
+name: Release
 
 on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'patch | minor | major'
+        required: true
 
 jobs:
   test:
-
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
         node-version: [14.x, 16.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
     - uses: actions/checkout@v2
@@ -28,3 +27,21 @@ jobs:
     - run: npm ci
     - run: npm run build --if-present
     - run: npm test
+  
+  release:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: 14
+    - run: npm ci
+    - run: npm run release -- ${{ github.event.inputs.version }} --ci
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
