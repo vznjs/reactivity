@@ -25,6 +25,9 @@
       "commitMessage": "${version}",
       "tagAnnotation": "${version}"
     },
+    "npm": {
+      "publish": false
+    },
     "github": {
       "release": true,
       "releaseName": "${version}"

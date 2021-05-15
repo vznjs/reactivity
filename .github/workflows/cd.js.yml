@@ -1,14 +1,11 @@
 # This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
 
-name: Release
+name: Publish
 
 on:
-  workflow_dispatch:
-    inputs:
-      version:
-        description: 'patch | minor | major'
-        required: true
+  release:
+    types: [created]
 
 jobs:
   test:
@@ -28,21 +25,40 @@ jobs:
     - run: npm run build --if-present
     - run: npm test
   
-  release:
+  publish_to_npm:
     needs: test
+
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: write
-
     steps:
-    - uses: actions/checkout@v2
-    - name: Setup Node.js
-      uses: actions/setup-node@v2
-      with:
-        node-version: 14
-    - run: npm ci
-    - run: npm run release -- ${{ github.event.inputs.version }} --ci
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '14.x'
+          registry-url: 'https://registry.npmjs.org'
+      - run: npm install
+      - run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  publish_to_gh:
+    needs: test
+
+    runs-on: ubuntu-latest 
+
+    permissions: 
+      contents: read
+      packages: write 
+    
+    steps:
+      - uses: actions/checkout@v2
+      # Setup .npmrc file to publish to GitHub Packages
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '14.x'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@vzn'
+      - run: npm install
+      - run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
