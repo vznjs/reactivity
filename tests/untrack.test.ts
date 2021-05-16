@@ -7,7 +7,9 @@ jest.useFakeTimers("modern");
 
 describe("untrack", () => {
   it("runs without any computation", () => {
-    const computation = () => {};
+    const computation = () => {
+      // dummy
+    };
 
     expect(getOwner().computation).toBeUndefined();
 

@@ -2,7 +2,7 @@ import { runWithOwner } from "./owner";
 
 export type Queue = Set<() => void>;
 
-export function flushQueue(queue: Queue) {
+export function flushQueue(queue: Queue): void {
   if (!queue.size) return;
 
   const tasks = [...queue];
