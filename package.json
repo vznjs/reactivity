@@ -9,7 +9,7 @@
   "main": "dist/main/index.js",
   "esnext": "dist/esnext/index.js",
   "module": "dist/module/index.js",
-  "browser": "dist/web/index.js",
+  "browser": "dist/module/index.js",
   "source": "dist/src/index.js",
   "types": "dist/types/index.d.ts",
   "unpkg": "dist/module/index.js",
@@ -27,7 +27,6 @@
     "build:esnext": "esbuild --bundle src/index.ts --outdir=dist/esnext --format=esm --sourcemap",
     "build:node": "esbuild --bundle src/index.ts --outdir=dist/main --platform=node --sourcemap",
     "build:module": "esbuild --bundle src/index.ts --outdir=dist/module --format=esm --target=es2020 --sourcemap",
-    "build:web": "esbuild --bundle src/index.ts --outdir=dist/web --format=esm --target=chrome89,firefox87,safari14 --sourcemap",
     "build:source": "tsc",
     "build:types": "tsc --emitDeclarationOnly --declaration --outDir ./dist/types",
     "release": "release-it"
