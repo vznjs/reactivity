@@ -3,7 +3,7 @@ import { createQueue, flushQueue } from "./queue";
 
 /**
  * Computations created by root will live until dispose is called
- * 
+ *
  * @export
  * @template T
  * @param {(disposer: () => void) => T} fn
@@ -11,5 +11,7 @@ import { createQueue, flushQueue } from "./queue";
  */
 export function createRoot<T>(fn: (disposer: () => void) => T): T {
   const disposer = createQueue();
-  return runWithOwner({ disposer, computation: undefined }, () => fn(() => flushQueue(disposer)));
+  return runWithOwner({ disposer, computation: undefined }, () =>
+    fn(() => flushQueue(disposer))
+  );
 }

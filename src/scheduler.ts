@@ -3,7 +3,7 @@ import { createQueue, flushQueue } from "./queue";
 const scheduler = createQueue();
 
 function flush() {
-  flushQueue(scheduler)
+  flushQueue(scheduler);
 }
 
 export function schedule<T>(computation: () => T) {

@@ -12,7 +12,7 @@ function runComputations(computations: Set<Computation>) {
       // ! Updating value will never cause recalculation of current computation
       if (currentComputation === computation) return;
       computation();
-    };
+    }
   });
 }
 
@@ -20,7 +20,7 @@ function runComputations(computations: Set<Computation>) {
  * Values are the foundation of reactive system.
  * By using them, you are creating implicit dependencies for computations.
  * Once the value is updated all computations with the dependency will be scheduled for update as well.
- * 
+ *
  * @example
  * const [getCount, setCount] = createValue(0),
  * const handle = setInterval(() => setCount(getCount() + 1), 1000);
@@ -31,14 +31,17 @@ function runComputations(computations: Set<Computation>) {
  * @template T
  * @returns {([() => T | undefined, <U extends T | undefined>(value?: U) => void])}
  */
-export function createValue<T>(): [() => T | undefined, <U extends T | undefined>(value?: U) => void];
+export function createValue<T>(): [
+  () => T | undefined,
+  <U extends T | undefined>(value?: U) => void
+];
 export function createValue<T>(
   value: T,
-  compare?: boolean | ((prev: T, next: T) => boolean),
+  compare?: boolean | ((prev: T, next: T) => boolean)
 ): [() => T, (value: T) => void];
 export function createValue<T>(
   value?: T,
-  compare?: boolean | ((prev: T | undefined, next: T) => boolean),
+  compare?: boolean | ((prev: T | undefined, next: T) => boolean)
 ): [() => T | undefined, (newValue: T) => void] {
   // Buffer for next update
   const computations = new Set<Computation>();
@@ -47,7 +50,7 @@ export function createValue<T>(
   let currentComputations = new Set<Computation>();
 
   let currentValue = value;
-  
+
   compare ??= true;
 
   function getter(): T | undefined {
@@ -59,8 +62,8 @@ export function createValue<T>(
       onCleanup(() => {
         // In case there was a cleanup we want to stop any further updates of computations
         // This means nested computations will be cancelled as well
-        currentComputations.delete(computation)
-        computations.delete(computation)
+        currentComputations.delete(computation);
+        computations.delete(computation);
       });
     }
 
@@ -68,9 +71,10 @@ export function createValue<T>(
   }
 
   function setter(newValue: T): void {
-    if (typeof compare === 'function' && compare(currentValue, newValue)) return;
+    if (typeof compare === "function" && compare(currentValue, newValue))
+      return;
     if (compare === true && currentValue === newValue) return;
-    
+
     // The new value is set ASAP in order to be usable in further called computations
     currentValue = newValue;
 

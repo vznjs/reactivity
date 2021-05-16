@@ -1,6 +1,6 @@
 import { runWithOwner } from "./owner";
 
-export type Queue = Set<() => void>
+export type Queue = Set<() => void>;
 
 export function flushQueue(queue: Queue) {
   if (!queue.size) return;
@@ -13,10 +13,12 @@ export function flushQueue(queue: Queue) {
       try {
         tasks[index]();
       } catch (error) {
-        setTimeout(() => { throw error; })
+        setTimeout(() => {
+          throw error;
+        }, 0);
       }
     }
-  })
+  });
 }
 
 export function createQueue(): Queue {

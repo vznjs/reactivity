@@ -4,7 +4,7 @@ import { createQueue, flushQueue } from "./queue";
 const disposer = createQueue();
 
 function flush() {
-  flushQueue(disposer)
+  flushQueue(disposer);
 }
 
 export function onCleanup(fn: () => void): void {

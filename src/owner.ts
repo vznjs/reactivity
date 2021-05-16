@@ -22,4 +22,3 @@ export function runWithOwner<T>(newOwner: Owner, fn: () => T): T {
     owner = currentOwner;
   }
 }
-

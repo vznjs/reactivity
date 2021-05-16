@@ -9,13 +9,13 @@ export function createMemo<T>(fn: () => T): () => T {
 
   const [trackMemo, notifyChange] = createValue(true, false);
   const disposer = createQueue();
-  
+
   function computation() {
     if (isDirty) return;
 
     isDirty = true;
     notifyChange(true);
-  };
+  }
 
   function recomputeMemo() {
     memoValue = fn();
@@ -32,9 +32,9 @@ export function createMemo<T>(fn: () => T): () => T {
       runWithOwner({ computation, disposer }, recomputeMemo);
       isDirty = false;
     }
-  
+
     trackMemo();
-  
+
     return memoValue;
   }
 
