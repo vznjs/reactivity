@@ -6,18 +6,28 @@
   "author": "Maciej Kwaśniak <kmaciek17@gmail.com>",
   "license": "MIT",
   "repository": "https://github.com/vznjs/reactivity",
-  "main": "dist/index.js",
-  "module": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/main/index.js",
+  "esnext": "dist/esnext/index.js",
+  "module": "dist/module/index.js",
+  "source": "dist/src/index.js",
+  "types": "dist/types/index.d.ts",
+  "unpkg": "dist/module/index.js",
+  "jsdelivr": "dist/module/index.js",
   "sideEffects": false,
   "files": [
-    "dist"
+    "dist/"
   ],
   "scripts": {
     "prepublishOnly": "yarn build",
-    "build": "tsc",
-    "dev": "tsc -w",
     "test": "jest",
+    "clean": "rimraf dist",
+    "dev": "npm-run-all clean --parallel 'build:** -- --watch'",
+    "build": "npm-run-all --serial clean build:**",
+    "build:esnext": "esbuild --bundle src/index.ts --outdir=dist/esnext --format=esm --sourcemap",
+    "build:node": "esbuild --bundle src/index.ts --outdir=dist/main --platform=node --sourcemap",
+    "build:web": "esbuild --bundle src/index.ts --outdir=dist/module --format=esm --target=chrome89,firefox87,safari14 --sourcemap",
+    "build:source": "tsc",
+    "build:types": "tsc --emitDeclarationOnly --declaration --outDir ./dist/types",
     "release": "release-it"
   },
   "release-it": {
@@ -38,8 +48,11 @@
   },
   "devDependencies": {
     "@types/jest": "^26.0.23",
+    "esbuild": "^0.11.22",
     "jest": "^26.6.3",
+    "npm-run-all": "^4.1.5",
     "release-it": "^14.6.2",
+    "rimraf": "^3.0.2",
     "ts-jest": "^26.5.6",
     "typescript": "^4.2.4"
   }
