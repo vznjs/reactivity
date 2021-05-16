@@ -9,6 +9,7 @@
   "main": "dist/main/index.js",
   "esnext": "dist/esnext/index.js",
   "module": "dist/module/index.js",
+  "browser": "dist/module/index.js",
   "source": "dist/src/index.js",
   "types": "dist/types/index.d.ts",
   "unpkg": "dist/module/index.js",
@@ -32,15 +33,15 @@
   },
   "release-it": {
     "git": {
-      "commitMessage": "${version}",
-      "tagAnnotation": "${version}"
+      "commitMessage": "v${version}",
+      "tagAnnotation": "v${version}"
     },
     "npm": {
       "publish": false
     },
     "github": {
       "release": true,
-      "releaseName": "${version}"
+      "releaseName": "v${version}"
     },
     "hooks": {
       "before:init": "npm test"
