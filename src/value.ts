@@ -19,7 +19,7 @@ function runComputations(computations: Set<Computation>) {
 /**
  * Values are the foundation of reactive system.
  * By using them, you are creating implicit dependencies for computations.
- * Once the value is updated all computations with the dependency will be scheduled for update as well.
+ * Once the value is updated all computations with the value as dependency will be scheduled for update as well.
  *
  * @example
  * const [getCount, setCount] = createValue(0),
@@ -79,7 +79,7 @@ export function createValue<T>(
     currentValue = newValue;
 
     // We take a snapshot to prevent infinite iteration in case of using getter() in called computations
-    currentComputations = new Set<Computation>([...computations]);
+    currentComputations = new Set<Computation>(computations);
     runComputations(currentComputations);
     currentComputations.clear();
   }
