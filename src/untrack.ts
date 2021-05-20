@@ -1,5 +1,5 @@
-import { runWithOwner } from "./owner";
+import { runWithContext } from "./context";
 
 export function untrack<T>(fn: () => T): T {
-  return runWithOwner({ computation: undefined }, fn);
+  return runWithContext({ computation: undefined }, fn);
 }

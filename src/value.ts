@@ -1,12 +1,12 @@
 import { onCleanup } from "./disposer";
-import { getOwner, runWithOwner } from "./owner";
+import { getContext, runWithContext } from "./context";
 
 type Computation = () => void;
 
 function runComputations(computations: Set<Computation>) {
-  const currentComputation = getOwner().computation;
+  const currentComputation = getContext().computation;
 
-  runWithOwner({ disposer: undefined, computation: undefined }, () => {
+  runWithContext({ disposer: undefined, computation: undefined }, () => {
     for (const computation of computations) {
       // ? This condition will prevent circular dependencies
       // ! Updating value will never cause recalculation of current computation
@@ -54,7 +54,7 @@ export function createValue<T>(
   compare ??= true;
 
   function getter(): T | undefined {
-    const { computation } = getOwner();
+    const { computation } = getContext();
 
     if (computation && !computations.has(computation)) {
       computations.add(computation);

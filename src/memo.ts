@@ -1,5 +1,5 @@
 import { onCleanup } from "./disposer";
-import { runWithOwner } from "./owner";
+import { runWithContext } from "./context";
 import { createValue } from "./value";
 import { createQueue, flushQueue } from "./queue";
 
@@ -29,7 +29,7 @@ export function createMemo<T>(fn: () => T): () => T {
   function getter() {
     if (isDirty) {
       flushQueue(disposer);
-      runWithOwner({ computation, disposer }, recomputeMemo);
+      runWithContext({ computation, disposer }, recomputeMemo);
       isDirty = false;
     }
 

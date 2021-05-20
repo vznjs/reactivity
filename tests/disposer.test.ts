@@ -1,5 +1,5 @@
 import { onCleanup } from "../src/disposer";
-import { runWithOwner } from "../src/owner";
+import { runWithContext } from "../src/context";
 import { createQueue, flushQueue } from "../src/queue";
 import { createRoot } from "../src/root";
 
@@ -10,7 +10,7 @@ describe("onCleanup", () => {
     const disposer = createQueue();
     const cleanupMock = jest.fn();
 
-    runWithOwner({ disposer }, () => {
+    runWithContext({ disposer }, () => {
       onCleanup(cleanupMock);
     });
 

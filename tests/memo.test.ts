@@ -2,7 +2,7 @@ import { createMemo } from "../src/memo";
 import { createReaction } from "../src/reaction";
 import { createValue } from "../src/value";
 import { onCleanup } from "../src/disposer";
-import { runWithOwner } from "../src/owner";
+import { runWithContext } from "../src/context";
 import { createQueue, flushQueue } from "../src/queue";
 
 jest.useFakeTimers("modern");
@@ -66,7 +66,7 @@ describe("createMemo", () => {
     const disposer = createQueue();
     const spy = jest.fn();
 
-    runWithOwner({ disposer }, () => {
+    runWithContext({ disposer }, () => {
       expect(spy.mock.calls.length).toBe(0);
 
       const getMemo = createMemo(() => {
@@ -113,7 +113,7 @@ describe("createMemo", () => {
     const [getSignal, setSignal] = createValue(1);
     const disposer = createQueue();
 
-    runWithOwner({ disposer }, () => {
+    runWithContext({ disposer }, () => {
       const getMemo = createMemo(() => {
         onCleanup(spy);
         getSignal();

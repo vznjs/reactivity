@@ -1,6 +1,6 @@
 import { untrack } from "../src/untrack";
 import { onCleanup } from "../src/disposer";
-import { getOwner, runWithOwner } from "../src/owner";
+import { getContext, runWithContext } from "../src/context";
 import { createQueue, flushQueue } from "../src/queue";
 
 jest.useFakeTimers("modern");
@@ -11,28 +11,28 @@ describe("untrack", () => {
       // dummy
     };
 
-    expect(getOwner().computation).toBeUndefined();
+    expect(getContext().computation).toBeUndefined();
 
-    runWithOwner({ computation }, () => {
-      expect(getOwner().computation).toBe(computation);
+    runWithContext({ computation }, () => {
+      expect(getContext().computation).toBe(computation);
 
       untrack(() => {
-        expect(getOwner().computation).toBeUndefined();
+        expect(getContext().computation).toBeUndefined();
       });
 
-      expect(getOwner().computation).toBe(computation);
+      expect(getContext().computation).toBe(computation);
     });
 
-    expect(getOwner().computation).toBeUndefined();
+    expect(getContext().computation).toBeUndefined();
   });
 
   it("runs cleanups in computation correctly", () => {
     const disposer = createQueue();
     const cleanupMock = jest.fn();
 
-    expect(getOwner().disposer).toBeUndefined();
+    expect(getContext().disposer).toBeUndefined();
 
-    runWithOwner({ disposer }, () => {
+    runWithContext({ disposer }, () => {
       untrack(() => {
         onCleanup(cleanupMock);
       });

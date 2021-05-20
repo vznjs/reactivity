@@ -1,4 +1,4 @@
-import { getOwner } from "./owner";
+import { getContext } from "./context";
 import { createQueue, flushQueue } from "./queue";
 
 const disposer = createQueue();
@@ -8,7 +8,7 @@ function flush() {
 }
 
 export function onCleanup(fn: () => void): void {
-  (getOwner().disposer || disposer).add(fn);
+  (getContext().disposer || disposer).add(fn);
 
   if (disposer.size === 1) {
     setTimeout(flush, 0);

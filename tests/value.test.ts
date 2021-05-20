@@ -1,7 +1,7 @@
 import { createRoot } from "../src/root";
 import { createValue } from "../src/value";
 import { createReaction } from "../src/reaction";
-import { runWithOwner } from "../src/owner";
+import { runWithContext } from "../src/context";
 import { createQueue, flushQueue } from "../src/queue";
 
 jest.useFakeTimers("modern");
@@ -22,7 +22,7 @@ describe("createValue", () => {
     const spy = jest.fn();
     const [getSignal, setSignal] = createValue(false);
 
-    runWithOwner({ computation: spy }, () => getSignal());
+    runWithContext({ computation: spy }, () => getSignal());
 
     expect(spy.mock.calls.length).toBe(0);
     expect(getSignal()).toBe(false);
@@ -37,7 +37,7 @@ describe("createValue", () => {
     const spy = jest.fn();
     const [getSignal, setSignal] = createValue(true, false);
 
-    runWithOwner({ computation: spy }, () => getSignal());
+    runWithContext({ computation: spy }, () => getSignal());
 
     expect(spy.mock.calls.length).toBe(0);
 
@@ -50,7 +50,7 @@ describe("createValue", () => {
     const spy = jest.fn();
     const [getSignal, setSignal] = createValue(false);
 
-    runWithOwner({ computation: spy }, () => getSignal());
+    runWithContext({ computation: spy }, () => getSignal());
 
     expect(spy.mock.calls.length).toBe(0);
     expect(getSignal()).toBe(false);
@@ -65,7 +65,7 @@ describe("createValue", () => {
     const spy = jest.fn();
     const [getSignal, setSignal] = createValue([1], (a, b) => a[0] === b[0]);
 
-    runWithOwner({ computation: spy }, () => getSignal());
+    runWithContext({ computation: spy }, () => getSignal());
 
     expect(spy.mock.calls.length).toBe(0);
 
@@ -83,7 +83,7 @@ describe("createValue", () => {
     const [getSignal, setSignal] = createValue(false);
     const disposer = createQueue();
 
-    runWithOwner({ disposer, computation: spy }, () => getSignal());
+    runWithContext({ disposer, computation: spy }, () => getSignal());
 
     setSignal(true);
 
@@ -103,7 +103,7 @@ describe("createValue", () => {
     const [getSignal, setSignal] = createValue(0);
     const disposer = createQueue();
 
-    runWithOwner({ disposer, computation: spy }, () =>
+    runWithContext({ disposer, computation: spy }, () =>
       setSignal(getSignal() + 1)
     );
 

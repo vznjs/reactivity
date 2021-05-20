@@ -2,7 +2,7 @@ export * from "./scheduler";
 export * from "./disposer";
 export * from "./reaction";
 export * from "./memo";
-export * from "./owner";
+export * from "./context";
 export * from "./queue";
 export * from "./root";
 export * from "./untrack";

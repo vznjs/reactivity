@@ -1,4 +1,4 @@
-import { runWithOwner } from "./owner";
+import { runWithContext } from "./context";
 import { createQueue, flushQueue } from "./queue";
 
 /**
@@ -11,7 +11,7 @@ import { createQueue, flushQueue } from "./queue";
  */
 export function createRoot<T>(fn: (disposer: () => void) => T): T {
   const disposer = createQueue();
-  return runWithOwner({ disposer, computation: undefined }, () =>
+  return runWithContext({ disposer, computation: undefined }, () =>
     fn(() => flushQueue(disposer))
   );
 }

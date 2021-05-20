@@ -1,6 +1,6 @@
 import { onCleanup } from "../src/disposer";
 import { createReaction } from "../src/reaction";
-import { runWithOwner } from "../src/owner";
+import { runWithContext } from "../src/context";
 import { createQueue, flushQueue } from "../src/queue";
 import { createValue } from "../src/value";
 
@@ -13,7 +13,7 @@ describe("createReaction", () => {
     const reactionSpy = jest.fn();
     const cleanupSpy = jest.fn();
 
-    runWithOwner({ disposer }, () => {
+    runWithContext({ disposer }, () => {
       createReaction(() => {
         onCleanup(cleanupSpy);
         reactionSpy();

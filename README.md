@@ -31,13 +31,13 @@ npm install @vzn/reactivity
 
 ## `schedule`
 
-## `getOwner`
-
 ## `createQueue`
 
 ## `flushQueue`
 
-## `runWithOwner`
+## `getContext`
+
+## `runWithContext`
 
 # Contributing
 

@@ -1,6 +1,6 @@
 import { schedule } from "./scheduler";
 import { onCleanup } from "./disposer";
-import { runWithOwner } from "./owner";
+import { runWithContext } from "./context";
 import { createQueue, flushQueue } from "./queue";
 
 export function createReaction<T>(fn: (v: T) => T, value: T): void;
@@ -23,7 +23,10 @@ export function createReaction<T>(fn: (v?: T) => T, value?: T): void {
 
   function recompute() {
     cleanup();
-    runWithOwner({ computation, disposer }, () => (lastValue = fn(lastValue)));
+    runWithContext(
+      { computation, disposer },
+      () => (lastValue = fn(lastValue))
+    );
     isScheduled = false;
   }
 
