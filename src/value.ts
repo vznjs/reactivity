@@ -1,20 +1,4 @@
-import { onCleanup } from "./disposer";
-import { getContext, runWithContext } from "./context";
-
-type Computation = () => void;
-
-function runComputations(computations: Set<Computation>) {
-  const currentComputation = getContext().computation;
-
-  runWithContext({ disposer: undefined, computation: undefined }, () => {
-    for (const computation of computations) {
-      // ? This condition will prevent circular dependencies
-      // ! Updating value will never cause recalculation of current computation
-      if (currentComputation === computation) return;
-      computation();
-    }
-  });
-}
+import { createSignal } from "./signal";
 
 /**
  * Values are the foundation of reactive system.
@@ -43,45 +27,26 @@ export function createValue<T>(
   value?: T,
   compare?: boolean | ((prev: T | undefined, next: T) => boolean)
 ): [() => T | undefined, (newValue: T) => void] {
-  // Buffer for next update
-  const computations = new Set<Computation>();
-
-  // Buffer for current update
-  let currentComputations = new Set<Computation>();
+  const signal = createSignal();
 
   let currentValue = value;
 
   compare ??= true;
 
   function getter(): T | undefined {
-    const { computation } = getContext();
-
-    if (computation && !computations.has(computation)) {
-      computations.add(computation);
-
-      onCleanup(() => {
-        // In case there was a cleanup we want to stop any further updates of computations
-        // This means nested computations will be cancelled as well
-        currentComputations.delete(computation);
-        computations.delete(computation);
-      });
-    }
-
+    signal.track();
     return currentValue;
   }
 
   function setter(newValue: T): void {
     if (typeof compare === "function" && compare(currentValue, newValue))
       return;
+
     if (compare === true && currentValue === newValue) return;
 
-    // The new value is set ASAP in order to be usable in further called computations
     currentValue = newValue;
 
-    // We take a snapshot to prevent infinite iteration in case of using getter() in called computations
-    currentComputations = new Set<Computation>(computations);
-    runComputations(currentComputations);
-    currentComputations.clear();
+    signal.notify();
   }
 
   return [getter, setter];

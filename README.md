@@ -80,6 +80,10 @@ createRoot((dispose) => {
 })
 ```
 
+The created reaction will live (react) until the Root's dispose will be called.
+
+If you would not create the Root, the reaction would be automatically disposed at the end of your code execution (end of micro queue).
+
 ## `createMemo`
 
 Memo is like a mix of on-demand reaction and reactive value. If the reactive values used inside of it will change, it will know that it needs to recompute but it will wait until the next usage, at the same time informing all it's dependents that it has been changed. Sounds complex? But it's actually super intuitive.
@@ -148,11 +152,9 @@ createReaction(() => {
 setName('This will not trigger the reaction!')
 ```
 
-The created reaction will live (react) until the Root's dispose will be called.
-
-If you would not create the Root, the reaction would be automatically disposed at the end of your code execution (end of micro queue).
-
 # Low-level API
+
+## `createSignal`
 
 ## `schedule`
 
@@ -171,3 +173,10 @@ Bug reports and pull requests are welcome on GitHub at https://github.com/vznjs/
 # License
 
 This version of the package is available as open source under the terms of the [MIT License](http://opensource.org/licenses/MIT).
+
+<iframe src="https://codesandbox.io/embed/eloquent-hoover-iw6mj?autoresize=1&fontsize=14&hidenavigation=1&module=%2Fsrc%2Findex.ts&theme=dark&view=editor"
+     style="width:100%; height:500px; border:0; border-radius: 4px; overflow:hidden;"
+     title="eloquent-hoover-iw6mj"
+     allow="accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking"
+     sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts"
+   ></iframe>

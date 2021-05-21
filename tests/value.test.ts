@@ -3,6 +3,7 @@ import { createValue } from "../src/value";
 import { createReaction } from "../src/reaction";
 import { runWithContext } from "../src/context";
 import { createQueue, flushQueue } from "../src/queue";
+import { onCleanup } from "../src/disposer";
 
 jest.useFakeTimers("modern");
 
@@ -161,6 +162,46 @@ describe("createValue", () => {
       jest.runAllTimers();
 
       expect(spy.mock.calls.length).toBe(3);
+    });
+  });
+
+  it("works with nested updates and cleanups", () => {
+    const spy = jest.fn();
+    const spy2 = jest.fn();
+    const [getData, setData] = createValue(1);
+    const disposer = createQueue();
+
+    createRoot(() => {
+      createReaction(() => {
+        onCleanup(() => flushQueue(disposer));
+        getData();
+        spy();
+      });
+
+      runWithContext({ disposer }, () => {
+        createReaction(() => {
+          getData();
+          spy2();
+        });
+      });
+
+      expect(spy.mock.calls.length).toBe(1);
+      expect(spy2.mock.calls.length).toBe(1);
+
+      jest.runAllTimers();
+
+      expect(spy.mock.calls.length).toBe(1);
+      expect(spy2.mock.calls.length).toBe(1);
+
+      setData(2);
+
+      expect(spy.mock.calls.length).toBe(1);
+      expect(spy2.mock.calls.length).toBe(1);
+
+      jest.runAllTimers();
+
+      expect(spy.mock.calls.length).toBe(2);
+      expect(spy2.mock.calls.length).toBe(1);
     });
   });
 });

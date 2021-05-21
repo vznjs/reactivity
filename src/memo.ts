@@ -1,20 +1,20 @@
 import { onCleanup } from "./disposer";
 import { runWithContext } from "./context";
-import { createValue } from "./value";
 import { createQueue, flushQueue } from "./queue";
+import { createSignal } from "./signal";
 
 export function createMemo<T>(fn: () => T): () => T {
   let memoValue: T;
   let isDirty = true;
 
-  const [trackMemo, notifyChange] = createValue(true, false);
+  const signal = createSignal();
   const disposer = createQueue();
 
   function computation() {
     if (isDirty) return;
 
     isDirty = true;
-    notifyChange(true);
+    signal.notify();
   }
 
   function recomputeMemo() {
@@ -33,7 +33,7 @@ export function createMemo<T>(fn: () => T): () => T {
       isDirty = false;
     }
 
-    trackMemo();
+    signal.track();
 
     return memoValue;
   }
