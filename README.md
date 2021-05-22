@@ -1,6 +1,36 @@
 # VZN | Reactivity
 
+Makes your code reactive. Do things when other things changed. When you get fired, you look to be hired. Action and reaction. Let your code just be like you.
+
 # Motivation
+
+1. **I am learning about reactivity!** Everything else was just an excuse.
+2. Most of the alternatives are too complex that it took me 6 months to figure out what they do and how they work.
+3. I was inspired by all the below mentioned solutions and I learnt everything by going through their code and concepts. Kudos for the maintainers!
+4. The usability of S.js is great, but it's complexity and edge-cases were too overwhelming.
+5. Solid.js reactivity is super preformant but it's not intuitive to use.
+6. The Tagging in glimmer tracking is awesome but the need for traversing the tree looks like waste of CPU and its not scalable.
+7. MobX - it's BIG. HUGE! and complex. At the beginning it looked fine, but with time I lost myself fixing and thinking about reactivity in my code.
+
+# Goals
+
+🧱 **Simple** - Having 2-3 years of JS experience you should be able to understand it. Contact me if not!
+
+📖 **Clean** - Read the code as good book and learn something new.
+
+🐣 **Small** - 300kb? 15kb? 5kb? 1kb? 0.7kb? Guess yourself.
+
+🧬 **Flexible** - No limitations, access to internal API (not private), build it yourself.
+
+😎 **Intuitive** - Either you know how to use it, or you doing it wrong.
+
+💨 **Fast** - Does only what needs to be done.
+
+___
+This is **VZN | Reactivity** (brotli compression/for your eyes only)
+```
+G4gGAByFcRs9m+SnSVc4mZm66r+pgKxHZ3o9VohlkpOPJY+8B9R8Jj8rVRPXtEJ3hBXthIhpKKX99zv//OX0RkM0wivF/1t701ivMemworA0jkplTMAW2BmAOR9E7NrGMZm1DuvRmnG12mhsfBKESIlRecN4HOOkSukw48tdWJ03BDWI59UiC7z/YEUAEuGbZZwGlugbrdiCUZwXDa0sEBoT8oPYQ9yUQCzEuTsC4gSr99fo3Plws7Aaef8/yeBzYqC8LOnhIDoXw0a4803QBiMiKzCxGWgtzVYrEsMgfsDx/Zg1VIwmGe2gFVST7maNT4FEuTfPFiRO8o7dx3xe5ZTnxNzr7baHIGK8hJmrXksuvnUfsmYX7gioiC+6x/yiOtlQg1ws0eqLkDC/Wtlj9xjBjLyq9gRQc6ei46Yz0y8mUNEqZBCnKDZrG+BjBVQmWOnGlqg5tWuo9JECM0OrlEpgMZbNDrKF1LvYNhDHrcDnHzYR3rbUsL8sktmiNQZlkyNi5GkIB1air8VV24TtHBtdtF6PHa/Ee6sCt7oOoh3CNR0bU/tKBQ0G0r8sI4NUGWKk2ar3ACMWCY1ssdMCid980K1GfeCU/oaqQncvz2fScidScwTSe9CqoHvJpGoHuA5kDBVIAYkt2TxQPijLzC47LFiHcFYlEIqqUjkjURDBKCgu/wXTLpmozR6mgykYd8i3ToCxo/yH2gKrKwAos8D9ZQcL8QZNCYzPO7GEzryMpWWVpD3Jys54FMm7I//e6hBQJqtrJPNO7KXJnKqgmWjqEKOomDjzTE+zky73jbrcE+zAs4wfp+0w/A2hgNdQ+rWawJd0zwzc9/B23Hja99Lp+lWOgKja093hj+ih7Hgm0xv6Br8yJ4HTv/TWqtLJqKl0Q2w8/Q9MExWNU7EF
+```
 
 # Compatibility
 
@@ -15,6 +45,8 @@ npm install @vzn/reactivity
 ```
 
 # High-level API
+
+This API should be perceived as public and you should feel free to use in your implementations.
 
 ## `createValue`
 
