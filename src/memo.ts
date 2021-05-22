@@ -13,6 +13,7 @@ export function createMemo<T>(fn: () => T): () => T {
   function computation() {
     if (isDirty) return;
 
+    flushQueue(disposer);
     isDirty = true;
     signal.notify();
   }
@@ -28,7 +29,6 @@ export function createMemo<T>(fn: () => T): () => T {
 
   function getter() {
     if (isDirty) {
-      flushQueue(disposer);
       runWithContext({ computation, disposer }, recomputeMemo);
       isDirty = false;
     }

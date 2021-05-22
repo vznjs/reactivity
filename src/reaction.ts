@@ -17,12 +17,12 @@ export function createReaction<T>(fn: (v?: T) => T, value?: T): void {
 
   function computation() {
     if (isScheduled) return;
+    cleanup();
     schedule(recompute);
     isScheduled = true;
   }
 
   function recompute() {
-    cleanup();
     runWithContext(
       { computation, disposer },
       () => (lastValue = fn(lastValue))
