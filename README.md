@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/vznjs/reactivity/master/logo.png" alt="VZN Reactivity logo" />
+</p>
+
 # VZN | Reactivity
 
 Makes your code reactive. Does things when other things change. When you get fired, you look to be hired. Action and reaction. Let your code be just like you.
