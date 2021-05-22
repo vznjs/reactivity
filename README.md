@@ -26,8 +26,10 @@ Makes your code reactive. Does things when other things change. When you get fir
 
 💨 **Fast** - Does only what needs to be done.
 
-___
+---
+
 This is **VZN | Reactivity** (brotli compression/for your eyes only)
+
 ```
 G4gGAByFcRs9m+SnSVc4mZm66r+pgKxHZ3o9VohlkpOPJY+8B9R8Jj8rVRPXtEJ3hBXthIhpKKX99zv//
 OX0RkM0wivF/1t701ivMemworA0jkplTMAW2BmAOR9E7NrGMZm1DuvRmnG12mhsfBKESIlRecN4HOOkSu
