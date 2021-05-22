@@ -31,16 +31,16 @@ export function createSignal(): Signal {
   function track(): void {
     const { computation } = getContext();
 
-    if (computation && !computations.has(computation)) {
-      computations.add(computation);
+    if (!computation || computations.has(computation)) return;
 
-      onCleanup(() => {
-        // In case there was a cleanup we want to stop any further updates of computations
-        // This means nested computations will be cancelled as well
-        currentComputations.delete(computation);
-        computations.delete(computation);
-      });
-    }
+    computations.add(computation);
+
+    onCleanup(() => {
+      // In case there was a cleanup we want to stop any further updates of computations
+      // This means nested computations will be cancelled as well
+      currentComputations.delete(computation);
+      computations.delete(computation);
+    });
   }
 
   function notify(): void {
