@@ -155,17 +155,89 @@ setName("This will not trigger the reaction!");
 
 # Low-level API
 
+This API has been used to create a High-level API. It is discouraged to use it directly in your features. It should serve as a way to create a new custom High-level API if needed. Eg. if you think you need your own `createMemo` implementation, you can do it yourself by using this API.
+
 ## `createSignal`
+
+Signal is the smallest reactive primitive. It's role is to track and notify about changes.
+
+```js
+import { createSignal, createReaction } from "@vzn/reactivity";
+
+const mySignal = createSignal();
+
+createReaction(() => {
+  mySignal.track(); // track and remember the computation
+});
+
+mySignal.notify(); // notify all computations about a change (the reaction will be scheduled for recomputation)
+```
 
 ## `schedule`
 
+It allows you to schedule some tasks in microtasks queue (after your code has been executed), respecting the order of other tasks and throwing possible errors in async (non-blocking) way.
+
+```js
+import { schedule } from "@vzn/reactivity";
+
+console.log("Sync1");
+schedule(() => console.log("Async"));
+console.log("Sync2");
+
+// LOG: Sync1
+// LOG: Sync2
+// LOG: Async
+```
+
 ## `createQueue`
+
+It creates a queue of unique tasks with `Set<() => void>` interface. It can be used as context's disposer.
+
+```js
+import { createQueue } from "@vzn/reactivity";
+
+const myDisposer = createQueue();
+
+myDisposer.add(() => console.log("clean me"));
+```
 
 ## `flushQueue`
 
+It flushes the queue of tasks with async errors handling and detached Reactive Context.
+
+```js
+import { createQueue, flushQueue } from "@vzn/reactivity";
+
+const myDisposer = createQueue();
+
+myDisposer.add(() => console.log("clean me"));
+
+flushQueue(myDisposer);
+
+// LOG: clean me
+```
+
 ## `getContext`
 
+It returns current Reactive Context. Useful, for retrieving current computation and disposer, as well as remembering the context eg for async operations.
+
+```js
+import { getContext } from "@vzn/reactivity";
+
+const currentContext = getContext(); // { disposer?: Set<() => void>, computation?: () => void}
+```
+
 ## `runWithContext`
+
+It merges passed computation and disposer with current Context, creating a new one and running passed function with it.
+
+```js
+import { runWithContext } from "@vzn/reactivity";
+
+runWithContext({ disposer: undefined }, () => {
+  console.log("I have no disposer but I still use the inherited computation");
+});
+```
 
 # Contributing
 
@@ -174,10 +246,3 @@ Bug reports and pull requests are welcome on GitHub at https://github.com/vznjs/
 # License
 
 This version of the package is available as open source under the terms of the [MIT License](http://opensource.org/licenses/MIT).
-
-<iframe src="https://codesandbox.io/embed/eloquent-hoover-iw6mj?autoresize=1&fontsize=14&hidenavigation=1&module=%2Fsrc%2Findex.ts&theme=dark&view=editor"
-     style="width:100%; height:500px; border:0; border-radius: 4px; overflow:hidden;"
-     title="eloquent-hoover-iw6mj"
-     allow="accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking"
-     sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts"
-   ></iframe>
