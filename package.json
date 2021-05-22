@@ -23,6 +23,7 @@
     "test": "jest",
     "clean": "rimraf dist",
     "lint": "prettier --check . && eslint .",
+    "lint:fix": "prettier --write .",
     "dev": "npm-run-all clean --parallel 'build:** -- --watch'",
     "build": "npm-run-all --serial clean build:**",
     "build:esnext": "esbuild --bundle src/index.ts --outdir=dist/esnext --format=esm --sourcemap",
