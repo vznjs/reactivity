@@ -12,7 +12,7 @@ Makes your code reactive. Does things when other things change. When you get fir
 2. Most of the alternatives are too complex that it took me 6 months to figure out what they do and how they work.
 3. I was inspired by all the below mentioned solutions and I learnt everything by going through their code and concepts. Kudos for the maintainers!
 4. The usability of S.js is great, but it's complexity and edge-cases were too overwhelming.
-5. Solid.js reactivity is super preformant but it's not intuitive to use and tough to understand.
+5. Solid.js reactivity is super performant but it's not intuitive to use and tough to understand.
 6. The Tagging in glimmer tracking is awesome but the need for traversing the tree (reconcile) looks like a waste of CPU and it's not scalable.
 7. MobX - it's BIG. HUGE! and complex. At the beginning it looked fine, but with time I lost myself fixing and thinking about reactivity in my code.
 
@@ -110,7 +110,7 @@ setName("Maciej");
 
 ## `createRoot`
 
-Root is the most important block in reactivity. It defines the owner of the whole reactivity tree. When you plan to make some part of your code reactive, eg your whole app, create a top-level Root as the owner. The Root is yielding a disposer function which you can use dispose all reactive computations.
+Root is the most important block in reactivity. It defines the owner of the whole reactivity tree. When you plan to make some part of your code reactive, eg. your whole app, create a top-level Root as the owner. The Root is yielding a disposer function which you can use dispose all reactive computations.
 
 ```js
 import { createRoot, createValue, createReaction } from "@vzn/reactivity";
@@ -268,7 +268,7 @@ flushQueue(myDisposer);
 
 ## `getContext`
 
-It returns current Reactive Context. Useful, for retrieving current computation and disposer, as well as remembering the context eg for async operations.
+It returns current Reactive Context. Useful, for retrieving current computation and disposer, as well as remembering the context eg. for async operations.
 
 ```js
 import { getContext } from "@vzn/reactivity";
