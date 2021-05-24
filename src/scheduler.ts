@@ -13,3 +13,7 @@ export function schedule<T>(computation: () => T): void {
     queueMicrotask(flush);
   }
 }
+
+export function unschedule<T>(computation: () => T): void {
+  scheduler.delete(computation);
+}

@@ -1,4 +1,4 @@
-import { schedule } from "./scheduler";
+import { schedule, unschedule } from "./scheduler";
 import { onCleanup } from "./disposer";
 import { runWithContext } from "./context";
 import { createQueue, flushQueue } from "./queue";
@@ -11,13 +11,9 @@ export function createReaction<T>(fn: (v?: T) => T, value?: T): void {
 
   const disposer = createQueue();
 
-  function cleanup() {
-    flushQueue(disposer);
-  }
-
   function computation() {
     if (isScheduled) return;
-    cleanup();
+    flushQueue(disposer);
     schedule(recompute);
     isScheduled = true;
   }
@@ -33,6 +29,9 @@ export function createReaction<T>(fn: (v?: T) => T, value?: T): void {
   try {
     recompute();
   } finally {
-    onCleanup(cleanup);
+    onCleanup(() => {
+      unschedule(recompute);
+      flushQueue(disposer);
+    });
   }
 }

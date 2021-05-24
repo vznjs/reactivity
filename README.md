@@ -240,6 +240,24 @@ console.log("Sync2");
 // LOG: Async
 ```
 
+## `unschedule`
+
+It allows you to unschedule tasks form the scheduler.
+
+```js
+import { schedule, unschedule } from "@vzn/reactivity";
+
+const myTask = () => console.log("Async");
+
+console.log("Sync1");
+schedule(myTask);
+unschedule(myTask)
+console.log("Sync2");
+
+// LOG: Sync1
+// LOG: Sync2
+```
+
 ## `createQueue`
 
 It creates a queue of unique tasks with `Set<() => void>` interface. It can be used as context's disposer.

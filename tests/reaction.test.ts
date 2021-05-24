@@ -115,4 +115,34 @@ describe("createReaction", () => {
 
     expect(spy.mock.calls.length).toBe(1);
   });
+
+  it("does not run scheduled reaction after context cleanup", () => {
+    const cleanupSpy = jest.fn();
+    const reactionSpy = jest.fn();
+    const disposer = createQueue();
+    const [getSignal, setSignal] = createValue(false);
+
+    runWithContext({ disposer }, () => {
+      createReaction(() => {
+        getSignal();
+        reactionSpy();
+        onCleanup(cleanupSpy);
+      });
+    });
+
+    expect(cleanupSpy.mock.calls.length).toBe(0);
+    expect(reactionSpy.mock.calls.length).toBe(1);
+
+    setSignal(true);
+
+    expect(cleanupSpy.mock.calls.length).toBe(1);
+    expect(reactionSpy.mock.calls.length).toBe(1);
+
+    flushQueue(disposer);
+
+    jest.runAllTimers();
+
+    expect(cleanupSpy.mock.calls.length).toBe(1);
+    expect(reactionSpy.mock.calls.length).toBe(1);
+  });
 });
