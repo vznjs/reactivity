@@ -63,6 +63,39 @@ WqtLJqKl0Q2w8/Q9MExWNU7EF
 npm install @vzn/reactivity
 ```
 
+# Usage
+
+This example shows off some of the capabilities of VZN | Reactivity.
+The most important thing to learn here is that you need to wrap your "app" with `createRoot()`, otherwise, all reactivity will be one-time only.
+
+```js
+import { createRoot, createValue, createMemo, createReaction, onCleanup } from "@vzn/reactivity";
+
+createRoot((dispose) => {
+  console.log('Reactivity is turned on!');
+
+  setTimeout(dispose, 1000); // Turn off reactive system in 1s
+
+  onCleanup(() => console.log('Reactivity is turned off!')) // log this message on dispose
+
+  const [getName, setName] = createValue("VZN");
+
+  const greetings = createMemo(() => `Hey ${getName()}!`);
+
+  createReaction(() => {
+    console.log(greetings()); // Log greetings every time they will change
+  });
+
+  // LOG: Hey VZN!
+
+  setName('Maciej');
+  
+  // LOG: Hey VZN!
+
+  // after 1s: LOG: Reactivity is turned off!
+})
+```
+
 # High-level API
 
 This API should be perceived as public, and you should feel free to use it in your implementations.
@@ -138,7 +171,7 @@ If you did not create the Root, the reaction would be automatically disposed of 
 
 ## `createMemo`
 
-A memo is like a mix of on-demand reaction and reactive value. When the reactive values used inside of it change, it knows that it needs to recompute, but it will wait until the next usage, at the same time informing all of its dependents that it has been changed. Sounds complex? But it's actually super intuitive.
+A memo is like a mix of reaction and reactive value. It recomputes only when accessed and only if changed.
 
 ```js
 import { createMemo, createReaction, createValue } from "@vzn/reactivity";
@@ -149,22 +182,21 @@ const getGreetings = createMemo(() => `Hey ${getName()}!`); // It does not compu
 
 getGreetings(); // First usage runs the computation
 
+// The reaction will not recompute the memo as it has been already calculated
 createReaction(() => {
-  console.log(getGreetings()); // It recomputes only if memo has changed
+  console.log(getGreetings());
 });
 
 // LOG: Hey VZN!
 
-setName("Maciej");
-
-getGreetings(); // Its dependency changed so this usage will recompute it again
+setName("Maciej"); // Triggers computation which recomputes the memo directly
 
 // LOG: Hey Maciej!
 ```
 
 ## `onCleanup`
 
-Use onCleanup for scheduling a task that will be run before the computation recomputes or is scheduled for disposal.
+Use onCleanup for scheduling a task that will be run before the computation recomputes or is scheduled for root's disposal.
 
 ```js
 import { createReaction, createValue, onCleanup } from "@vzn/reactivity";
@@ -186,7 +218,7 @@ setEvent("mouseover");
 
 ## `untrack`
 
-By using `untrack` you can get the value without setting a dependency on the current computation (reaction).
+By using `untrack` you can get the value without setting a dependency on the current reaction or memo (computation) which means that they will not recompute in case values inside of `untrack` will change.
 
 ```js
 import { createReaction, createValue } from "@vzn/reactivity";
@@ -201,7 +233,7 @@ createReaction(() => {
 
 // LOG: VZN
 
-setName("This will not trigger the reaction!");
+setName("This will not trigger the reaction as getName() was not tracked in the reaction");
 ```
 
 # Low-level API
@@ -307,6 +339,11 @@ runWithContext({ disposer: undefined }, () => {
   console.log("I have no disposer but I still use the inherited computation");
 });
 ```
+
+# TO DO
+
+- [ ] full reactivity for objects and arrays
+- [ ] `reactive` decorator?
 
 # Contributing
 
