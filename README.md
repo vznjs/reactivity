@@ -4,23 +4,23 @@
 
 # VZN | Reactivity
 
-Makes your code reactive. Does things when other things change. When you get fired, you look to be hired. Action and reaction. Let your code be just like you.
+VZN makes your code reactive. It does things when other things change. When you get fired (action), you look to be hired (reaction). Let your code be just like you.
 
 # Motivation
 
-1. **I am learning about reactivity!** Everything else was only an excuse.
-2. Most of the alternatives are too complex that it took me 6 months to figure out what they do and how they work.
-3. I was inspired by all the below mentioned solutions and I learnt everything by going through their code and concepts. Kudos for the maintainers!
-4. The usability of S.js is great, but it's complexity and edge-cases were too overwhelming.
-5. Solid.js reactivity is super performant but it's not intuitive to use and tough to understand.
-6. The Tagging in glimmer tracking is awesome but the need for traversing the tree (reconcile) looks like a waste of CPU and it's not scalable.
-7. MobX - it's BIG. HUGE! and complex. At the beginning it looked fine, but with time I lost myself fixing and thinking about reactivity in my code.
+1. **I am learning about reactivity!** Everything else is only an excuse.
+2. Most of the alternatives are so complex that it took me 6 months to figure out what they do and how they work.
+3. I was inspired by all the solutions mentioned below, and I learned everything by going through their code and concepts. Kudos to the maintainers!
+4. The usability of S.js is great, but its complexity and edge-cases were too overwhelming.
+5. Solid.js reactivity is super performant, but it's not intuitive to use and tough to understand.
+6. The Tagging in glimmer tracking is awesome, but the need for traversing the tree (reconcile) looks like a waste of CPU, and it's not scalable.
+7. MobX - it's BIG. HUGE! and complex. In the beginning, it looked fine, but with time I lost myself fixing and thinking about reactivity in my code.
 
 # Goals
 
 🧱 **Simple** - Having 2-3 years of JS experience you should be able to understand it. Contact me if not!
 
-📖 **Clean** - Read the code as good book and learn something new.
+📖 **Clean** - Read the code as a good book and learn something new.
 
 🐣 **Small** - 300kb? 15kb? 5kb? 1kb? 0.7kb? Take a guess.
 
@@ -34,7 +34,7 @@ Makes your code reactive. Does things when other things change. When you get fir
 
 ---
 
-This is **VZN | Reactivity** (brotli compression/for your eyes only)
+Source code of **VZN | Reactivity** (minified and compressed with brotli, for demonstration only)
 
 ```
 G4gGAByFcRs9m+SnSVc4mZm66r+pgKxHZ3o9VohlkpOPJY+8B9R8Jj8rVRPXtEJ3hBXthIhpKKX99zv//
@@ -65,11 +65,11 @@ npm install @vzn/reactivity
 
 # High-level API
 
-This API should be perceived as public and you should feel free to use in your implementations.
+This API should be perceived as public, and you should feel free to use it in your implementations.
 
 ## `createValue`
 
-Reactive values are used as signals for computations (eg, reactions and memos). They work in synchronous way, which means their updates are immediately available and in the "background" they are informing computations about a change.
+Reactive values are used as signals for computations (e.g., reactions and memos). They work synchronously, which means their updates are available immediately, and in the "background" they inform computations about a change.
 
 ```js
 import { createValue } from "@vzn/reactivity";
@@ -81,7 +81,7 @@ setName("Maciej");
 getName(); // Maciej
 ```
 
-By default, updating a reactive value to the same value eg, 'vzn' to 'vzn', will not trigger any updates.
+By default, updating a reactive value to the same value (e.g., 'vzn' to 'vzn') will not trigger any updates.
 
 If you wish to signal a change on every update use `createValue(value, false)` or pass your own compare function
 
@@ -91,7 +91,7 @@ createValue(value, (oldValue, newValue) => oldValue == newValue);
 
 ## `createReaction`
 
-Reaction will make your block code reactive. This means, every time some reactive value that has been used will change, the code will recompute. This will allow you to create granular reactivity or set side effects.
+A reaction will make your block of code reactive. Change of any reactive value used in that block will make the code recompute. This gives you a granular reactivity and a place to call side effects.
 
 ```js
 import { createReaction, createValue } from "@vzn/reactivity";
@@ -112,7 +112,7 @@ setName("Maciej");
 
 ## `createRoot`
 
-Root is the most important block in reactivity. It defines the owner of the whole reactivity tree. When you plan to make some part of your code reactive, eg. your whole app, create a top-level Root as the owner. The Root is yielding a disposer function which you can use dispose all reactive computations.
+A root is the most important block in reactivity. It defines the owner of the whole reactivity tree. When you plan to make some part of your code reactive, create a top-level Root (e.g., around your entire app). The Root is yielding a disposer function which you can use to dispose of all reactive computations.
 
 ```js
 import { createRoot, createValue, createReaction } from "@vzn/reactivity";
@@ -134,37 +134,37 @@ createRoot((dispose) => {
 
 The created reaction will live (react) until the Root's dispose will be called.
 
-If you would not create the Root, the reaction would be automatically disposed at the end of your code execution (end of micro queue).
+If you did not create the Root, the reaction would be automatically disposed of at the end of your code execution (end of the micro queue).
 
 ## `createMemo`
 
-Memo is like a mix of on-demand reaction and reactive value. If the reactive values used inside of it will change, it will know that it needs to recompute but it will wait until the next usage, at the same time informing all it's dependents that it has been changed. Sounds complex? But it's actually super intuitive.
+A memo is like a mix of on-demand reaction and reactive value. When the reactive values used inside of it change, it knows that it needs to recompute, but it will wait until the next usage, at the same time informing all of its dependents that it has been changed. Sounds complex? But it's actually super intuitive.
 
 ```js
 import { createMemo, createReaction, createValue } from "@vzn/reactivity";
 
 const [getName, setName] = createValue("VZN");
 
-const getGreetings = createMemo(() => `Hey ${getName()}!`); // it does not compute just yet
+const getGreetings = createMemo(() => `Hey ${getName()}!`); // It does not compute just yet
 
 getGreetings(); // First usage runs the computation
 
 createReaction(() => {
-  console.log(getGreetings()); // it recomputes only if memo has changed
+  console.log(getGreetings()); // It recomputes only if memo has changed
 });
 
 // LOG: Hey VZN!
 
 setName("Maciej");
 
-getGreetings(); // It's dependency changed so this usage will recompute it again
+getGreetings(); // Its dependency changed so this usage will recompute it again
 
 // LOG: Hey Maciej!
 ```
 
 ## `onCleanup`
 
-Use onCleanup for scheduling a task which will be run before the computation will recompute or when it will be scheduled for disposal.
+Use onCleanup for scheduling a task that will be run before the computation recomputes or is scheduled for disposal.
 
 ```js
 import { createReaction, createValue, onCleanup } from "@vzn/reactivity";
@@ -186,7 +186,7 @@ setEvent("mouseover");
 
 ## `untrack`
 
-By using `untrack` you can get the value without setting a dependency on current computation (reaction).
+By using `untrack` you can get the value without setting a dependency on the current computation (reaction).
 
 ```js
 import { createReaction, createValue } from "@vzn/reactivity";
@@ -206,11 +206,11 @@ setName("This will not trigger the reaction!");
 
 # Low-level API
 
-This API has been used to create a High-level API. It is discouraged to use it directly in your features. It should serve as a way to create a new custom High-level API if needed. Eg. if you think you need your own `createMemo` implementation, you can do it yourself by using this API.
+This API has been used to create a High-level API. It is discouraged to use it directly in your features. It should serve as a way to create a new custom High-level API if needed. E.g., if you think you need your own `createMemo` implementation, you can do it yourself by using this API.
 
 ## `createSignal`
 
-Signal is the smallest reactive primitive. It's role is to track and notify about changes.
+A signal is the smallest reactive primitive. Its role is to track and notify about changes.
 
 ```js
 import { createSignal, createReaction } from "@vzn/reactivity";
@@ -226,7 +226,7 @@ mySignal.notify(); // notify all computations about a change (the reaction will 
 
 ## `schedule`
 
-It allows you to schedule some tasks in microtasks queue (after your code has been executed), respecting the order of other tasks and throwing possible errors in async (non-blocking) way.
+It allows you to schedule some tasks in the microtasks queue (after your code has been executed), respecting the order of other tasks and throwing possible errors in an async (non-blocking) way.
 
 ```js
 import { schedule } from "@vzn/reactivity";
@@ -260,7 +260,7 @@ console.log("Sync2");
 
 ## `createQueue`
 
-It creates a queue of unique tasks with `Set<() => void>` interface. It can be used as context's disposer.
+It creates a queue of unique tasks with `Set<() => void>` interface. It can be used as a context's disposer.
 
 ```js
 import { createQueue } from "@vzn/reactivity";
@@ -288,7 +288,7 @@ flushQueue(myDisposer);
 
 ## `getContext`
 
-It returns current Reactive Context. Useful, for retrieving current computation and disposer, as well as remembering the context eg. for async operations.
+It returns the current Reactive Context. Useful for retrieving current computation and disposer, as well as remembering the context, e.g., for async operations.
 
 ```js
 import { getContext } from "@vzn/reactivity";
