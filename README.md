@@ -28,9 +28,9 @@ VZN makes your code reactive. It does things when other things change. When you 
 
 😎 **Intuitive** - Either you know how to use it, or you are doing it wrong.
 
-💨 **Fast** - Does only what needs to be done.
+🚀 **Fast** - Does only what needs to be done.
 
-🧙‍♀️ **TypeScript** - Written in TS with full typings.
+💎 **Modern** - Written in TS with full typings and modular structure.
 
 ---
 
