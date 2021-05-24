@@ -90,7 +90,7 @@ createRoot((dispose) => {
 
   setName('Maciej');
   
-  // LOG: Hey VZN!
+  // LOG: Hey Maciej!
 
   // after 1s: LOG: Reactivity is turned off!
 })
