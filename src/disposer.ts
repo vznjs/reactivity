@@ -8,9 +8,15 @@ function flush() {
 }
 
 export function onCleanup(fn: () => void): void {
-  (getContext().disposer || disposer).add(fn);
+  const currentDisposer = getContext().disposer;
 
-  if (disposer.size === 1) {
-    setTimeout(flush, 0);
+  if (currentDisposer) {
+    currentDisposer.add(fn);
+  } else {
+    disposer.add(fn);
+    
+    if (disposer.size === 1) {
+      setTimeout(flush, 0);
+    }
   }
 }
