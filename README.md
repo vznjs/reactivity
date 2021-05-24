@@ -251,7 +251,7 @@ const myTask = () => console.log("Async");
 
 console.log("Sync1");
 schedule(myTask);
-unschedule(myTask)
+unschedule(myTask);
 console.log("Sync2");
 
 // LOG: Sync1

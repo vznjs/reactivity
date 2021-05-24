@@ -14,7 +14,7 @@ export function onCleanup(fn: () => void): void {
     currentDisposer.add(fn);
   } else {
     disposer.add(fn);
-    
+
     if (disposer.size === 1) {
       setTimeout(flush, 0);
     }
