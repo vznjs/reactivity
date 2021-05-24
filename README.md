@@ -22,13 +22,15 @@ Makes your code reactive. Does things when other things change. When you get fir
 
 📖 **Clean** - Read the code as good book and learn something new.
 
-🐣 **Small** - 300kb? 15kb? 5kb? 1kb? 0.7kb? Guess yourself.
+🐣 **Small** - 300kb? 15kb? 5kb? 1kb? 0.7kb? Take a guess.
 
 🧬 **Flexible** - No limitations, access to internal API (not private), build it yourself.
 
 😎 **Intuitive** - Either you know how to use it, or you are doing it wrong.
 
 💨 **Fast** - Does only what needs to be done.
+
+🧙‍♀️ **TypeScript** - Written in TS with full typings.
 
 ---
 
