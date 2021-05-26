@@ -69,14 +69,20 @@ This example shows off some of the capabilities of VZN | Reactivity.
 The most important thing to learn here is that you need to wrap your "app" with `createRoot()`, otherwise, all reactivity will be one-time only.
 
 ```js
-import { createRoot, createValue, createMemo, createReaction, onCleanup } from "@vzn/reactivity";
+import {
+  createRoot,
+  createValue,
+  createMemo,
+  createReaction,
+  onCleanup,
+} from "@vzn/reactivity";
 
 createRoot((dispose) => {
-  console.log('Reactivity is turned on!');
+  console.log("Reactivity is turned on!");
 
   setTimeout(dispose, 1000); // Turn off reactive system in 1s
 
-  onCleanup(() => console.log('Reactivity is turned off!')) // log this message on dispose
+  onCleanup(() => console.log("Reactivity is turned off!")); // log this message on dispose
 
   const [getName, setName] = createValue("VZN");
 
@@ -88,12 +94,12 @@ createRoot((dispose) => {
 
   // LOG: Hey VZN!
 
-  setName('Maciej');
-  
+  setName("Maciej");
+
   // LOG: Hey Maciej!
 
   // after 1s: LOG: Reactivity is turned off!
-})
+});
 ```
 
 # Examples & Resources
@@ -239,7 +245,9 @@ createReaction(() => {
 
 // LOG: VZN
 
-setName("This will not trigger the reaction as getName() was not tracked in the reaction");
+setName(
+  "This will not trigger the reaction as getName() was not tracked in the reaction"
+);
 ```
 
 # Low-level API
