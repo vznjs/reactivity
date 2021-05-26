@@ -96,7 +96,13 @@ createRoot((dispose) => {
 })
 ```
 
-# High-level API
+# Examples & Resources
+
+- [Counter](https://codesandbox.io/s/counter-1h4ve?file=/src/index.ts)
+- [Counter as component](https://codesandbox.io/s/counter-as-component-iw6mj?file=/src/index.ts)
+- [State management](https://codesandbox.io/s/authentication-o87py?file=/src/index.ts)
+
+# High-level APIz
 
 This API should be perceived as public, and you should feel free to use it in your implementations.
 
