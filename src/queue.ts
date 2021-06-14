@@ -5,13 +5,10 @@ export type Queue = Set<() => void>;
 export function flushQueue(queue: Queue): void {
   if (!queue.size) return;
 
-  const tasks = Array.from(queue);
-  queue.clear();
-
   runWithContext({ disposer: undefined, computation: undefined }, () => {
-    for (let index = 0; index < tasks.length; index++) {
+    for (const task of queue) {
       try {
-        tasks[index]();
+        task();
       } catch (error) {
         setTimeout(() => {
           throw error;
@@ -19,6 +16,8 @@ export function flushQueue(queue: Queue): void {
       }
     }
   });
+
+  queue.clear();
 }
 
 export function createQueue(): Queue {

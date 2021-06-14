@@ -135,14 +135,15 @@ describe("createReaction", () => {
 
     setSignal(true);
 
-    expect(cleanupSpy.mock.calls.length).toBe(1);
+    expect(cleanupSpy.mock.calls.length).toBe(0);
     expect(reactionSpy.mock.calls.length).toBe(1);
 
     flushQueue(disposer);
 
+    expect(cleanupSpy.mock.calls.length).toBe(1);
+
     jest.runAllTimers();
 
-    expect(cleanupSpy.mock.calls.length).toBe(1);
     expect(reactionSpy.mock.calls.length).toBe(1);
   });
 });

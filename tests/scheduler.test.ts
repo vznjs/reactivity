@@ -1,13 +1,15 @@
-import { schedule, unschedule } from "../src/scheduler";
+import { scheduleUpdate, unscheduleComputation } from "../src/scheduler";
+import { createSignal } from "../src/signal";
 
 jest.useFakeTimers("modern");
 
-describe("schedule", () => {
+describe("scheduleUpdate", () => {
   it("batches calls", () => {
     const spy = jest.fn();
+    const signal = createSignal();
 
-    schedule(spy);
-    schedule(spy);
+    scheduleUpdate(signal, [spy]);
+    scheduleUpdate(signal, [spy]);
 
     expect(spy.mock.calls.length).toBe(0);
 
@@ -18,11 +20,13 @@ describe("schedule", () => {
 
   it("works with nested schedules", () => {
     const spy = jest.fn();
-
-    schedule(() => {
-      schedule(() => spy("nested"));
+    const signal = createSignal();
+    const computation = () => {
+      scheduleUpdate(signal, [() => spy("nested")]);
       spy("flat");
-    });
+    };
+
+    scheduleUpdate(signal, [computation]);
 
     expect(spy.mock.calls.length).toBe(0);
 
@@ -34,12 +38,13 @@ describe("schedule", () => {
   });
 });
 
-describe("unschedule", () => {
+describe("unscheduleComputation", () => {
   it("unschedules a task", () => {
     const spy = jest.fn();
+    const signal = createSignal();
 
-    schedule(spy);
-    unschedule(spy);
+    scheduleUpdate(signal, [spy]);
+    unscheduleComputation(spy);
 
     expect(spy.mock.calls.length).toBe(0);
 

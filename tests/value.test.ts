@@ -30,6 +30,10 @@ describe("createValue", () => {
 
     setSignal(true);
 
+    expect(spy.mock.calls.length).toBe(0);
+
+    jest.runAllTimers();
+
     expect(spy.mock.calls.length).toBe(1);
     expect(getSignal()).toBe(true);
   });
@@ -44,6 +48,10 @@ describe("createValue", () => {
 
     setSignal(true);
 
+    expect(spy.mock.calls.length).toBe(0);
+
+    jest.runAllTimers();
+
     expect(spy.mock.calls.length).toBe(1);
   });
 
@@ -51,32 +59,52 @@ describe("createValue", () => {
     const spy = jest.fn();
     const [getSignal, setSignal] = createValue(false);
 
-    runWithContext({ computation: spy }, () => getSignal());
+    createRoot(() => {
+      runWithContext({ computation: spy }, () => getSignal());
 
-    expect(spy.mock.calls.length).toBe(0);
-    expect(getSignal()).toBe(false);
+      expect(spy.mock.calls.length).toBe(0);
+      expect(getSignal()).toBe(false);
+      
+      setSignal(false);
+      
+      expect(spy.mock.calls.length).toBe(0);
+      expect(getSignal()).toBe(false);
 
-    setSignal(false);
+      jest.runAllTimers();
 
-    expect(spy.mock.calls.length).toBe(0);
-    expect(getSignal()).toBe(false);
+      expect(spy.mock.calls.length).toBe(0);
+      expect(getSignal()).toBe(false);
+      
+      setSignal(true);
+
+      jest.runAllTimers();
+  
+      expect(spy.mock.calls.length).toBe(1);
+      expect(getSignal()).toBe(true);
+    });
   });
 
   it("can take an equality predicate", () => {
     const spy = jest.fn();
     const [getSignal, setSignal] = createValue([1], (a, b) => a[0] === b[0]);
 
-    runWithContext({ computation: spy }, () => getSignal());
-
-    expect(spy.mock.calls.length).toBe(0);
-
-    setSignal([1]);
-
-    expect(spy.mock.calls.length).toBe(0);
-
-    setSignal([2]);
-
-    expect(spy.mock.calls.length).toBe(1);
+    createRoot(() => {
+      runWithContext({ computation: spy }, () => getSignal());
+  
+      expect(spy.mock.calls.length).toBe(0);
+  
+      setSignal([1]);
+  
+      jest.runAllTimers();
+  
+      expect(spy.mock.calls.length).toBe(0);
+  
+      setSignal([2]);
+  
+      jest.runAllTimers();
+  
+      expect(spy.mock.calls.length).toBe(1);
+    })
   });
 
   it("removes subscriptions on cleanup", () => {
@@ -88,6 +116,10 @@ describe("createValue", () => {
 
     setSignal(true);
 
+    expect(spy.mock.calls.length).toBe(0);
+
+    jest.runAllTimers();
+    
     expect(spy.mock.calls.length).toBe(1);
     expect(getSignal()).toBe(true);
 
@@ -113,6 +145,8 @@ describe("createValue", () => {
 
     setSignal(getSignal() + 1);
 
+    jest.runAllTimers();
+
     expect(spy.mock.calls.length).toBe(1);
     expect(getSignal()).toBe(2);
   });
@@ -121,13 +155,19 @@ describe("createValue", () => {
     const spy = jest.fn();
     const [getSignal, setSignal] = createValue(20);
 
-    createReaction(() => {
-      while (getSignal() <= 10) {
-        setSignal(getSignal() + 1);
-      }
-    });
+    createRoot(() => {
+      createReaction(() => {
+        while (getSignal() <= 10) {
+          setSignal(getSignal() + 1);
+        }
+      });
+  
+      createReaction(() => spy(getSignal()));
+    })
 
-    createReaction(() => spy(getSignal()));
+    expect(spy.mock.calls.length).toBe(1);
+    
+    jest.runAllTimers();
 
     expect(spy.mock.calls.length).toBe(1);
 
@@ -203,5 +243,25 @@ describe("createValue", () => {
       expect(spy.mock.calls.length).toBe(2);
       expect(spy2.mock.calls.length).toBe(1);
     });
+  });
+
+  it("does not recompute computations used after change", () => {
+    const spy = jest.fn();
+    const [getSignal, setSignal] = createValue(false);
+
+    createRoot(() => {
+      setSignal(true);
+
+      createReaction(() => {
+        getSignal();
+        spy();
+      });
+    });
+
+    expect(spy.mock.calls.length).toBe(1);
+
+    jest.runAllTimers();
+
+    expect(spy.mock.calls.length).toBe(1);
   });
 });
