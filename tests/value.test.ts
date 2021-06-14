@@ -64,9 +64,9 @@ describe("createValue", () => {
 
       expect(spy.mock.calls.length).toBe(0);
       expect(getSignal()).toBe(false);
-      
+
       setSignal(false);
-      
+
       expect(spy.mock.calls.length).toBe(0);
       expect(getSignal()).toBe(false);
 
@@ -74,11 +74,11 @@ describe("createValue", () => {
 
       expect(spy.mock.calls.length).toBe(0);
       expect(getSignal()).toBe(false);
-      
+
       setSignal(true);
 
       jest.runAllTimers();
-  
+
       expect(spy.mock.calls.length).toBe(1);
       expect(getSignal()).toBe(true);
     });
@@ -90,21 +90,21 @@ describe("createValue", () => {
 
     createRoot(() => {
       runWithContext({ computation: spy }, () => getSignal());
-  
+
       expect(spy.mock.calls.length).toBe(0);
-  
+
       setSignal([1]);
-  
+
       jest.runAllTimers();
-  
+
       expect(spy.mock.calls.length).toBe(0);
-  
+
       setSignal([2]);
-  
+
       jest.runAllTimers();
-  
+
       expect(spy.mock.calls.length).toBe(1);
-    })
+    });
   });
 
   it("removes subscriptions on cleanup", () => {
@@ -119,7 +119,7 @@ describe("createValue", () => {
     expect(spy.mock.calls.length).toBe(0);
 
     jest.runAllTimers();
-    
+
     expect(spy.mock.calls.length).toBe(1);
     expect(getSignal()).toBe(true);
 
@@ -161,12 +161,12 @@ describe("createValue", () => {
           setSignal(getSignal() + 1);
         }
       });
-  
+
       createReaction(() => spy(getSignal()));
-    })
+    });
 
     expect(spy.mock.calls.length).toBe(1);
-    
+
     jest.runAllTimers();
 
     expect(spy.mock.calls.length).toBe(1);
