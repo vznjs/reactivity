@@ -1,5 +1,6 @@
+import type { Computation } from "./signal";
 import { createQueue, flushQueue } from "./queue";
-import type { Computation, Signal } from "./signal";
+import type { Signal } from "./signal";
 
 const updates = createQueue();
 const signalsQueue = new Map<Signal, Computation[]>();
@@ -23,28 +24,31 @@ function computeUpdates() {
   for (let index = 0; index < unscheduledArray.length; index++) {
     updates.delete(unscheduledArray[index]);
   }
-  
+
   signalsQueue.clear();
   unscheduledQueue.clear();
 
   flushQueue(updates);
 }
 
-export function scheduleUpdate(signal: Signal, computations: Computation[]): void {
+export function scheduleUpdate(
+  signal: Signal,
+  computations: Computation[]
+): void {
   if (isComputing) {
     for (let index = 0; index < computations.length; index++) {
       updates.add(computations[index]);
     }
     return;
-  };
+  }
 
   signalsQueue.set(signal, computations);
-  
+
   if (isScheduled) return;
 
   queueMicrotask(() => {
     isComputing = true;
-    
+
     try {
       computeUpdates();
     } finally {
@@ -56,7 +60,7 @@ export function scheduleUpdate(signal: Signal, computations: Computation[]): voi
   isScheduled = true;
 }
 
-export function unscheduleComputation<T>(computation: () => T): void {
+export function unscheduleComputation(computation: Computation): void {
   if (isComputing) {
     updates.delete(computation);
     return;

@@ -134,6 +134,12 @@ describe("createMemo", () => {
       getMemo();
 
       expect(spy.mock.calls.length).toBe(2);
+      
+      setSignal(3);
+
+      jest.runAllTimers();
+
+      expect(spy.mock.calls.length).toBe(3);
     });
   });
 });

@@ -1,8 +1,9 @@
+import type { Computation } from "./signal";
 import type { Queue } from "./queue";
 
 export interface Context {
   disposer?: Queue;
-  computation?: () => void;
+  computation?: Computation;
 }
 
 let context: Context | undefined;
