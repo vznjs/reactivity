@@ -270,40 +270,6 @@ createReaction(() => {
 mySignal.notify(); // notify all computations about a change (the reaction will be scheduled for recomputation)
 ```
 
-## `schedule`
-
-It allows you to schedule some tasks in the microtasks queue (after your code has been executed), respecting the order of other tasks and throwing possible errors in an async (non-blocking) way.
-
-```js
-import { schedule } from "@vzn/reactivity";
-
-console.log("Sync1");
-schedule(() => console.log("Async"));
-console.log("Sync2");
-
-// LOG: Sync1
-// LOG: Sync2
-// LOG: Async
-```
-
-## `unschedule`
-
-It allows you to unschedule tasks form the scheduler.
-
-```js
-import { schedule, unschedule } from "@vzn/reactivity";
-
-const myTask = () => console.log("Async");
-
-console.log("Sync1");
-schedule(myTask);
-unschedule(myTask);
-console.log("Sync2");
-
-// LOG: Sync1
-// LOG: Sync2
-```
-
 ## `createQueue`
 
 It creates a queue of unique tasks with `Set<() => void>` interface. It can be used as a context's disposer.
