@@ -69,8 +69,8 @@ describe("createMemo", () => {
       expect(spy.mock.calls.length).toBe(0);
 
       const getMemo = createMemo(() => {
-        getSignal();
         spy();
+        return getSignal();
       });
 
       expect(spy.mock.calls.length).toBe(0);
@@ -94,10 +94,12 @@ describe("createMemo", () => {
 
       flushDisposer(disposer);
 
+      expect(spy.mock.calls.length).toBe(2);
+      
       setSignal(4);
-
+      
       jest.runAllTimers();
-
+      
       expect(spy.mock.calls.length).toBe(2);
 
       getMemo();
@@ -132,13 +134,15 @@ describe("createMemo", () => {
 
       getMemo();
 
-      expect(spy.mock.calls.length).toBe(2);
+      jest.runAllTimers();
+
+      expect(spy.mock.calls.length).toBe(1);
 
       setSignal(3);
 
       jest.runAllTimers();
 
-      expect(spy.mock.calls.length).toBe(3);
+      expect(spy.mock.calls.length).toBe(2);
     });
   });
 });

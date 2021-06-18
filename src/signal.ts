@@ -42,8 +42,9 @@ export function createSignal(): Signal {
   }
 
   function notify(): void {
+    revision = ++CURRENT_REVISION;
+
     if (computations.size) {
-      revision = ++CURRENT_REVISION;
       scheduleUpdate(signal, [...computations]);
     }
   }

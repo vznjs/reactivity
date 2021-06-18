@@ -36,9 +36,12 @@ export function createMemo<T>(fn: () => T): () => T {
   }
 
   onCleanup(() => {
-    Reflect.deleteProperty(computation, SIGNALS);
+    const signals = new Set(computation[SIGNALS]);
+    
     unscheduleComputation(computation);
     flushDisposer(disposer);
+    
+    computation[SIGNALS] = signals;
   });
 
   function getter() {
