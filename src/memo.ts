@@ -4,16 +4,22 @@ import { createSignal, getRevision, Revision, Signal } from "./signal";
 import { Computation, SIGNALS } from "./signal";
 import { unscheduleComputation } from "./scheduler";
 
-function getLatestRevision(signals?: Set<Signal>): Revision {
-  return signals
-    ? Math.max(...[...signals].map((signal) => signal.revision))
-    : 0;
+function getLatestRevision(signals: Set<Signal> | Signal[] = []): Revision {
+  const arr = [...signals];
+  let max = 0;
+
+  for (let index = 0; index < arr.length; index++) {
+    const signal = arr[index];
+    if (signal.revision > max) max = signal.revision;
+  }
+
+  return max;
 }
 
 export function createMemo<T>(fn: () => T): () => T {
   let memoValue: T;
-  let lastRevision = 0;
   let currentRevision = getRevision();
+  let lastRevision = currentRevision;
 
   const signal = createSignal();
   const disposer: Disposer = new Set();
