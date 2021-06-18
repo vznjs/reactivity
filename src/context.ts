@@ -6,20 +6,23 @@ export interface Context {
   computation?: Computation;
 }
 
-let context: Context | undefined;
+const context: Context = {};
 
 export function getContext(): Context {
-  return context || {};
+  return context;
 }
 
 export function runWithContext<T>(newContext: Context, fn: () => T): T {
-  const currentContext = context;
+  const currentDisposer = context.disposer;
+  const currentComputation = context.computation;
 
-  context = Object.freeze({ ...getContext(), ...newContext });
+  context.disposer = newContext.disposer;
+  context.computation = newContext.computation;
 
   try {
     return fn();
   } finally {
-    context = currentContext;
+    context.disposer = currentDisposer;
+    context.computation = currentComputation;
   }
 }
