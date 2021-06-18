@@ -16,8 +16,8 @@ export function runWithContext<T>(newContext: Context, fn: () => T): T {
   const currentDisposer = context.disposer;
   const currentComputation = context.computation;
 
-  context.disposer = newContext.disposer;
-  context.computation = newContext.computation;
+  if ("disposer" in newContext) context.disposer = newContext.disposer;
+  if ("computation" in newContext) context.computation = newContext.computation;
 
   try {
     return fn();
