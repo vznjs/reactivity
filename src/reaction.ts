@@ -6,24 +6,15 @@ import { createQueue, flushQueue } from "./queue";
 export function createReaction<T>(fn: (v: T) => T, value: T): void;
 export function createReaction<T>(fn: (v?: T) => T | undefined): void;
 export function createReaction<T>(fn: (v?: T) => T, value?: T): void {
-  let lastValue = value;
-
   const disposer = createQueue();
 
   function computation() {
     flushQueue(disposer);
-    recompute();
-  }
-
-  function recompute() {
-    runWithContext(
-      { computation, disposer },
-      () => (lastValue = fn(lastValue))
-    );
+    runWithContext({ computation, disposer }, () => (value = fn(value)));
   }
 
   try {
-    recompute();
+    runWithContext({ computation, disposer }, () => (value = fn(value)));
   } finally {
     onCleanup(() => {
       unscheduleComputation(computation);
