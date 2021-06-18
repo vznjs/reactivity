@@ -1,43 +1,37 @@
 import type { Computation } from "./signal";
-import { Queue, flushQueue } from "./queue";
+import { flushQueue } from "./queue";
 import type { Signal } from "./signal";
 
-const updates: Queue = new Set();
 const signalsQueue = new Map<Signal, Computation[]>();
-const unscheduledQueue = new Set<Computation>();
+const unscheduleQueue = new Set<Computation>();
+
+let updatesQueue: Set<Computation> | undefined;
 
 let isScheduled = false;
-let isComputing = false;
 
-function computeUpdates() {
-  const queueArray = [...signalsQueue.values()];
-  const unscheduledArray = [...unscheduledQueue];
-
-  for (let index = 0; index < queueArray.length; index++) {
-    const computationsArray = queueArray[index];
-
-    for (let index = 0; index < computationsArray.length; index++) {
-      updates.add(computationsArray[index]);
-    }
-  }
-
-  for (let index = 0; index < unscheduledArray.length; index++) {
-    updates.delete(unscheduledArray[index]);
-  }
+function scheduler() {
+  updatesQueue = new Set(
+    [...signalsQueue.values()]
+      .flat()
+      .filter((computation) => !unscheduleQueue.has(computation))
+  );
 
   signalsQueue.clear();
-  unscheduledQueue.clear();
+  unscheduleQueue.clear();
 
-  flushQueue(updates);
+  flushQueue(updatesQueue);
+
+  updatesQueue = undefined;
+  isScheduled = false;
 }
 
 export function scheduleUpdate(
   signal: Signal,
   computations: Computation[]
 ): void {
-  if (isComputing) {
+  if (updatesQueue) {
     for (let index = 0; index < computations.length; index++) {
-      updates.add(computations[index]);
+      updatesQueue.add(computations[index]);
     }
     return;
   }
@@ -46,25 +40,16 @@ export function scheduleUpdate(
 
   if (isScheduled) return;
 
-  queueMicrotask(() => {
-    isComputing = true;
-
-    try {
-      computeUpdates();
-    } finally {
-      isComputing = false;
-      isScheduled = false;
-    }
-  });
+  queueMicrotask(scheduler);
 
   isScheduled = true;
 }
 
 export function unscheduleComputation(computation: Computation): void {
-  if (isComputing) {
-    updates.delete(computation);
+  if (updatesQueue) {
+    updatesQueue.delete(computation);
     return;
   }
 
-  if (isScheduled) unscheduledQueue.add(computation);
+  if (isScheduled) unscheduleQueue.add(computation);
 }
