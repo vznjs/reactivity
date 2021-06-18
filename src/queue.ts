@@ -19,7 +19,3 @@ export function flushQueue(queue: Queue): void {
 
   queue.clear();
 }
-
-export function createQueue(): Queue {
-  return new Set<() => void>();
-}

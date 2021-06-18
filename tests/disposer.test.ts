@@ -1,13 +1,13 @@
 import { onCleanup } from "../src/disposer";
 import { runWithContext } from "../src/context";
-import { createQueue, flushQueue } from "../src/queue";
+import { Queue, flushQueue } from "../src/queue";
 import { createRoot } from "../src/root";
 
 jest.useFakeTimers("modern");
 
 describe("onCleanup", () => {
   it("schedules disposer and calls it on flush", () => {
-    const disposer = createQueue();
+    const disposer: Queue = new Set();
     const cleanupMock = jest.fn();
 
     runWithContext({ disposer }, () => {

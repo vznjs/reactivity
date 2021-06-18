@@ -270,26 +270,14 @@ createReaction(() => {
 mySignal.notify(); // notify all computations about a change (the reaction will be scheduled for recomputation)
 ```
 
-## `createQueue`
-
-It creates a queue of unique tasks with `Set<() => void>` interface. It can be used as a context's disposer.
-
-```js
-import { createQueue } from "@vzn/reactivity";
-
-const myDisposer = createQueue();
-
-myDisposer.add(() => console.log("clean me"));
-```
-
 ## `flushQueue`
 
 It flushes the queue of tasks with async errors handling and detached Reactive Context.
 
 ```js
-import { createQueue, flushQueue } from "@vzn/reactivity";
+import { Queue, flushQueue } from "@vzn/reactivity";
 
-const myDisposer = createQueue();
+const myDisposer: Queue = new Set()
 
 myDisposer.add(() => console.log("clean me"));
 

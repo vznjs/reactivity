@@ -1,8 +1,8 @@
 import type { Computation } from "./signal";
-import { createQueue, flushQueue } from "./queue";
+import { Queue, flushQueue } from "./queue";
 import type { Signal } from "./signal";
 
-const updates = createQueue();
+const updates: Queue = new Set();
 const signalsQueue = new Map<Signal, Computation[]>();
 const unscheduledQueue = new Set<Computation>();
 

@@ -1,7 +1,7 @@
 import { onCleanup } from "../src/disposer";
 import { createReaction } from "../src/reaction";
 import { runWithContext } from "../src/context";
-import { createQueue, flushQueue } from "../src/queue";
+import { Queue, flushQueue } from "../src/queue";
 import { createValue } from "../src/value";
 
 jest.useFakeTimers("modern");
@@ -9,7 +9,7 @@ jest.useFakeTimers("modern");
 describe("createReaction", () => {
   it("reruns and cleanups on change", () => {
     const [getSignal, setSignal] = createValue(1);
-    const disposer = createQueue();
+    const disposer: Queue = new Set();
     const reactionSpy = jest.fn();
     const cleanupSpy = jest.fn();
 
@@ -119,7 +119,7 @@ describe("createReaction", () => {
   it("does not run scheduled reaction after context cleanup", () => {
     const cleanupSpy = jest.fn();
     const reactionSpy = jest.fn();
-    const disposer = createQueue();
+    const disposer: Queue = new Set();
     const [getSignal, setSignal] = createValue(false);
 
     runWithContext({ disposer }, () => {

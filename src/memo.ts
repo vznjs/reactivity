@@ -1,6 +1,6 @@
 import { onCleanup } from "./disposer";
 import { runWithContext } from "./context";
-import { createQueue, flushQueue } from "./queue";
+import { flushQueue, Queue } from "./queue";
 import { createSignal, getRevision, Revision, Signal } from "./signal";
 import { Computation, SIGNALS } from "./signal";
 import { unscheduleComputation } from "./scheduler";
@@ -17,7 +17,7 @@ export function createMemo<T>(fn: () => T): () => T {
   let currentRevision = getRevision();
 
   const signal = createSignal();
-  const disposer = createQueue();
+  const disposer: Queue = new Set();
 
   const computation: Computation = () => {
     lastRevision = getLatestRevision(computation[SIGNALS]);

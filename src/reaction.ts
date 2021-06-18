@@ -1,12 +1,12 @@
 import { unscheduleComputation } from "./scheduler";
 import { onCleanup } from "./disposer";
 import { runWithContext } from "./context";
-import { createQueue, flushQueue } from "./queue";
+import { flushQueue, Queue } from "./queue";
 
 export function createReaction<T>(fn: (v: T) => T, value: T): void;
 export function createReaction<T>(fn: (v?: T) => T | undefined): void;
 export function createReaction<T>(fn: (v?: T) => T, value?: T): void {
-  const disposer = createQueue();
+  const disposer: Queue = new Set();
 
   function computation() {
     flushQueue(disposer);

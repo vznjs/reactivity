@@ -1,7 +1,7 @@
 import { getContext } from "./context";
-import { createQueue, flushQueue } from "./queue";
+import { flushQueue, Queue } from "./queue";
 
-const disposer = createQueue();
+const disposer: Queue = new Set();
 
 function flush() {
   flushQueue(disposer);

@@ -3,7 +3,7 @@ import { createReaction } from "../src/reaction";
 import { createValue } from "../src/value";
 import { onCleanup } from "../src/disposer";
 import { runWithContext } from "../src/context";
-import { createQueue, flushQueue } from "../src/queue";
+import { Queue, flushQueue } from "../src/queue";
 
 jest.useFakeTimers("modern");
 
@@ -63,7 +63,7 @@ describe("createMemo", () => {
 
   it("does recompute on every change in reaction", () => {
     const [getSignal, setSignal] = createValue(1);
-    const disposer = createQueue();
+    const disposer: Queue = new Set();
     const spy = jest.fn();
 
     runWithContext({ disposer }, () => {
@@ -111,7 +111,7 @@ describe("createMemo", () => {
     const spy = jest.fn();
 
     const [getSignal, setSignal] = createValue(1);
-    const disposer = createQueue();
+    const disposer: Queue = new Set();
 
     runWithContext({ disposer }, () => {
       const getMemo = createMemo(() => {
