@@ -29,22 +29,19 @@ export function createValue<T>(
 ): [() => T | undefined, (newValue: T) => void] {
   const signal = createSignal();
 
-  let currentValue = value;
-
   compare ??= true;
 
   function getter(): T | undefined {
     signal.track();
-    return currentValue;
+    return value;
   }
 
   function setter(newValue: T): void {
-    if (typeof compare === "function" && compare(currentValue, newValue))
-      return;
+    if (typeof compare === "function" && compare(value, newValue)) return;
 
-    if (compare === true && currentValue === newValue) return;
+    if (compare === true && value === newValue) return;
 
-    currentValue = newValue;
+    value = newValue;
 
     signal.notify();
   }
