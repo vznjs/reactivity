@@ -30,29 +30,31 @@ export function createSignal(): Signal {
   function track(): void {
     const { computation } = getContext();
 
-    if (!computation || computations.has(computation)) return;
-
-    computations.add(computation);
-    computation[SIGNALS]?.add(signal);
-
-    onCleanup(() => {
-      computations.delete(computation);
-      computation[SIGNALS]?.delete(signal);
-    });
+    if (computation && !computations.has(computation)) {
+      computations.add(computation);
+      computation[SIGNALS]?.add(signal);
+  
+      onCleanup(() => {
+        computations.delete(computation);
+        computation[SIGNALS]?.delete(signal);
+      });
+    };
   }
 
   function notify(): void {
-    revision = ++CURRENT_REVISION;
-    scheduleUpdate(signal, [...computations]);
+    if (computations.size) {
+      revision = ++CURRENT_REVISION;
+      scheduleUpdate(signal, [...computations]);
+    }
   }
 
-  const signal = Object.freeze({
+  const signal = {
     track,
     notify,
     get revision() {
       return revision;
     },
-  });
+  } as const;
 
   return signal;
 }
