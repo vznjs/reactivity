@@ -5,7 +5,7 @@ export type Queue = Set<() => void>;
 export function flushQueue(queue: Queue): void {
   if (!queue.size) return;
 
-  runWithContext({ disposer: undefined, computation: undefined }, () => {
+  function flush() {
     for (const task of queue) {
       try {
         task();
@@ -15,7 +15,9 @@ export function flushQueue(queue: Queue): void {
         }, 0);
       }
     }
-  });
+  }
+
+  runWithContext({ disposer: undefined, computation: undefined }, flush);
 
   queue.clear();
 }

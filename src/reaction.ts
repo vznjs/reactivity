@@ -7,17 +7,23 @@ export function createReaction<T>(fn: (v?: T) => T | undefined): void;
 export function createReaction<T>(fn: (v?: T) => T, value?: T): void {
   const disposer: Disposer = new Set();
 
+  function recompute() {
+    value = fn(value);
+  }
+
   function computation() {
     flushDisposer(disposer);
-    runWithContext({ computation, disposer }, () => (value = fn(value)));
+    runWithContext({ computation, disposer }, recompute);
+  }
+
+  function cleanup() {
+    unscheduleComputation(computation);
+    flushDisposer(disposer);
   }
 
   try {
-    runWithContext({ computation, disposer }, () => (value = fn(value)));
+    runWithContext({ computation, disposer }, recompute);
   } finally {
-    onCleanup(() => {
-      unscheduleComputation(computation);
-      flushDisposer(disposer);
-    });
+    onCleanup(cleanup);
   }
 }
