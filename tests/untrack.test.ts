@@ -1,7 +1,6 @@
 import { untrack } from "../src/untrack";
-import { onCleanup } from "../src/disposer";
+import { Disposer, flushDisposer, onCleanup } from "../src/disposer";
 import { getContext, runWithContext } from "../src/context";
-import { Queue, flushQueue } from "../src/queue";
 
 jest.useFakeTimers("modern");
 
@@ -27,7 +26,7 @@ describe("untrack", () => {
   });
 
   it("runs cleanups in computation correctly", () => {
-    const disposer: Queue = new Set();
+    const disposer: Disposer = new Set();
     const cleanupMock = jest.fn();
 
     expect(getContext().disposer).toBeUndefined();
@@ -40,7 +39,7 @@ describe("untrack", () => {
 
     expect(cleanupMock.mock.calls.length).toBe(0);
 
-    flushQueue(disposer);
+    flushDisposer(disposer);
 
     expect(cleanupMock.mock.calls.length).toBe(1);
   });

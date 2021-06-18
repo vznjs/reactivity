@@ -1,7 +1,6 @@
-import { onCleanup } from "../src/disposer";
+import { Disposer, flushDisposer, onCleanup } from "../src/disposer";
 import { createReaction } from "../src/reaction";
 import { runWithContext } from "../src/context";
-import { Queue, flushQueue } from "../src/queue";
 import { createValue } from "../src/value";
 
 jest.useFakeTimers("modern");
@@ -9,7 +8,7 @@ jest.useFakeTimers("modern");
 describe("createReaction", () => {
   it("reruns and cleanups on change", () => {
     const [getSignal, setSignal] = createValue(1);
-    const disposer: Queue = new Set();
+    const disposer: Disposer = new Set();
     const reactionSpy = jest.fn();
     const cleanupSpy = jest.fn();
 
@@ -36,7 +35,7 @@ describe("createReaction", () => {
     expect(reactionSpy.mock.calls.length).toBe(3);
     expect(cleanupSpy.mock.calls.length).toBe(2);
 
-    flushQueue(disposer);
+    flushDisposer(disposer);
 
     expect(reactionSpy.mock.calls.length).toBe(3);
     expect(cleanupSpy.mock.calls.length).toBe(3);
@@ -119,7 +118,7 @@ describe("createReaction", () => {
   it("does not run scheduled reaction after context cleanup", () => {
     const cleanupSpy = jest.fn();
     const reactionSpy = jest.fn();
-    const disposer: Queue = new Set();
+    const disposer: Disposer = new Set();
     const [getSignal, setSignal] = createValue(false);
 
     runWithContext({ disposer }, () => {
@@ -138,7 +137,7 @@ describe("createReaction", () => {
     expect(cleanupSpy.mock.calls.length).toBe(0);
     expect(reactionSpy.mock.calls.length).toBe(1);
 
-    flushQueue(disposer);
+    flushDisposer(disposer);
 
     expect(cleanupSpy.mock.calls.length).toBe(1);
 

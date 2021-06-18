@@ -270,22 +270,6 @@ createReaction(() => {
 mySignal.notify(); // notify all computations about a change (the reaction will be scheduled for recomputation)
 ```
 
-## `flushQueue`
-
-It flushes the queue of tasks with async errors handling and detached Reactive Context.
-
-```js
-import { Queue, flushQueue } from "@vzn/reactivity";
-
-const myDisposer: Queue = new Set()
-
-myDisposer.add(() => console.log("clean me"));
-
-flushQueue(myDisposer);
-
-// LOG: clean me
-```
-
 ## `getContext`
 
 It returns the current Reactive Context. Useful for retrieving current computation and disposer, as well as remembering the context, e.g., for async operations.

@@ -1,6 +1,5 @@
-import { onCleanup } from "./disposer";
+import { Disposer, flushDisposer, onCleanup } from "./disposer";
 import { runWithContext } from "./context";
-import { flushQueue, Queue } from "./queue";
 import { createSignal, getRevision, Revision, Signal } from "./signal";
 import { Computation, SIGNALS } from "./signal";
 import { unscheduleComputation } from "./scheduler";
@@ -17,11 +16,11 @@ export function createMemo<T>(fn: () => T): () => T {
   let currentRevision = getRevision();
 
   const signal = createSignal();
-  const disposer: Queue = new Set();
+  const disposer: Disposer = new Set();
 
   const computation: Computation = () => {
     lastRevision = getLatestRevision(computation[SIGNALS]);
-    flushQueue(disposer);
+    flushDisposer(disposer);
     signal.notify();
   };
 
@@ -33,7 +32,7 @@ export function createMemo<T>(fn: () => T): () => T {
   onCleanup(() => {
     Reflect.deleteProperty(computation, SIGNALS);
     unscheduleComputation(computation);
-    flushQueue(disposer);
+    flushDisposer(disposer);
   });
 
   function getter() {
@@ -45,7 +44,7 @@ export function createMemo<T>(fn: () => T): () => T {
     } else if (currentRevision < lastRevision) {
       recompute();
     } else if (currentRevision < getLatestRevision(signals)) {
-      flushQueue(disposer);
+      flushDisposer(disposer);
       recompute();
     }
 
