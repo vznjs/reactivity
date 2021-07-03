@@ -4,6 +4,8 @@ import { scheduleUpdate } from "./scheduler";
 
 export const SIGNALS = Symbol("SIGNALS");
 
+let CLOCK: Revision = 0;
+
 export type Computation = {
   (): void;
   [SIGNALS]?: Set<Signal>;
@@ -11,51 +13,48 @@ export type Computation = {
 
 export type Revision = number;
 
-let CURRENT_REVISION: Revision = 0;
-
 export type Signal = {
-  track(): void;
-  notify(): void;
-  get revision(): Revision;
+  computations?: Computation[];
+  revision: Revision;
 };
 
 export function getRevision(): Revision {
-  return CURRENT_REVISION;
+  return CLOCK;
+}
+
+export function trackSignal(signal: Signal): void {
+  const { computation } = getContext();
+
+  if (!computation) return;
+  if (signal.computations?.includes(computation)) return;
+
+  if (signal.computations) {
+    signal.computations.push(computation);
+  } else {
+    signal.computations = [computation];
+  }
+
+  computation[SIGNALS]?.add(signal);
+
+  onCleanup(() => {
+    if (signal.computations) {
+      const index = signal.computations.indexOf(computation);
+      signal.computations.splice(index, 1);
+    }
+    computation[SIGNALS]?.delete(signal);
+  });
+}
+
+export function notifySignal(signal: Signal): void {
+  signal.revision = ++CLOCK;
+
+  if (signal.computations?.length) {
+    scheduleUpdate(signal, [...signal.computations]);
+  }
 }
 
 export function createSignal(): Signal {
-  const computations = new Set<Computation>();
-  let revision = CURRENT_REVISION;
-
-  function track(): void {
-    const { computation } = getContext();
-
-    if (computation && !computations.has(computation)) {
-      computations.add(computation);
-      computation[SIGNALS]?.add(signal);
-  
-      onCleanup(() => {
-        computations.delete(computation);
-        computation[SIGNALS]?.delete(signal);
-      });
-    };
-  }
-
-  function notify(): void {
-    revision = ++CURRENT_REVISION;
-
-    if (computations.size) {
-      scheduleUpdate(signal, [...computations]);
-    }
-  }
-
-  const signal = {
-    track,
-    notify,
-    get revision() {
-      return revision;
-    },
+  return {
+    revision: CLOCK,
   } as const;
-
-  return signal;
 }

@@ -1,6 +1,13 @@
 import { Disposer, flushDisposer, onCleanup } from "./disposer";
 import { runWithContext } from "./context";
-import { createSignal, getRevision, Revision, Signal } from "./signal";
+import {
+  createSignal,
+  getRevision,
+  notifySignal,
+  Revision,
+  Signal,
+  trackSignal,
+} from "./signal";
 import { Computation, SIGNALS } from "./signal";
 import { unscheduleComputation } from "./scheduler";
 
@@ -27,7 +34,7 @@ export function createMemo<T>(fn: () => T): () => T {
   const computation: Computation = () => {
     lastRevision = getLatestRevision(computation[SIGNALS]);
     flushDisposer(disposer);
-    signal.notify();
+    notifySignal(signal);
   };
 
   function recompute() {
@@ -57,7 +64,7 @@ export function createMemo<T>(fn: () => T): () => T {
       recompute();
     }
 
-    signal.track();
+    trackSignal(signal);
 
     return memoValue;
   }
