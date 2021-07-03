@@ -43,7 +43,7 @@ export function scheduleUpdate(signal: Signal, computations: Queue): void {
   isScheduled = true;
 }
 
-export function unscheduleComputation(computation: () => void): void {
+export function cancelComputation(computation: () => void): void {
   if (updatesQueue) {
     const index = updatesQueue.indexOf(computation);
     if (index > -1) updatesQueue.splice(index, 1);

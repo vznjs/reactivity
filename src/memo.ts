@@ -9,7 +9,7 @@ import {
   trackSignal,
 } from "./signal";
 import { Computation, SIGNALS } from "./signal";
-import { unscheduleComputation } from "./scheduler";
+import { cancelComputation } from "./scheduler";
 
 function getLatestRevision(signals?: Signal[]): Revision {
   if (!signals) return 0;
@@ -45,7 +45,7 @@ export function createMemo<T>(fn: () => T): () => T {
   onCleanup(() => {
     const signals = [...(computation[SIGNALS] || [])];
 
-    unscheduleComputation(computation);
+    cancelComputation(computation);
     flushDisposer(disposer);
 
     computation[SIGNALS] = signals;

@@ -1,4 +1,4 @@
-import { scheduleUpdate, unscheduleComputation } from "../src/scheduler";
+import { scheduleUpdate, cancelComputation } from "../src/scheduler";
 import { createSignal } from "../src/signal";
 
 jest.useFakeTimers("modern");
@@ -38,13 +38,13 @@ describe("scheduleUpdate", () => {
   });
 });
 
-describe("unscheduleComputation", () => {
+describe("cancelComputation", () => {
   it("unschedules a task", () => {
     const spy = jest.fn();
     const signal = createSignal();
 
     scheduleUpdate(signal, [spy]);
-    unscheduleComputation(spy);
+    cancelComputation(spy);
 
     expect(spy.mock.calls.length).toBe(0);
 
