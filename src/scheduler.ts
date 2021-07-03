@@ -1,20 +1,17 @@
-import type { Computation } from "./signal";
-import { flushQueue } from "./queue";
+import { flushQueue, Queue } from "./queue";
 import type { Signal } from "./signal";
 
-const signalsQueue = new Map<Signal, Computation[]>();
-const unscheduleQueue = new Set<Computation>();
+const signalsQueue = new Map<Signal, Queue>();
+const unscheduleQueue = new Set<() => void>();
 
-let updatesQueue: Set<Computation> | undefined;
+let updatesQueue: Queue | undefined;
 
 let isScheduled = false;
 
 function scheduler() {
-  updatesQueue = new Set(
-    [...signalsQueue.values()]
-      .flat()
-      .filter((computation) => !unscheduleQueue.has(computation))
-  );
+  updatesQueue = [...signalsQueue.values()]
+    .flat()
+    .filter((computation) => !unscheduleQueue.has(computation));
 
   signalsQueue.clear();
   unscheduleQueue.clear();
@@ -25,13 +22,14 @@ function scheduler() {
   isScheduled = false;
 }
 
-export function scheduleUpdate(
-  signal: Signal,
-  computations: Computation[]
-): void {
+export function scheduleUpdate(signal: Signal, computations: Queue): void {
   if (updatesQueue) {
     for (let index = 0; index < computations.length; index++) {
-      updatesQueue.add(computations[index]);
+      const computation = computations[index];
+
+      if (updatesQueue.indexOf(computation) === -1) {
+        updatesQueue.push(computations[index]);
+      }
     }
     return;
   }
@@ -45,9 +43,10 @@ export function scheduleUpdate(
   isScheduled = true;
 }
 
-export function unscheduleComputation(computation: Computation): void {
+export function unscheduleComputation(computation: () => void): void {
   if (updatesQueue) {
-    updatesQueue.delete(computation);
+    const index = updatesQueue.indexOf(computation);
+    if (index > -1) updatesQueue.splice(index, 1);
     return;
   }
 

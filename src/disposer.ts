@@ -1,8 +1,8 @@
 import { getContext } from "./context";
-import { flushQueue } from "./queue";
+import { flushQueue, Queue } from "./queue";
 
 export type Disposer = {
-  queue?: Array<() => void>;
+  queue?: Queue;
 };
 
 const globalDisposer: Disposer = createDisposer();
