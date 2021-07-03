@@ -1,4 +1,4 @@
-import { Disposer, flushDisposer, onCleanup } from "../src/disposer";
+import { createDisposer, flushDisposer, onCleanup } from "../src/disposer";
 import { runWithContext } from "../src/context";
 import { createRoot } from "../src/root";
 
@@ -6,7 +6,7 @@ jest.useFakeTimers("modern");
 
 describe("onCleanup", () => {
   it("schedules disposer and calls it on flush", () => {
-    const disposer: Disposer = new Set();
+    const disposer = createDisposer();
     const cleanupMock = jest.fn();
 
     runWithContext({ disposer }, () => {

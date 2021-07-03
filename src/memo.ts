@@ -1,4 +1,4 @@
-import { Disposer, flushDisposer, onCleanup } from "./disposer";
+import { createDisposer, flushDisposer, onCleanup } from "./disposer";
 import { runWithContext } from "./context";
 import {
   createSignal,
@@ -29,7 +29,7 @@ export function createMemo<T>(fn: () => T): () => T {
   let lastRevision = currentRevision;
 
   const signal = createSignal();
-  const disposer: Disposer = new Set();
+  const disposer = createDisposer();
 
   const computation: Computation = () => {
     lastRevision = getLatestRevision(computation[SIGNALS]);
@@ -44,10 +44,10 @@ export function createMemo<T>(fn: () => T): () => T {
 
   onCleanup(() => {
     const signals = new Set(computation[SIGNALS]);
-    
+
     unscheduleComputation(computation);
     flushDisposer(disposer);
-    
+
     computation[SIGNALS] = signals;
   });
 

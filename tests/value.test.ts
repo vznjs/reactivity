@@ -2,7 +2,7 @@ import { createRoot } from "../src/root";
 import { createValue } from "../src/value";
 import { createReaction } from "../src/reaction";
 import { runWithContext } from "../src/context";
-import { Disposer, flushDisposer, onCleanup } from "../src/disposer";
+import { createDisposer, flushDisposer, onCleanup } from "../src/disposer";
 
 jest.useFakeTimers("modern");
 
@@ -109,7 +109,7 @@ describe("createValue", () => {
   it("removes subscriptions on cleanup", () => {
     const spy = jest.fn();
     const [getSignal, setSignal] = createValue(false);
-    const disposer: Disposer = new Set();
+    const disposer = createDisposer();
 
     runWithContext({ disposer, computation: spy }, () => getSignal());
 
@@ -133,7 +133,7 @@ describe("createValue", () => {
   it("ignores recomputation with circular dependencies", () => {
     const spy = jest.fn();
     const [getSignal, setSignal] = createValue(0);
-    const disposer: Disposer = new Set();
+    const disposer = createDisposer();
 
     runWithContext({ disposer, computation: spy }, () =>
       setSignal(getSignal() + 1)
@@ -208,7 +208,7 @@ describe("createValue", () => {
     const spy = jest.fn();
     const spy2 = jest.fn();
     const [getData, setData] = createValue(1);
-    const disposer: Disposer = new Set();
+    const disposer = createDisposer();
 
     createRoot(() => {
       createReaction(() => {

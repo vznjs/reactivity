@@ -1,10 +1,8 @@
 import { runWithContext } from "./context";
 
-export type Queue = Set<() => void>;
+export type Queue = Array<() => void> | Set<() => void>;
 
 export function flushQueue(queue: Queue): void {
-  if (!queue.size) return;
-
   function flush() {
     for (const task of queue) {
       try {
@@ -18,6 +16,4 @@ export function flushQueue(queue: Queue): void {
   }
 
   runWithContext({ disposer: undefined, computation: undefined }, flush);
-
-  queue.clear();
 }

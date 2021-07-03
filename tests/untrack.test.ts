@@ -1,5 +1,5 @@
 import { untrack } from "../src/untrack";
-import { Disposer, flushDisposer, onCleanup } from "../src/disposer";
+import { createDisposer, flushDisposer, onCleanup } from "../src/disposer";
 import { getContext, runWithContext } from "../src/context";
 
 jest.useFakeTimers("modern");
@@ -26,7 +26,7 @@ describe("untrack", () => {
   });
 
   it("runs cleanups in computation correctly", () => {
-    const disposer: Disposer = new Set();
+    const disposer = createDisposer();
     const cleanupMock = jest.fn();
 
     expect(getContext().disposer).toBeUndefined();

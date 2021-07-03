@@ -1,7 +1,7 @@
 import { createMemo } from "../src/memo";
 import { createReaction } from "../src/reaction";
 import { createValue } from "../src/value";
-import { Disposer, flushDisposer, onCleanup } from "../src/disposer";
+import { createDisposer, flushDisposer, onCleanup } from "../src/disposer";
 import { runWithContext } from "../src/context";
 
 jest.useFakeTimers("modern");
@@ -62,7 +62,7 @@ describe("createMemo", () => {
 
   it("does recompute on every change in reaction", () => {
     const [getSignal, setSignal] = createValue(1);
-    const disposer: Disposer = new Set();
+    const disposer = createDisposer();
     const spy = jest.fn();
 
     runWithContext({ disposer }, () => {
@@ -112,7 +112,7 @@ describe("createMemo", () => {
     const spy = jest.fn();
 
     const [getSignal, setSignal] = createValue(1);
-    const disposer: Disposer = new Set();
+    const disposer = createDisposer();
 
     runWithContext({ disposer }, () => {
       const getMemo = createMemo(() => {

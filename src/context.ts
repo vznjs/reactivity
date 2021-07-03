@@ -1,8 +1,8 @@
 import type { Computation } from "./signal";
-import type { Queue } from "./queue";
+import type { Disposer } from "./disposer";
 
 export interface Context {
-  disposer?: Queue;
+  disposer?: Disposer;
   computation?: Computation;
 }
 

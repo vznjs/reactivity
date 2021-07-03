@@ -49,7 +49,7 @@ export function notifySignal(signal: Signal): void {
   signal.revision = ++CLOCK;
 
   if (signal.computations?.length) {
-    scheduleUpdate(signal, [...signal.computations]);
+    scheduleUpdate(signal, signal.computations);
   }
 }
 

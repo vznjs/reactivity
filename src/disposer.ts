@@ -1,29 +1,43 @@
 import { getContext } from "./context";
-import { flushQueue, Queue } from "./queue";
+import { flushQueue } from "./queue";
 
-export type Disposer = Queue;
+export type Disposer = {
+  queue?: Array<() => void>;
+};
 
-const globalDisposer: Disposer = new Set();
+const globalDisposer: Disposer = createDisposer();
 
 function flush(): void {
   flushDisposer(globalDisposer);
 }
 
+export function createDisposer(): Disposer {
+  return {};
+}
+
 export function flushDisposer(disposer: Disposer): void {
-  flushQueue(disposer);
+  if (!disposer.queue) return;
+  flushQueue(disposer.queue);
+  disposer.queue = undefined;
 }
 
 export function onCleanup(fn: () => void): void {
   const currentDisposer = getContext().disposer;
 
   if (currentDisposer) {
-    currentDisposer.add(fn);
+    if (!currentDisposer.queue) {
+      currentDisposer.queue = [fn];
+    } else if (currentDisposer.queue.indexOf(fn) === -1) {
+      currentDisposer.queue.push(fn);
+    }
+
     return;
   }
 
-  globalDisposer.add(fn);
-
-  if (globalDisposer.size === 1) {
+  if (!globalDisposer.queue) {
+    globalDisposer.queue = [fn];
     setTimeout(flush, 0);
+  } else if (globalDisposer.queue.indexOf(fn) === -1) {
+    globalDisposer.queue.push(fn);
   }
 }

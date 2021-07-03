@@ -1,5 +1,5 @@
 import { runWithContext } from "./context";
-import { Disposer, flushDisposer } from "./disposer";
+import { createDisposer, flushDisposer } from "./disposer";
 
 /**
  * Computations created by root will live until dispose is called
@@ -10,7 +10,7 @@ import { Disposer, flushDisposer } from "./disposer";
  * @returns {T}
  */
 export function createRoot<T>(fn: (disposer: () => void) => T): T {
-  const disposer: Disposer = new Set();
+  const disposer = createDisposer();
 
   return runWithContext({ disposer, computation: undefined }, () =>
     fn(() => flushDisposer(disposer))
