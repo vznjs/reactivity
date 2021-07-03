@@ -11,12 +11,12 @@ import {
 import { Computation, SIGNALS } from "./signal";
 import { unscheduleComputation } from "./scheduler";
 
-function getLatestRevision(signals: Set<Signal> | Signal[] = []): Revision {
-  const arr = [...signals];
+function getLatestRevision(signals?: Signal[]): Revision {
+  if (!signals) return 0;
   let max = 0;
 
-  for (let index = 0; index < arr.length; index++) {
-    const signal = arr[index];
+  for (let index = 0; index < signals.length; index++) {
+    const signal = signals[index];
     if (signal.revision > max) max = signal.revision;
   }
 
@@ -43,7 +43,7 @@ export function createMemo<T>(fn: () => T): () => T {
   }
 
   onCleanup(() => {
-    const signals = new Set(computation[SIGNALS]);
+    const signals = [...(computation[SIGNALS] || [])];
 
     unscheduleComputation(computation);
     flushDisposer(disposer);
@@ -55,7 +55,7 @@ export function createMemo<T>(fn: () => T): () => T {
     const signals = computation[SIGNALS];
 
     if (!signals) {
-      computation[SIGNALS] = new Set<Signal>();
+      computation[SIGNALS] = [];
       recompute();
     } else if (currentRevision < lastRevision) {
       recompute();

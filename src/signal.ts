@@ -8,7 +8,7 @@ let CLOCK: Revision = 0;
 
 export type Computation = {
   (): void;
-  [SIGNALS]?: Set<Signal>;
+  [SIGNALS]?: Signal[];
 };
 
 export type Revision = number;
@@ -34,14 +34,18 @@ export function trackSignal(signal: Signal): void {
     signal.computations = [computation];
   }
 
-  computation[SIGNALS]?.add(signal);
+  computation[SIGNALS]?.push(signal);
 
   onCleanup(() => {
     if (signal.computations) {
       const index = signal.computations.indexOf(computation);
       signal.computations.splice(index, 1);
     }
-    computation[SIGNALS]?.delete(signal);
+
+    if (computation[SIGNALS]) {
+      const index = computation[SIGNALS]!.indexOf(signal);
+      if (index > -1) computation[SIGNALS]?.splice(index, 1);
+    }
   });
 }
 
