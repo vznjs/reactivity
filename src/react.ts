@@ -2,9 +2,9 @@ import { cancelReaction } from "./reactor";
 import { createDisposer, flushDisposer, onCleanup } from "./disposer";
 import { runWithContext } from "./context";
 
-export function createReaction<T>(fn: (v: T) => T, value: T): void;
-export function createReaction<T>(fn: (v?: T) => T | undefined): void;
-export function createReaction<T>(fn: (v?: T) => T, value?: T): void {
+export function react<T>(fn: (v: T) => T, value: T): void;
+export function react<T>(fn: (v?: T) => T | undefined): void;
+export function react<T>(fn: (v?: T) => T, value?: T): void {
   const disposer = createDisposer();
 
   function recompute() {

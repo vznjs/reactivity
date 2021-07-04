@@ -73,7 +73,7 @@ import {
   createRoot,
   createValue,
   createMemo,
-  createReaction,
+  react,
   onCleanup,
 } from "@vzn/reactivity";
 
@@ -88,7 +88,7 @@ createRoot((dispose) => {
 
   const greetings = createMemo(() => `Hey ${getName()}!`);
 
-  createReaction(() => {
+  react(() => {
     console.log(greetings()); // Log greetings every time they will change
   });
 
@@ -134,17 +134,17 @@ If you wish to trigger a change on every update use `createValue(value, false)` 
 createValue(value, (oldValue, newValue) => oldValue == newValue);
 ```
 
-## `createReaction`
+## `react`
 
 A reaction will make your block of code reactive. Change of any reactive value used in that block will make the code recompute. This gives you a granular reactivity and a place to call side effects.
 
 ```js
-import { createReaction, createValue } from "@vzn/reactivity";
+import { react, createValue } from "@vzn/reactivity";
 
 const button = document.createElement("button");
 const [getName, setName] = createValue("VZN");
 
-createReaction(() => {
+react(() => {
   console.log("Say my name:", getName());
 });
 
@@ -160,12 +160,12 @@ setName("Maciej");
 A root is the most important block in reactivity. It defines the owner of the whole reactivity tree. When you plan to make some part of your code reactive, create a top-level Root (e.g., around your entire app). The Root is yielding a disposer function which you can use to dispose of all reactive computations.
 
 ```js
-import { createRoot, createValue, createReaction } from "@vzn/reactivity";
+import { createRoot, createValue, react } from "@vzn/reactivity";
 
 createRoot((dispose) => {
   const [getName] = createValue("VZN");
 
-  createReaction(() => {
+  react(() => {
     console.log(getName());
   });
 
@@ -186,7 +186,7 @@ If you did not create the Root, the reaction would be automatically disposed of 
 A memo is like a mix of reaction and reactive value. It recomputes only when accessed and only if changed.
 
 ```js
-import { createMemo, createReaction, createValue } from "@vzn/reactivity";
+import { createMemo, react, createValue } from "@vzn/reactivity";
 
 const [getName, setName] = createValue("VZN");
 
@@ -195,7 +195,7 @@ const getGreetings = createMemo(() => `Hey ${getName()}!`); // It does not compu
 getGreetings(); // First usage runs the computation
 
 // The reaction will not recompute the memo as it has been already calculated
-createReaction(() => {
+react(() => {
   console.log(getGreetings());
 });
 
@@ -211,12 +211,12 @@ setName("Maciej"); // Triggers computation which recomputes the memo directly
 Use onCleanup for scheduling a task that will be run before the computation recomputes or is scheduled for root's disposal.
 
 ```js
-import { createReaction, createValue, onCleanup } from "@vzn/reactivity";
+import { react, createValue, onCleanup } from "@vzn/reactivity";
 
 const button = document.createElement("button");
 const [getEvent, setEvent] = createValue("click");
 
-createReaction(() => {
+react(() => {
   const eventType = getEvent();
   const action = () => console.log("I did something!");
 
@@ -233,11 +233,11 @@ setEvent("mouseover");
 By using `untrack` you can get the value without setting a dependency on the current reaction or memo (computation) which means that they will not recompute in case values inside of `untrack` will change.
 
 ```js
-import { createReaction, createValue } from "@vzn/reactivity";
+import { react, createValue } from "@vzn/reactivity";
 
 const [getName, setName] = createValue("VZN");
 
-createReaction(() => {
+react(() => {
   untrack(() => {
     console.log(getName());
   });
@@ -259,11 +259,11 @@ This API has been used to create a High-level API. It is discouraged to use it d
 An Atom is the smallest reactive primitive. Its role is to track and trigger changes.
 
 ```js
-import { createAtom, trackAtom, triggerAtom, createReaction } from "@vzn/reactivity";
+import { createAtom, trackAtom, triggerAtom, react } from "@vzn/reactivity";
 
 const myAtom = createAtom();
 
-createReaction(() => {
+react(() => {
   trackAtom(myAtom); // track and remember the computation
 });
 

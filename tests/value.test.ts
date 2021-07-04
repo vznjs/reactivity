@@ -1,6 +1,6 @@
 import { createRoot } from "../src/root";
 import { createValue } from "../src/value";
-import { createReaction } from "../src/reaction";
+import { react } from "../src/react";
 import { runWithContext } from "../src/context";
 import { createDisposer, flushDisposer, onCleanup } from "../src/disposer";
 
@@ -155,13 +155,13 @@ describe("createValue", () => {
     const [getAtom, setAtom] = createValue(20);
 
     createRoot(() => {
-      createReaction(() => {
+      react(() => {
         while (getAtom() <= 10) {
           setAtom(getAtom() + 1);
         }
       });
 
-      createReaction(() => spy(getAtom()));
+      react(() => spy(getAtom()));
     });
 
     expect(spy.mock.calls.length).toBe(1);
@@ -182,12 +182,12 @@ describe("createValue", () => {
     const [getData2, setData2] = createValue(2);
 
     createRoot(() => {
-      createReaction(() => {
+      react(() => {
         getData2();
         spy();
       });
 
-      createReaction(() => {
+      react(() => {
         setData2(getData() + 1);
       });
 
@@ -211,14 +211,14 @@ describe("createValue", () => {
     const disposer = createDisposer();
 
     createRoot(() => {
-      createReaction(() => {
+      react(() => {
         onCleanup(() => flushDisposer(disposer));
         getData();
         spy();
       });
 
       runWithContext({ disposer }, () => {
-        createReaction(() => {
+        react(() => {
           getData();
           spy2();
         });
@@ -251,7 +251,7 @@ describe("createValue", () => {
     createRoot(() => {
       setAtom(true);
 
-      createReaction(() => {
+      react(() => {
         getAtom();
         spy();
       });

@@ -1,11 +1,11 @@
 import { createDisposer, flushDisposer, onCleanup } from "../src/disposer";
-import { createReaction } from "../src/reaction";
+import { react } from "../src/react";
 import { runWithContext } from "../src/context";
 import { createValue } from "../src/value";
 
 jest.useFakeTimers("modern");
 
-describe("createReaction", () => {
+describe("react", () => {
   it("reruns and cleanups on change", () => {
     const [getAtom, setAtom] = createValue(1);
     const disposer = createDisposer();
@@ -13,7 +13,7 @@ describe("createReaction", () => {
     const cleanupSpy = jest.fn();
 
     runWithContext({ disposer }, () => {
-      createReaction(() => {
+      react(() => {
         onCleanup(cleanupSpy);
         reactionSpy();
         getAtom();
@@ -50,7 +50,7 @@ describe("createReaction", () => {
   it("works with built-in async batching", () => {
     const [getAtom, setAtom] = createValue("start");
 
-    createReaction(() => {
+    react(() => {
       setAtom("reaction");
       getAtom();
     });
@@ -70,7 +70,7 @@ describe("createReaction", () => {
     const [getAtom, setAtom] = createValue("start");
     const spy = jest.fn();
 
-    createReaction(() => {
+    react(() => {
       setAtom("reaction1");
       setAtom("reaction2");
       getAtom();
@@ -95,9 +95,9 @@ describe("createReaction", () => {
     const spy = jest.fn();
     const [getAtom, setAtom] = createValue(false);
 
-    createReaction(() => {
+    react(() => {
       if (!getAtom()) return;
-      createReaction(() => spy(getAtom()));
+      react(() => spy(getAtom()));
     });
 
     expect(spy.mock.calls.length).toBe(0);
@@ -122,7 +122,7 @@ describe("createReaction", () => {
     const [getAtom, setAtom] = createValue(false);
 
     runWithContext({ disposer }, () => {
-      createReaction(() => {
+      react(() => {
         getAtom();
         reactionSpy();
         onCleanup(cleanupSpy);

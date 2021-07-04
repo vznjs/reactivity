@@ -2,7 +2,7 @@ export * from "./context";
 export * from "./disposer";
 export * from "./memo";
 export * from "./queue";
-export * from "./reaction";
+export * from "./react";
 export * from "./root";
 export * from "./reactor";
 export * from "./atom";

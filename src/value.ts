@@ -9,7 +9,7 @@ import { createAtom, triggerAtom, Atom, trackAtom } from "./atom";
  * const [getCount, setCount] = createValue(0),
  * const handle = setInterval(() => setCount(getCount() + 1), 1000);
  * onCleanup(() => clearInterval(handle));
- * createReaction(() => console.log(getCount()))
+ * react(() => console.log(getCount()))
  *
  * @export
  * @template T

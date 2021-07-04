@@ -1,6 +1,6 @@
 import { createRoot } from "../src/root";
 import { createValue } from "../src/value";
-import { createReaction } from "../src/reaction";
+import { react } from "../src/react";
 
 jest.useFakeTimers("modern");
 
@@ -12,12 +12,12 @@ describe("root", () => {
       const outerSpy = jest.fn();
       const innerSpy = jest.fn();
 
-      createReaction(() => {
+      react(() => {
         getOuterAtom();
         outerSpy();
 
         createRoot(() => {
-          createReaction(() => {
+          react(() => {
             getInnerAtom();
             innerSpy();
           });
@@ -51,7 +51,7 @@ describe("root", () => {
     createRoot((dispose) => {
       const [getAtom, setAtom] = createValue(1);
 
-      createReaction(() => {
+      react(() => {
         getAtom();
         spy();
       });
