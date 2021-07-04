@@ -1,5 +1,5 @@
-import { createDisposer, flushDisposer, onCleanup } from "./disposer";
-import { runWithContext } from "./context";
+import { createDisposer, flushDisposer, onCleanup } from "./core/disposer";
+import { runWithContext } from "./core/context";
 import {
   createAtom,
   getRevision,
@@ -7,9 +7,9 @@ import {
   Revision,
   Atom,
   trackAtom,
-} from "./atom";
-import { Reaction, ATOMS } from "./atom";
-import { cancelReaction } from "./reactor";
+} from "./core/atom";
+import { Reaction, ATOMS } from "./core/atom";
+import { cancelReaction } from "./core/reactor";
 
 function getLatestRevision(atoms?: Atom[]): Revision {
   if (!atoms) return 0;

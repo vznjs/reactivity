@@ -1,5 +1,5 @@
+import { flushQueue, Queue } from "../utils/queue";
 import { getContext } from "./context";
-import { flushQueue, Queue } from "./queue";
 
 export type Disposer = {
   queue?: Queue;

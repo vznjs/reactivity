@@ -1,8 +1,11 @@
-import { createRoot } from "../src/root";
-import { createValue } from "../src/value";
-import { react } from "../src/react";
-import { runWithContext } from "../src/context";
-import { createDisposer, flushDisposer, onCleanup } from "../src/disposer";
+import { root, runWithContext } from "../../src/core/context";
+import { createValue } from "../../src/reactive/value";
+import { react } from "../../src/react";
+import {
+  createDisposer,
+  flushDisposer,
+  onCleanup,
+} from "../../src/core/disposer";
 
 jest.useFakeTimers("modern");
 
@@ -58,7 +61,7 @@ describe("createValue", () => {
     const spy = jest.fn();
     const [getAtom, setAtom] = createValue(false);
 
-    createRoot(() => {
+    root(() => {
       runWithContext({ reaction: spy }, () => getAtom());
 
       expect(spy.mock.calls.length).toBe(0);
@@ -87,7 +90,7 @@ describe("createValue", () => {
     const spy = jest.fn();
     const [getAtom, setAtom] = createValue([1], (a, b) => a[0] === b[0]);
 
-    createRoot(() => {
+    root(() => {
       runWithContext({ reaction: spy }, () => getAtom());
 
       expect(spy.mock.calls.length).toBe(0);
@@ -135,9 +138,7 @@ describe("createValue", () => {
     const [getAtom, setAtom] = createValue(0);
     const disposer = createDisposer();
 
-    runWithContext({ disposer, reaction: spy }, () =>
-      setAtom(getAtom() + 1)
-    );
+    runWithContext({ disposer, reaction: spy }, () => setAtom(getAtom() + 1));
 
     expect(spy.mock.calls.length).toBe(0);
     expect(getAtom()).toBe(1);
@@ -154,7 +155,7 @@ describe("createValue", () => {
     const spy = jest.fn();
     const [getAtom, setAtom] = createValue(20);
 
-    createRoot(() => {
+    root(() => {
       react(() => {
         while (getAtom() <= 10) {
           setAtom(getAtom() + 1);
@@ -181,7 +182,7 @@ describe("createValue", () => {
     const [getData, setData] = createValue(2);
     const [getData2, setData2] = createValue(2);
 
-    createRoot(() => {
+    root(() => {
       react(() => {
         getData2();
         spy();
@@ -210,7 +211,7 @@ describe("createValue", () => {
     const [getData, setData] = createValue(1);
     const disposer = createDisposer();
 
-    createRoot(() => {
+    root(() => {
       react(() => {
         onCleanup(() => flushDisposer(disposer));
         getData();
@@ -248,7 +249,7 @@ describe("createValue", () => {
     const spy = jest.fn();
     const [getAtom, setAtom] = createValue(false);
 
-    createRoot(() => {
+    root(() => {
       setAtom(true);
 
       react(() => {

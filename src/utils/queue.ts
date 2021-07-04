@@ -1,4 +1,4 @@
-import { runWithContext } from "./context";
+import { runWithContext } from "../core/context";
 
 export type Queue = Array<() => void>;
 

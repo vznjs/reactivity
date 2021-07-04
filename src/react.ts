@@ -1,6 +1,6 @@
-import { cancelReaction } from "./reactor";
-import { createDisposer, flushDisposer, onCleanup } from "./disposer";
-import { runWithContext } from "./context";
+import { cancelReaction } from "./core/reactor";
+import { createDisposer, flushDisposer, onCleanup } from "./core/disposer";
+import { runWithContext } from "./core/context";
 
 export function react<T>(fn: (v: T) => T, value: T): void;
 export function react<T>(fn: (v?: T) => T | undefined): void;

@@ -1,4 +1,4 @@
-import { flushQueue, Queue } from "./queue";
+import { flushQueue, Queue } from "../utils/queue";
 import type { Atom } from "./atom";
 
 const atomsQueue = new Map<Atom, Queue>();

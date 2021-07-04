@@ -1,6 +1,9 @@
-import { createDisposer, flushDisposer, onCleanup } from "../src/disposer";
-import { runWithContext } from "../src/context";
-import { createRoot } from "../src/root";
+import {
+  createDisposer,
+  flushDisposer,
+  onCleanup,
+} from "../../src/core/disposer";
+import { root, runWithContext } from "../../src/core/context";
 
 jest.useFakeTimers("modern");
 
@@ -23,7 +26,7 @@ describe("onCleanup", () => {
   it("supports nested cleanups", () => {
     const spy = jest.fn();
 
-    createRoot((dispose) => {
+    root((dispose) => {
       onCleanup(() => {
         onCleanup(spy);
         spy();
@@ -39,7 +42,7 @@ describe("onCleanup", () => {
   it("does not run onCleanup if there is no reaction", () => {
     const cleanupMock = jest.fn();
 
-    createRoot(() => onCleanup(cleanupMock));
+    root(() => onCleanup(cleanupMock));
 
     expect(cleanupMock.mock.calls.length).toBe(0);
 

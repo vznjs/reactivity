@@ -66,18 +66,18 @@ npm install @vzn/reactivity
 # Usage
 
 This example shows off some of the capabilities of VZN | Reactivity.
-The most important thing to learn here is that you need to wrap your "app" with `createRoot()`, otherwise, all reactivity will be one-time only.
+The most important thing to learn here is that you need to wrap your "app" with `root()`, otherwise, all reactivity will be one-time only.
 
 ```js
 import {
-  createRoot,
+  root,
   createValue,
   createMemo,
   react,
   onCleanup,
 } from "@vzn/reactivity";
 
-createRoot((dispose) => {
+root((dispose) => {
   console.log("Reactivity is turned on!");
 
   setTimeout(dispose, 1000); // Turn off reactive system in 1s
@@ -155,14 +155,14 @@ setName("Maciej");
 // LOG: Say my name: Maciej
 ```
 
-## `createRoot`
+## `root`
 
 A root is the most important block in reactivity. It defines the owner of the whole reactivity tree. When you plan to make some part of your code reactive, create a top-level Root (e.g., around your entire app). The Root is yielding a disposer function which you can use to dispose of all reactive computations.
 
 ```js
-import { createRoot, createValue, react } from "@vzn/reactivity";
+import { root, createValue, react } from "@vzn/reactivity";
 
-createRoot((dispose) => {
+root((dispose) => {
   const [getName] = createValue("VZN");
 
   react(() => {

@@ -1,4 +1,4 @@
-import { createAtom, triggerAtom, Atom, trackAtom } from "./atom";
+import { createAtom, triggerAtom, Atom, trackAtom } from "../core/atom";
 
 /**
  * Values are the foundation of reactive system.

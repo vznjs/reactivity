@@ -1,7 +1,7 @@
-import { createDisposer, flushDisposer, onCleanup } from "../src/disposer";
+import { createDisposer, flushDisposer, onCleanup } from "../src/core/disposer";
 import { react } from "../src/react";
-import { runWithContext } from "../src/context";
-import { createValue } from "../src/value";
+import { runWithContext } from "../src/core/context";
+import { createValue } from "../src/reactive/value";
 
 jest.useFakeTimers("modern");
 

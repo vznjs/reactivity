@@ -1,8 +1,8 @@
 import { createMemo } from "../src/memo";
 import { react } from "../src/react";
-import { createValue } from "../src/value";
-import { createDisposer, flushDisposer, onCleanup } from "../src/disposer";
-import { runWithContext } from "../src/context";
+import { createValue } from "../src/reactive/value";
+import { createDisposer, flushDisposer, onCleanup } from "../src/core/disposer";
+import { runWithContext } from "../src/core/context";
 
 jest.useFakeTimers("modern");
 

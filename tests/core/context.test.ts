@@ -1,12 +1,22 @@
-import { createRoot } from "../src/root";
-import { createValue } from "../src/value";
-import { react } from "../src/react";
+import {
+  root,
+  freeze,
+  getContext,
+  runWithContext,
+} from "../../src/core/context";
+import { createValue } from "../../src/reactive/value";
+import { react } from "../../src/react";
+import {
+  createDisposer,
+  flushDisposer,
+  onCleanup,
+} from "../../src/core/disposer";
 
 jest.useFakeTimers("modern");
 
 describe("root", () => {
   it("allows subreactions to escape their parents", () => {
-    createRoot(() => {
+    root(() => {
       const [getOuterAtom, setOuterAtom] = createValue(0);
       const [getInnerAtom, setInnerAtom] = createValue(0);
       const outerSpy = jest.fn();
@@ -16,7 +26,7 @@ describe("root", () => {
         getOuterAtom();
         outerSpy();
 
-        createRoot(() => {
+        root(() => {
           react(() => {
             getInnerAtom();
             innerSpy();
@@ -48,7 +58,7 @@ describe("root", () => {
   it("allows to dispose all nested reactions", () => {
     const spy = jest.fn();
 
-    createRoot((dispose) => {
+    root((dispose) => {
       const [getAtom, setAtom] = createValue(1);
 
       react(() => {
@@ -72,5 +82,46 @@ describe("root", () => {
 
       expect(spy.mock.calls.length).toBe(2);
     });
+  });
+});
+
+describe("freeze", () => {
+  it("runs without any reaction", () => {
+    const reaction = () => {
+      // dummy
+    };
+
+    expect(getContext().reaction).toBeUndefined();
+
+    runWithContext({ reaction }, () => {
+      expect(getContext().reaction).toBe(reaction);
+
+      freeze(() => {
+        expect(getContext().reaction).toBeUndefined();
+      });
+
+      expect(getContext().reaction).toBe(reaction);
+    });
+
+    expect(getContext().reaction).toBeUndefined();
+  });
+
+  it("runs cleanups in reaction correctly", () => {
+    const disposer = createDisposer();
+    const cleanupMock = jest.fn();
+
+    expect(getContext().disposer).toBeUndefined();
+
+    runWithContext({ disposer }, () => {
+      freeze(() => {
+        onCleanup(cleanupMock);
+      });
+    });
+
+    expect(cleanupMock.mock.calls.length).toBe(0);
+
+    flushDisposer(disposer);
+
+    expect(cleanupMock.mock.calls.length).toBe(1);
   });
 });

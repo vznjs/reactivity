@@ -1,5 +1,5 @@
 import type { Reaction } from "./atom";
-import type { Disposer } from "./disposer";
+import { createDisposer, Disposer, flushDisposer } from "./disposer";
 
 export interface Context {
   disposer?: Disposer;
@@ -25,4 +25,24 @@ export function runWithContext<T>(newContext: Context, fn: () => T): T {
     context.disposer = currentDisposer;
     context.reaction = currentReaction;
   }
+}
+
+export function freeze<T>(fn: () => T): T {
+  return runWithContext({ reaction: undefined }, fn);
+}
+
+/**
+ * Reactions created by root will live until dispose is called
+ *
+ * @export
+ * @template T
+ * @param {(disposer: () => void) => T} fn
+ * @returns {T}
+ */
+export function root<T>(fn: (disposer: () => void) => T): T {
+  const disposer = createDisposer();
+
+  return runWithContext({ disposer, reaction: undefined }, () =>
+    fn(() => flushDisposer(disposer))
+  );
 }

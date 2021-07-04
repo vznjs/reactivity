@@ -1,5 +1,6 @@
-import { scheduleAtomReactions, cancelReaction } from "../src/reactor";
-import { createAtom } from "../src/atom";
+import { runWithContext } from "../../src/core/context";
+import { createAtom, trackAtom } from "../../src/core/atom";
+import { scheduleAtomReactions, cancelReaction } from "../../src/core/reactor";
 
 jest.useFakeTimers("modern");
 
@@ -8,8 +9,10 @@ describe("scheduleAtomReactions", () => {
     const spy = jest.fn();
     const atom = createAtom();
 
-    scheduleAtomReactions(atom, [spy]);
-    scheduleAtomReactions(atom, [spy]);
+    runWithContext({ reaction: spy }, () => trackAtom(atom));
+
+    scheduleAtomReactions(atom);
+    scheduleAtomReactions(atom);
 
     expect(spy.mock.calls.length).toBe(0);
 
@@ -22,11 +25,14 @@ describe("scheduleAtomReactions", () => {
     const spy = jest.fn();
     const atom = createAtom();
     const reaction = () => {
-      scheduleAtomReactions(atom, [() => spy("nested")]);
+      runWithContext({ reaction: () => spy("nested") }, () => trackAtom(atom));
+      scheduleAtomReactions(atom);
       spy("flat");
     };
 
-    scheduleAtomReactions(atom, [reaction]);
+    runWithContext({ reaction }, () => trackAtom(atom));
+
+    scheduleAtomReactions(atom);
 
     expect(spy.mock.calls.length).toBe(0);
 
@@ -43,7 +49,8 @@ describe("cancelReaction", () => {
     const spy = jest.fn();
     const atom = createAtom();
 
-    scheduleAtomReactions(atom, [spy]);
+    runWithContext({ reaction: spy }, () => trackAtom(atom));
+    scheduleAtomReactions(atom);
     cancelReaction(spy);
 
     expect(spy.mock.calls.length).toBe(0);
