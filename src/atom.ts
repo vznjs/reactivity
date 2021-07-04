@@ -1,6 +1,6 @@
 import { getContext } from "./context";
 import { onCleanup } from "./disposer";
-import { scheduleReactions } from "./reactor";
+import { scheduleAtomReactions } from "./reactor";
 
 export const ATOMS = Symbol("ATOMS");
 
@@ -53,7 +53,7 @@ export function triggerAtom(atom: Atom): void {
   atom.revision = ++CLOCK;
 
   if (atom.reactions?.length) {
-    scheduleReactions(atom, atom.reactions);
+    scheduleAtomReactions(atom);
   }
 }
 

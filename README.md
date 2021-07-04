@@ -228,9 +228,9 @@ react(() => {
 setEvent("mouseover");
 ```
 
-## `untrack`
+## `freeze`
 
-By using `untrack` you can get the value without setting a dependency on the current reaction or memo (computation) which means that they will not recompute in case values inside of `untrack` will change.
+By using `freeze` you can get the value without setting a dependency on the current reaction or memo (computation) which means that they will not recompute in case values inside of `freeze` will change.
 
 ```js
 import { react, createValue } from "@vzn/reactivity";
@@ -238,7 +238,7 @@ import { react, createValue } from "@vzn/reactivity";
 const [getName, setName] = createValue("VZN");
 
 react(() => {
-  untrack(() => {
+  freeze(() => {
     console.log(getName());
   });
 });

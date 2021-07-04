@@ -22,7 +22,11 @@ function scheduler() {
   isScheduled = false;
 }
 
-export function scheduleReactions(atom: Atom, reactions: Queue): void {
+export function scheduleAtomReactions(atom: Atom): void {
+  const reactions = atom.reactions || [];
+
+  if (!reactions.length) return;
+
   if (updatesQueue) {
     for (let index = 0; index < reactions.length; index++) {
       const reaction = reactions[index];
