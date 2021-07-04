@@ -2,7 +2,7 @@ import { runWithContext } from "./context";
 import { createDisposer, flushDisposer } from "./disposer";
 
 /**
- * Computations created by root will live until dispose is called
+ * Reactions created by root will live until dispose is called
  *
  * @export
  * @template T
@@ -12,7 +12,7 @@ import { createDisposer, flushDisposer } from "./disposer";
 export function createRoot<T>(fn: (disposer: () => void) => T): T {
   const disposer = createDisposer();
 
-  return runWithContext({ disposer, computation: undefined }, () =>
+  return runWithContext({ disposer, reaction: undefined }, () =>
     fn(() => flushDisposer(disposer))
   );
 }

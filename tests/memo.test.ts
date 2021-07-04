@@ -33,7 +33,7 @@ describe("createMemo", () => {
     expect(spy.mock.calls.length).toBe(2);
   });
 
-  it("schedules only one recomputation", () => {
+  it("schedules only one rereaction", () => {
     const [getAtom, setAtom] = createValue(1);
     const spy = jest.fn();
 
@@ -108,7 +108,7 @@ describe("createMemo", () => {
     });
   });
 
-  it("cleanups with each recomputation", () => {
+  it("cleanups with each rereaction", () => {
     const spy = jest.fn();
 
     const [getAtom, setAtom] = createValue(1);

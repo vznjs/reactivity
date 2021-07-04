@@ -114,7 +114,7 @@ This API should be perceived as public, and you should feel free to use it in yo
 
 ## `createValue`
 
-Reactive values are used as signals for computations (e.g., reactions and memos). They work synchronously, which means their updates are available immediately, and in the "background" they inform computations about a change.
+Reactive values are used as atoms for computations (e.g., reactions and memos). They work synchronously, which means their updates are available immediately, and in the "background" they inform computations about a change.
 
 ```js
 import { createValue } from "@vzn/reactivity";
@@ -128,7 +128,7 @@ getName(); // Maciej
 
 By default, updating a reactive value to the same value (e.g., 'vzn' to 'vzn') will not trigger any updates.
 
-If you wish to signal a change on every update use `createValue(value, false)` or pass your own compare function
+If you wish to trigger a change on every update use `createValue(value, false)` or pass your own compare function
 
 ```js
 createValue(value, (oldValue, newValue) => oldValue == newValue);
@@ -254,20 +254,20 @@ setName(
 
 This API has been used to create a High-level API. It is discouraged to use it directly in your features. It should serve as a way to create a new custom High-level API if needed. E.g., if you think you need your own `createMemo` implementation, you can do it yourself by using this API.
 
-## `createSignal`
+## `createAtom`
 
-A signal is the smallest reactive primitive. Its role is to track and notify about changes.
+An Atom is the smallest reactive primitive. Its role is to track and trigger changes.
 
 ```js
-import { createSignal, createReaction } from "@vzn/reactivity";
+import { createAtom, trackAtom, triggerAtom, createReaction } from "@vzn/reactivity";
 
-const mySignal = createSignal();
+const myAtom = createAtom();
 
 createReaction(() => {
-  mySignal.track(); // track and remember the computation
+  trackAtom(myAtom); // track and remember the computation
 });
 
-mySignal.notify(); // notify all computations about a change (the reaction will be scheduled for recomputation)
+triggerAtom(myAtom); // notify all computations about a change (the reaction will be scheduled for recomputation)
 ```
 
 ## `getContext`

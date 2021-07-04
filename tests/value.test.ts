@@ -18,11 +18,11 @@ describe("createValue", () => {
     expect(getValue()).toBe(2);
   });
 
-  it("triggers computation if values are not equal", () => {
+  it("triggers reaction if values are not equal", () => {
     const spy = jest.fn();
     const [getAtom, setAtom] = createValue(false);
 
-    runWithContext({ computation: spy }, () => getAtom());
+    runWithContext({ reaction: spy }, () => getAtom());
 
     expect(spy.mock.calls.length).toBe(0);
     expect(getAtom()).toBe(false);
@@ -37,11 +37,11 @@ describe("createValue", () => {
     expect(getAtom()).toBe(true);
   });
 
-  it("triggers computation if compare option is false and values are equal", () => {
+  it("triggers reaction if compare option is false and values are equal", () => {
     const spy = jest.fn();
     const [getAtom, setAtom] = createValue(true, false);
 
-    runWithContext({ computation: spy }, () => getAtom());
+    runWithContext({ reaction: spy }, () => getAtom());
 
     expect(spy.mock.calls.length).toBe(0);
 
@@ -54,12 +54,12 @@ describe("createValue", () => {
     expect(spy.mock.calls.length).toBe(1);
   });
 
-  it("does not trigger computation if set to equal value", () => {
+  it("does not trigger reaction if set to equal value", () => {
     const spy = jest.fn();
     const [getAtom, setAtom] = createValue(false);
 
     createRoot(() => {
-      runWithContext({ computation: spy }, () => getAtom());
+      runWithContext({ reaction: spy }, () => getAtom());
 
       expect(spy.mock.calls.length).toBe(0);
       expect(getAtom()).toBe(false);
@@ -88,7 +88,7 @@ describe("createValue", () => {
     const [getAtom, setAtom] = createValue([1], (a, b) => a[0] === b[0]);
 
     createRoot(() => {
-      runWithContext({ computation: spy }, () => getAtom());
+      runWithContext({ reaction: spy }, () => getAtom());
 
       expect(spy.mock.calls.length).toBe(0);
 
@@ -111,7 +111,7 @@ describe("createValue", () => {
     const [getAtom, setAtom] = createValue(false);
     const disposer = createDisposer();
 
-    runWithContext({ disposer, computation: spy }, () => getAtom());
+    runWithContext({ disposer, reaction: spy }, () => getAtom());
 
     setAtom(true);
 
@@ -130,12 +130,12 @@ describe("createValue", () => {
     expect(getAtom()).toBe(false);
   });
 
-  it("ignores recomputation with circular dependencies", () => {
+  it("ignores rereaction with circular dependencies", () => {
     const spy = jest.fn();
     const [getAtom, setAtom] = createValue(0);
     const disposer = createDisposer();
 
-    runWithContext({ disposer, computation: spy }, () =>
+    runWithContext({ disposer, reaction: spy }, () =>
       setAtom(getAtom() + 1)
     );
 
@@ -244,7 +244,7 @@ describe("createValue", () => {
     });
   });
 
-  it("does not recompute computations used after change", () => {
+  it("does not recompute reactions used after change", () => {
     const spy = jest.fn();
     const [getAtom, setAtom] = createValue(false);
 

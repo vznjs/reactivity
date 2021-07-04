@@ -6,7 +6,7 @@ export const ATOMS = Symbol("ATOMS");
 
 let CLOCK: Revision = 0;
 
-export type Computation = {
+export type Reaction = {
   (): void;
   [ATOMS]?: Atom[];
 };
@@ -14,7 +14,7 @@ export type Computation = {
 export type Revision = number;
 
 export type Atom = {
-  computations?: Computation[];
+  reactions?: Reaction[];
   revision: Revision;
 };
 
@@ -23,28 +23,28 @@ export function getRevision(): Revision {
 }
 
 export function trackAtom(atom: Atom): void {
-  const { computation } = getContext();
+  const { reaction } = getContext();
 
-  if (!computation) return;
-  if (atom.computations?.includes(computation)) return;
+  if (!reaction) return;
+  if (atom.reactions?.includes(reaction)) return;
 
-  if (atom.computations) {
-    atom.computations.push(computation);
+  if (atom.reactions) {
+    atom.reactions.push(reaction);
   } else {
-    atom.computations = [computation];
+    atom.reactions = [reaction];
   }
 
-  computation[ATOMS]?.push(atom);
+  reaction[ATOMS]?.push(atom);
 
   onCleanup(() => {
-    if (atom.computations) {
-      const index = atom.computations.indexOf(computation);
-      atom.computations.splice(index, 1);
+    if (atom.reactions) {
+      const index = atom.reactions.indexOf(reaction);
+      atom.reactions.splice(index, 1);
     }
 
-    if (computation[ATOMS]) {
-      const index = computation[ATOMS]!.indexOf(atom);
-      if (index > -1) computation[ATOMS]?.splice(index, 1);
+    if (reaction[ATOMS]) {
+      const index = reaction[ATOMS]!.indexOf(atom);
+      if (index > -1) reaction[ATOMS]?.splice(index, 1);
     }
   });
 }
@@ -52,8 +52,8 @@ export function trackAtom(atom: Atom): void {
 export function triggerAtom(atom: Atom): void {
   atom.revision = ++CLOCK;
 
-  if (atom.computations?.length) {
-    scheduleReactions(atom, atom.computations);
+  if (atom.reactions?.length) {
+    scheduleReactions(atom, atom.reactions);
   }
 }
 

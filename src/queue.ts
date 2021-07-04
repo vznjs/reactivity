@@ -17,5 +17,5 @@ export function flushQueue(queue: Queue): void {
     }
   }
 
-  runWithContext({ disposer: undefined, computation: undefined }, flush);
+  runWithContext({ disposer: undefined, reaction: undefined }, flush);
 }

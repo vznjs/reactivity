@@ -11,7 +11,7 @@ let isScheduled = false;
 function scheduler() {
   updatesQueue = [...atomsQueue.values()]
     .flat()
-    .filter((computation) => !unscheduleQueue.has(computation));
+    .filter((reaction) => !unscheduleQueue.has(reaction));
 
   atomsQueue.clear();
   unscheduleQueue.clear();
@@ -22,19 +22,19 @@ function scheduler() {
   isScheduled = false;
 }
 
-export function scheduleReactions(atom: Atom, computations: Queue): void {
+export function scheduleReactions(atom: Atom, reactions: Queue): void {
   if (updatesQueue) {
-    for (let index = 0; index < computations.length; index++) {
-      const computation = computations[index];
+    for (let index = 0; index < reactions.length; index++) {
+      const reaction = reactions[index];
 
-      if (updatesQueue.indexOf(computation) === -1) {
-        updatesQueue.push(computations[index]);
+      if (updatesQueue.indexOf(reaction) === -1) {
+        updatesQueue.push(reactions[index]);
       }
     }
     return;
   }
 
-  atomsQueue.set(atom, computations);
+  atomsQueue.set(atom, reactions);
 
   if (isScheduled) return;
 
@@ -43,12 +43,12 @@ export function scheduleReactions(atom: Atom, computations: Queue): void {
   isScheduled = true;
 }
 
-export function cancelReaction(computation: () => void): void {
+export function cancelReaction(reaction: () => void): void {
   if (updatesQueue) {
-    const index = updatesQueue.indexOf(computation);
+    const index = updatesQueue.indexOf(reaction);
     if (index > -1) updatesQueue.splice(index, 1);
     return;
   }
 
-  if (isScheduled) unscheduleQueue.add(computation);
+  if (isScheduled) unscheduleQueue.add(reaction);
 }

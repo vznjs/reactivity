@@ -36,7 +36,7 @@ describe("onCleanup", () => {
     expect(spy.mock.calls.length).toBe(2);
   });
 
-  it("does not run onCleanup if there is no computation", () => {
+  it("does not run onCleanup if there is no reaction", () => {
     const cleanupMock = jest.fn();
 
     createRoot(() => onCleanup(cleanupMock));

@@ -5,7 +5,7 @@ import { createReaction } from "../src/reaction";
 jest.useFakeTimers("modern");
 
 describe("root", () => {
-  it("allows subcomputations to escape their parents", () => {
+  it("allows subreactions to escape their parents", () => {
     createRoot(() => {
       const [getOuterAtom, setOuterAtom] = createValue(0);
       const [getInnerAtom, setInnerAtom] = createValue(0);
@@ -27,7 +27,7 @@ describe("root", () => {
       expect(outerSpy.mock.calls.length).toBe(1);
       expect(innerSpy.mock.calls.length).toBe(1);
 
-      // trigger the outer computation, making more inners
+      // trigger the outer reaction, making more inners
       setOuterAtom(1);
       setOuterAtom(2);
 
@@ -45,7 +45,7 @@ describe("root", () => {
     });
   });
 
-  it("allows to dispose all nested computations", () => {
+  it("allows to dispose all nested reactions", () => {
     const spy = jest.fn();
 
     createRoot((dispose) => {

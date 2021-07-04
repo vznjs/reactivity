@@ -5,27 +5,27 @@ import { getContext, runWithContext } from "../src/context";
 jest.useFakeTimers("modern");
 
 describe("untrack", () => {
-  it("runs without any computation", () => {
-    const computation = () => {
+  it("runs without any reaction", () => {
+    const reaction = () => {
       // dummy
     };
 
-    expect(getContext().computation).toBeUndefined();
+    expect(getContext().reaction).toBeUndefined();
 
-    runWithContext({ computation }, () => {
-      expect(getContext().computation).toBe(computation);
+    runWithContext({ reaction }, () => {
+      expect(getContext().reaction).toBe(reaction);
 
       untrack(() => {
-        expect(getContext().computation).toBeUndefined();
+        expect(getContext().reaction).toBeUndefined();
       });
 
-      expect(getContext().computation).toBe(computation);
+      expect(getContext().reaction).toBe(reaction);
     });
 
-    expect(getContext().computation).toBeUndefined();
+    expect(getContext().reaction).toBeUndefined();
   });
 
-  it("runs cleanups in computation correctly", () => {
+  it("runs cleanups in reaction correctly", () => {
     const disposer = createDisposer();
     const cleanupMock = jest.fn();
 

@@ -8,7 +8,7 @@ import {
   Atom,
   trackAtom,
 } from "./atom";
-import { Computation, ATOMS } from "./atom";
+import { Reaction, ATOMS } from "./atom";
 import { cancelReaction } from "./reactor";
 
 function getLatestRevision(atoms?: Atom[]): Revision {
@@ -31,31 +31,31 @@ export function createMemo<T>(fn: () => T): () => T {
   const atom = createAtom();
   const disposer = createDisposer();
 
-  const computation: Computation = () => {
-    lastRevision = getLatestRevision(computation[ATOMS]);
+  const reaction: Reaction = () => {
+    lastRevision = getLatestRevision(reaction[ATOMS]);
     flushDisposer(disposer);
     triggerAtom(atom);
   };
 
   function recompute() {
-    runWithContext({ computation, disposer }, () => (memoValue = fn()));
-    currentRevision = getLatestRevision(computation[ATOMS]);
+    runWithContext({ reaction, disposer }, () => (memoValue = fn()));
+    currentRevision = getLatestRevision(reaction[ATOMS]);
   }
 
   onCleanup(() => {
-    const atoms = [...(computation[ATOMS] || [])];
+    const atoms = [...(reaction[ATOMS] || [])];
 
-    cancelReaction(computation);
+    cancelReaction(reaction);
     flushDisposer(disposer);
 
-    computation[ATOMS] = atoms;
+    reaction[ATOMS] = atoms;
   });
 
   function getter() {
-    const atoms = computation[ATOMS];
+    const atoms = reaction[ATOMS];
 
     if (!atoms) {
-      computation[ATOMS] = [];
+      reaction[ATOMS] = [];
       recompute();
     } else if (currentRevision < lastRevision) {
       recompute();

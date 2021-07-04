@@ -2,8 +2,8 @@ import { createAtom, triggerAtom, Atom, trackAtom } from "./atom";
 
 /**
  * Values are the foundation of reactive system.
- * By using them, you are creating implicit dependencies for computations.
- * Once the value is updated all computations with the value as dependency will be scheduled for update as well.
+ * By using them, you are creating implicit dependencies for reactions.
+ * Once the value is updated all reactions with the value as dependency will be scheduled for update as well.
  *
  * @example
  * const [getCount, setCount] = createValue(0),

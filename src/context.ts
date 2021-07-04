@@ -1,9 +1,9 @@
-import type { Computation } from "./atom";
+import type { Reaction } from "./atom";
 import type { Disposer } from "./disposer";
 
 export interface Context {
   disposer?: Disposer;
-  computation?: Computation;
+  reaction?: Reaction;
 }
 
 const context: Context = {};
@@ -14,15 +14,15 @@ export function getContext(): Context {
 
 export function runWithContext<T>(newContext: Context, fn: () => T): T {
   const currentDisposer = context.disposer;
-  const currentComputation = context.computation;
+  const currentReaction = context.reaction;
 
   if ("disposer" in newContext) context.disposer = newContext.disposer;
-  if ("computation" in newContext) context.computation = newContext.computation;
+  if ("reaction" in newContext) context.reaction = newContext.reaction;
 
   try {
     return fn();
   } finally {
     context.disposer = currentDisposer;
-    context.computation = currentComputation;
+    context.reaction = currentReaction;
   }
 }

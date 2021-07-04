@@ -11,18 +11,18 @@ export function createReaction<T>(fn: (v?: T) => T, value?: T): void {
     value = fn(value);
   }
 
-  function computation() {
+  function reaction() {
     flushDisposer(disposer);
-    runWithContext({ computation, disposer }, recompute);
+    runWithContext({ reaction, disposer }, recompute);
   }
 
   function cleanup() {
-    cancelReaction(computation);
+    cancelReaction(reaction);
     flushDisposer(disposer);
   }
 
   try {
-    runWithContext({ computation, disposer }, recompute);
+    runWithContext({ reaction, disposer }, recompute);
   } finally {
     onCleanup(cleanup);
   }

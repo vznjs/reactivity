@@ -21,12 +21,12 @@ describe("scheduleReactions", () => {
   it("works with nested schedules", () => {
     const spy = jest.fn();
     const atom = createAtom();
-    const computation = () => {
+    const reaction = () => {
       scheduleReactions(atom, [() => spy("nested")]);
       spy("flat");
     };
 
-    scheduleReactions(atom, [computation]);
+    scheduleReactions(atom, [reaction]);
 
     expect(spy.mock.calls.length).toBe(0);
 
