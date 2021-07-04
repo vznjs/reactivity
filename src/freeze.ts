@@ -1,5 +1,5 @@
 import { runWithContext } from "./context";
 
-export function untrack<T>(fn: () => T): T {
+export function freeze<T>(fn: () => T): T {
   return runWithContext({ reaction: undefined }, fn);
 }

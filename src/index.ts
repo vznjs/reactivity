@@ -6,5 +6,5 @@ export * from "./react";
 export * from "./root";
 export * from "./reactor";
 export * from "./atom";
-export * from "./untrack";
+export * from "./freeze";
 export * from "./value";

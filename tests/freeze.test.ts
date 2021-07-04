@@ -1,10 +1,10 @@
-import { untrack } from "../src/untrack";
+import { freeze } from "../src/freeze";
 import { createDisposer, flushDisposer, onCleanup } from "../src/disposer";
 import { getContext, runWithContext } from "../src/context";
 
 jest.useFakeTimers("modern");
 
-describe("untrack", () => {
+describe("freeze", () => {
   it("runs without any reaction", () => {
     const reaction = () => {
       // dummy
@@ -15,7 +15,7 @@ describe("untrack", () => {
     runWithContext({ reaction }, () => {
       expect(getContext().reaction).toBe(reaction);
 
-      untrack(() => {
+      freeze(() => {
         expect(getContext().reaction).toBeUndefined();
       });
 
@@ -32,7 +32,7 @@ describe("untrack", () => {
     expect(getContext().disposer).toBeUndefined();
 
     runWithContext({ disposer }, () => {
-      untrack(() => {
+      freeze(() => {
         onCleanup(cleanupMock);
       });
     });
