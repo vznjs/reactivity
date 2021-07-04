@@ -1,15 +1,15 @@
-import { scheduleUpdate, cancelComputation } from "../src/scheduler";
+import { scheduleReactions, cancelReaction } from "../src/reactor";
 import { createAtom } from "../src/atom";
 
 jest.useFakeTimers("modern");
 
-describe("scheduleUpdate", () => {
+describe("scheduleReactions", () => {
   it("batches calls", () => {
     const spy = jest.fn();
     const atom = createAtom();
 
-    scheduleUpdate(atom, [spy]);
-    scheduleUpdate(atom, [spy]);
+    scheduleReactions(atom, [spy]);
+    scheduleReactions(atom, [spy]);
 
     expect(spy.mock.calls.length).toBe(0);
 
@@ -22,11 +22,11 @@ describe("scheduleUpdate", () => {
     const spy = jest.fn();
     const atom = createAtom();
     const computation = () => {
-      scheduleUpdate(atom, [() => spy("nested")]);
+      scheduleReactions(atom, [() => spy("nested")]);
       spy("flat");
     };
 
-    scheduleUpdate(atom, [computation]);
+    scheduleReactions(atom, [computation]);
 
     expect(spy.mock.calls.length).toBe(0);
 
@@ -38,13 +38,13 @@ describe("scheduleUpdate", () => {
   });
 });
 
-describe("cancelComputation", () => {
+describe("cancelReaction", () => {
   it("unschedules a task", () => {
     const spy = jest.fn();
     const atom = createAtom();
 
-    scheduleUpdate(atom, [spy]);
-    cancelComputation(spy);
+    scheduleReactions(atom, [spy]);
+    cancelReaction(spy);
 
     expect(spy.mock.calls.length).toBe(0);
 

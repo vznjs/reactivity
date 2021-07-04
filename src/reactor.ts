@@ -22,7 +22,7 @@ function scheduler() {
   isScheduled = false;
 }
 
-export function scheduleUpdate(atom: Atom, computations: Queue): void {
+export function scheduleReactions(atom: Atom, computations: Queue): void {
   if (updatesQueue) {
     for (let index = 0; index < computations.length; index++) {
       const computation = computations[index];
@@ -43,7 +43,7 @@ export function scheduleUpdate(atom: Atom, computations: Queue): void {
   isScheduled = true;
 }
 
-export function cancelComputation(computation: () => void): void {
+export function cancelReaction(computation: () => void): void {
   if (updatesQueue) {
     const index = updatesQueue.indexOf(computation);
     if (index > -1) updatesQueue.splice(index, 1);

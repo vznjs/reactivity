@@ -4,7 +4,7 @@ export * from "./memo";
 export * from "./queue";
 export * from "./reaction";
 export * from "./root";
-export * from "./scheduler";
+export * from "./reactor";
 export * from "./atom";
 export * from "./untrack";
 export * from "./value";

@@ -9,7 +9,7 @@ import {
   trackAtom,
 } from "./atom";
 import { Computation, ATOMS } from "./atom";
-import { cancelComputation } from "./scheduler";
+import { cancelReaction } from "./reactor";
 
 function getLatestRevision(atoms?: Atom[]): Revision {
   if (!atoms) return 0;
@@ -45,7 +45,7 @@ export function createMemo<T>(fn: () => T): () => T {
   onCleanup(() => {
     const atoms = [...(computation[ATOMS] || [])];
 
-    cancelComputation(computation);
+    cancelReaction(computation);
     flushDisposer(disposer);
 
     computation[ATOMS] = atoms;

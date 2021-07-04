@@ -1,4 +1,4 @@
-import { cancelComputation } from "./scheduler";
+import { cancelReaction } from "./reactor";
 import { createDisposer, flushDisposer, onCleanup } from "./disposer";
 import { runWithContext } from "./context";
 
@@ -17,7 +17,7 @@ export function createReaction<T>(fn: (v?: T) => T, value?: T): void {
   }
 
   function cleanup() {
-    cancelComputation(computation);
+    cancelReaction(computation);
     flushDisposer(disposer);
   }
 
