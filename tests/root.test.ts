@@ -7,18 +7,18 @@ jest.useFakeTimers("modern");
 describe("root", () => {
   it("allows subcomputations to escape their parents", () => {
     createRoot(() => {
-      const [getOuterSignal, setOuterSignal] = createValue(0);
-      const [getInnerSignal, setInnerSignal] = createValue(0);
+      const [getOuterAtom, setOuterAtom] = createValue(0);
+      const [getInnerAtom, setInnerAtom] = createValue(0);
       const outerSpy = jest.fn();
       const innerSpy = jest.fn();
 
       createReaction(() => {
-        getOuterSignal();
+        getOuterAtom();
         outerSpy();
 
         createRoot(() => {
           createReaction(() => {
-            getInnerSignal();
+            getInnerAtom();
             innerSpy();
           });
         });
@@ -28,15 +28,15 @@ describe("root", () => {
       expect(innerSpy.mock.calls.length).toBe(1);
 
       // trigger the outer computation, making more inners
-      setOuterSignal(1);
-      setOuterSignal(2);
+      setOuterAtom(1);
+      setOuterAtom(2);
 
       jest.runAllTimers();
 
       expect(outerSpy.mock.calls.length).toBe(2);
       expect(innerSpy.mock.calls.length).toBe(2);
 
-      setInnerSignal(1);
+      setInnerAtom(1);
 
       jest.runAllTimers();
 
@@ -49,16 +49,16 @@ describe("root", () => {
     const spy = jest.fn();
 
     createRoot((dispose) => {
-      const [getSignal, setSignal] = createValue(1);
+      const [getAtom, setAtom] = createValue(1);
 
       createReaction(() => {
-        getSignal();
+        getAtom();
         spy();
       });
 
       expect(spy.mock.calls.length).toBe(1);
 
-      setSignal(2);
+      setAtom(2);
 
       jest.runAllTimers();
 
@@ -66,7 +66,7 @@ describe("root", () => {
 
       dispose();
 
-      setSignal(3);
+      setAtom(3);
 
       jest.runAllTimers();
 

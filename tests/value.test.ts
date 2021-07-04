@@ -20,32 +20,32 @@ describe("createValue", () => {
 
   it("triggers computation if values are not equal", () => {
     const spy = jest.fn();
-    const [getSignal, setSignal] = createValue(false);
+    const [getAtom, setAtom] = createValue(false);
 
-    runWithContext({ computation: spy }, () => getSignal());
+    runWithContext({ computation: spy }, () => getAtom());
 
     expect(spy.mock.calls.length).toBe(0);
-    expect(getSignal()).toBe(false);
+    expect(getAtom()).toBe(false);
 
-    setSignal(true);
+    setAtom(true);
 
     expect(spy.mock.calls.length).toBe(0);
 
     jest.runAllTimers();
 
     expect(spy.mock.calls.length).toBe(1);
-    expect(getSignal()).toBe(true);
+    expect(getAtom()).toBe(true);
   });
 
   it("triggers computation if compare option is false and values are equal", () => {
     const spy = jest.fn();
-    const [getSignal, setSignal] = createValue(true, false);
+    const [getAtom, setAtom] = createValue(true, false);
 
-    runWithContext({ computation: spy }, () => getSignal());
+    runWithContext({ computation: spy }, () => getAtom());
 
     expect(spy.mock.calls.length).toBe(0);
 
-    setSignal(true);
+    setAtom(true);
 
     expect(spy.mock.calls.length).toBe(0);
 
@@ -56,49 +56,49 @@ describe("createValue", () => {
 
   it("does not trigger computation if set to equal value", () => {
     const spy = jest.fn();
-    const [getSignal, setSignal] = createValue(false);
+    const [getAtom, setAtom] = createValue(false);
 
     createRoot(() => {
-      runWithContext({ computation: spy }, () => getSignal());
+      runWithContext({ computation: spy }, () => getAtom());
 
       expect(spy.mock.calls.length).toBe(0);
-      expect(getSignal()).toBe(false);
+      expect(getAtom()).toBe(false);
 
-      setSignal(false);
+      setAtom(false);
 
       expect(spy.mock.calls.length).toBe(0);
-      expect(getSignal()).toBe(false);
+      expect(getAtom()).toBe(false);
 
       jest.runAllTimers();
 
       expect(spy.mock.calls.length).toBe(0);
-      expect(getSignal()).toBe(false);
+      expect(getAtom()).toBe(false);
 
-      setSignal(true);
+      setAtom(true);
 
       jest.runAllTimers();
 
       expect(spy.mock.calls.length).toBe(1);
-      expect(getSignal()).toBe(true);
+      expect(getAtom()).toBe(true);
     });
   });
 
   it("can take an equality predicate", () => {
     const spy = jest.fn();
-    const [getSignal, setSignal] = createValue([1], (a, b) => a[0] === b[0]);
+    const [getAtom, setAtom] = createValue([1], (a, b) => a[0] === b[0]);
 
     createRoot(() => {
-      runWithContext({ computation: spy }, () => getSignal());
+      runWithContext({ computation: spy }, () => getAtom());
 
       expect(spy.mock.calls.length).toBe(0);
 
-      setSignal([1]);
+      setAtom([1]);
 
       jest.runAllTimers();
 
       expect(spy.mock.calls.length).toBe(0);
 
-      setSignal([2]);
+      setAtom([2]);
 
       jest.runAllTimers();
 
@@ -108,60 +108,60 @@ describe("createValue", () => {
 
   it("removes subscriptions on cleanup", () => {
     const spy = jest.fn();
-    const [getSignal, setSignal] = createValue(false);
+    const [getAtom, setAtom] = createValue(false);
     const disposer = createDisposer();
 
-    runWithContext({ disposer, computation: spy }, () => getSignal());
+    runWithContext({ disposer, computation: spy }, () => getAtom());
 
-    setSignal(true);
+    setAtom(true);
 
     expect(spy.mock.calls.length).toBe(0);
 
     jest.runAllTimers();
 
     expect(spy.mock.calls.length).toBe(1);
-    expect(getSignal()).toBe(true);
+    expect(getAtom()).toBe(true);
 
     flushDisposer(disposer);
 
-    setSignal(false);
+    setAtom(false);
 
     expect(spy.mock.calls.length).toBe(1);
-    expect(getSignal()).toBe(false);
+    expect(getAtom()).toBe(false);
   });
 
   it("ignores recomputation with circular dependencies", () => {
     const spy = jest.fn();
-    const [getSignal, setSignal] = createValue(0);
+    const [getAtom, setAtom] = createValue(0);
     const disposer = createDisposer();
 
     runWithContext({ disposer, computation: spy }, () =>
-      setSignal(getSignal() + 1)
+      setAtom(getAtom() + 1)
     );
 
     expect(spy.mock.calls.length).toBe(0);
-    expect(getSignal()).toBe(1);
+    expect(getAtom()).toBe(1);
 
-    setSignal(getSignal() + 1);
+    setAtom(getAtom() + 1);
 
     jest.runAllTimers();
 
     expect(spy.mock.calls.length).toBe(1);
-    expect(getSignal()).toBe(2);
+    expect(getAtom()).toBe(2);
   });
 
   it("uses global queue of updates (aka S.js subclocks)", () => {
     const spy = jest.fn();
-    const [getSignal, setSignal] = createValue(20);
+    const [getAtom, setAtom] = createValue(20);
 
     createRoot(() => {
       createReaction(() => {
-        while (getSignal() <= 10) {
-          setSignal(getSignal() + 1);
+        while (getAtom() <= 10) {
+          setAtom(getAtom() + 1);
         }
       });
 
-      createReaction(() => spy(getSignal()));
+      createReaction(() => spy(getAtom()));
     });
 
     expect(spy.mock.calls.length).toBe(1);
@@ -170,7 +170,7 @@ describe("createValue", () => {
 
     expect(spy.mock.calls.length).toBe(1);
 
-    setSignal(5);
+    setAtom(5);
     jest.runAllTimers();
 
     expect(spy.mock.calls.length).toBe(2);
@@ -246,13 +246,13 @@ describe("createValue", () => {
 
   it("does not recompute computations used after change", () => {
     const spy = jest.fn();
-    const [getSignal, setSignal] = createValue(false);
+    const [getAtom, setAtom] = createValue(false);
 
     createRoot(() => {
-      setSignal(true);
+      setAtom(true);
 
       createReaction(() => {
-        getSignal();
+        getAtom();
         spy();
       });
     });

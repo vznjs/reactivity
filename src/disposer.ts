@@ -12,7 +12,7 @@ function flush(): void {
 }
 
 export function createDisposer(): Disposer {
-  return {};
+  return {} as const;
 }
 
 export function flushDisposer(disposer: Disposer): void {

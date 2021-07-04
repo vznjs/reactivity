@@ -8,15 +8,15 @@ jest.useFakeTimers("modern");
 
 describe("createMemo", () => {
   it("does recompute once only if changed", () => {
-    const [getSignal, setSignal] = createValue(1);
+    const [getAtom, setAtom] = createValue(1);
     const spy = jest.fn();
 
     const getMemo = createMemo(() => {
-      getSignal();
+      getAtom();
       spy();
     });
 
-    setSignal(2);
+    setAtom(2);
 
     expect(spy.mock.calls.length).toBe(0);
 
@@ -25,8 +25,8 @@ describe("createMemo", () => {
 
     expect(spy.mock.calls.length).toBe(1);
 
-    setSignal(3);
-    setSignal(4);
+    setAtom(3);
+    setAtom(4);
 
     getMemo();
 
@@ -34,13 +34,13 @@ describe("createMemo", () => {
   });
 
   it("schedules only one recomputation", () => {
-    const [getSignal, setSignal] = createValue(1);
+    const [getAtom, setAtom] = createValue(1);
     const spy = jest.fn();
 
     expect(spy.mock.calls.length).toBe(0);
 
     const getMemo = createMemo(() => {
-      getSignal();
+      getAtom();
       spy();
     });
 
@@ -50,8 +50,8 @@ describe("createMemo", () => {
 
     expect(spy.mock.calls.length).toBe(1);
 
-    setSignal(2);
-    setSignal(3);
+    setAtom(2);
+    setAtom(3);
 
     expect(spy.mock.calls.length).toBe(1);
 
@@ -61,7 +61,7 @@ describe("createMemo", () => {
   });
 
   it("does recompute on every change in reaction", () => {
-    const [getSignal, setSignal] = createValue(1);
+    const [getAtom, setAtom] = createValue(1);
     const disposer = createDisposer();
     const spy = jest.fn();
 
@@ -70,7 +70,7 @@ describe("createMemo", () => {
 
       const getMemo = createMemo(() => {
         spy();
-        return getSignal();
+        return getAtom();
       });
 
       expect(spy.mock.calls.length).toBe(0);
@@ -81,8 +81,8 @@ describe("createMemo", () => {
 
       expect(spy.mock.calls.length).toBe(1);
 
-      setSignal(2);
-      setSignal(3);
+      setAtom(2);
+      setAtom(3);
 
       jest.runAllTimers();
 
@@ -96,7 +96,7 @@ describe("createMemo", () => {
 
       expect(spy.mock.calls.length).toBe(2);
       
-      setSignal(4);
+      setAtom(4);
       
       jest.runAllTimers();
       
@@ -111,13 +111,13 @@ describe("createMemo", () => {
   it("cleanups with each recomputation", () => {
     const spy = jest.fn();
 
-    const [getSignal, setSignal] = createValue(1);
+    const [getAtom, setAtom] = createValue(1);
     const disposer = createDisposer();
 
     runWithContext({ disposer }, () => {
       const getMemo = createMemo(() => {
         onCleanup(spy);
-        getSignal();
+        getAtom();
       });
 
       getMemo();
@@ -130,7 +130,7 @@ describe("createMemo", () => {
 
       getMemo();
 
-      setSignal(2);
+      setAtom(2);
 
       getMemo();
 
@@ -138,7 +138,7 @@ describe("createMemo", () => {
 
       expect(spy.mock.calls.length).toBe(1);
 
-      setSignal(3);
+      setAtom(3);
 
       jest.runAllTimers();
 

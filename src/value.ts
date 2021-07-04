@@ -1,4 +1,4 @@
-import { createSignal, notifySignal, Signal, trackSignal } from "./signal";
+import { createAtom, triggerAtom, Atom, trackAtom } from "./atom";
 
 /**
  * Values are the foundation of reactive system.
@@ -27,13 +27,13 @@ export function createValue<T>(
   value?: T,
   compare?: boolean | ((prev: T | undefined, next: T) => boolean)
 ): [() => T | undefined, (newValue: T) => void] {
-  let signal: Signal;
+  let atom: Atom;
 
   compare ??= true;
 
   function getter(): T | undefined {
-    if (!signal) signal = createSignal();
-    trackSignal(signal);
+    if (!atom) atom = createAtom();
+    trackAtom(atom);
     return value;
   }
 
@@ -44,7 +44,7 @@ export function createValue<T>(
 
     value = newValue;
 
-    if (signal) notifySignal(signal);
+    if (atom) triggerAtom(atom);
   }
 
   return [getter, setter];

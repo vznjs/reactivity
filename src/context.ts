@@ -1,4 +1,4 @@
-import type { Computation } from "./signal";
+import type { Computation } from "./atom";
 import type { Disposer } from "./disposer";
 
 export interface Context {

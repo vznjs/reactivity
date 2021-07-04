@@ -1,23 +1,23 @@
 import { createDisposer, flushDisposer, onCleanup } from "./disposer";
 import { runWithContext } from "./context";
 import {
-  createSignal,
+  createAtom,
   getRevision,
-  notifySignal,
+  triggerAtom,
   Revision,
-  Signal,
-  trackSignal,
-} from "./signal";
-import { Computation, SIGNALS } from "./signal";
+  Atom,
+  trackAtom,
+} from "./atom";
+import { Computation, ATOMS } from "./atom";
 import { cancelComputation } from "./scheduler";
 
-function getLatestRevision(signals?: Signal[]): Revision {
-  if (!signals) return 0;
+function getLatestRevision(atoms?: Atom[]): Revision {
+  if (!atoms) return 0;
   let max = 0;
 
-  for (let index = 0; index < signals.length; index++) {
-    const signal = signals[index];
-    if (signal.revision > max) max = signal.revision;
+  for (let index = 0; index < atoms.length; index++) {
+    const atom = atoms[index];
+    if (atom.revision > max) max = atom.revision;
   }
 
   return max;
@@ -28,43 +28,43 @@ export function createMemo<T>(fn: () => T): () => T {
   let currentRevision = getRevision();
   let lastRevision = currentRevision;
 
-  const signal = createSignal();
+  const atom = createAtom();
   const disposer = createDisposer();
 
   const computation: Computation = () => {
-    lastRevision = getLatestRevision(computation[SIGNALS]);
+    lastRevision = getLatestRevision(computation[ATOMS]);
     flushDisposer(disposer);
-    notifySignal(signal);
+    triggerAtom(atom);
   };
 
   function recompute() {
     runWithContext({ computation, disposer }, () => (memoValue = fn()));
-    currentRevision = getLatestRevision(computation[SIGNALS]);
+    currentRevision = getLatestRevision(computation[ATOMS]);
   }
 
   onCleanup(() => {
-    const signals = [...(computation[SIGNALS] || [])];
+    const atoms = [...(computation[ATOMS] || [])];
 
     cancelComputation(computation);
     flushDisposer(disposer);
 
-    computation[SIGNALS] = signals;
+    computation[ATOMS] = atoms;
   });
 
   function getter() {
-    const signals = computation[SIGNALS];
+    const atoms = computation[ATOMS];
 
-    if (!signals) {
-      computation[SIGNALS] = [];
+    if (!atoms) {
+      computation[ATOMS] = [];
       recompute();
     } else if (currentRevision < lastRevision) {
       recompute();
-    } else if (currentRevision < getLatestRevision(signals)) {
+    } else if (currentRevision < getLatestRevision(atoms)) {
       flushDisposer(disposer);
       recompute();
     }
 
-    trackSignal(signal);
+    trackAtom(atom);
 
     return memoValue;
   }

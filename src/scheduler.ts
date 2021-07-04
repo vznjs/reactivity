@@ -1,7 +1,7 @@
 import { flushQueue, Queue } from "./queue";
-import type { Signal } from "./signal";
+import type { Atom } from "./atom";
 
-const signalsQueue = new Map<Signal, Queue>();
+const atomsQueue = new Map<Atom, Queue>();
 const unscheduleQueue = new Set<() => void>();
 
 let updatesQueue: Queue | undefined;
@@ -9,11 +9,11 @@ let updatesQueue: Queue | undefined;
 let isScheduled = false;
 
 function scheduler() {
-  updatesQueue = [...signalsQueue.values()]
+  updatesQueue = [...atomsQueue.values()]
     .flat()
     .filter((computation) => !unscheduleQueue.has(computation));
 
-  signalsQueue.clear();
+  atomsQueue.clear();
   unscheduleQueue.clear();
 
   flushQueue(updatesQueue);
@@ -22,7 +22,7 @@ function scheduler() {
   isScheduled = false;
 }
 
-export function scheduleUpdate(signal: Signal, computations: Queue): void {
+export function scheduleUpdate(atom: Atom, computations: Queue): void {
   if (updatesQueue) {
     for (let index = 0; index < computations.length; index++) {
       const computation = computations[index];
@@ -34,7 +34,7 @@ export function scheduleUpdate(signal: Signal, computations: Queue): void {
     return;
   }
 
-  signalsQueue.set(signal, computations);
+  atomsQueue.set(atom, computations);
 
   if (isScheduled) return;
 

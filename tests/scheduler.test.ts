@@ -1,15 +1,15 @@
 import { scheduleUpdate, cancelComputation } from "../src/scheduler";
-import { createSignal } from "../src/signal";
+import { createAtom } from "../src/atom";
 
 jest.useFakeTimers("modern");
 
 describe("scheduleUpdate", () => {
   it("batches calls", () => {
     const spy = jest.fn();
-    const signal = createSignal();
+    const atom = createAtom();
 
-    scheduleUpdate(signal, [spy]);
-    scheduleUpdate(signal, [spy]);
+    scheduleUpdate(atom, [spy]);
+    scheduleUpdate(atom, [spy]);
 
     expect(spy.mock.calls.length).toBe(0);
 
@@ -20,13 +20,13 @@ describe("scheduleUpdate", () => {
 
   it("works with nested schedules", () => {
     const spy = jest.fn();
-    const signal = createSignal();
+    const atom = createAtom();
     const computation = () => {
-      scheduleUpdate(signal, [() => spy("nested")]);
+      scheduleUpdate(atom, [() => spy("nested")]);
       spy("flat");
     };
 
-    scheduleUpdate(signal, [computation]);
+    scheduleUpdate(atom, [computation]);
 
     expect(spy.mock.calls.length).toBe(0);
 
@@ -41,9 +41,9 @@ describe("scheduleUpdate", () => {
 describe("cancelComputation", () => {
   it("unschedules a task", () => {
     const spy = jest.fn();
-    const signal = createSignal();
+    const atom = createAtom();
 
-    scheduleUpdate(signal, [spy]);
+    scheduleUpdate(atom, [spy]);
     cancelComputation(spy);
 
     expect(spy.mock.calls.length).toBe(0);

@@ -7,7 +7,7 @@ jest.useFakeTimers("modern");
 
 describe("createReaction", () => {
   it("reruns and cleanups on change", () => {
-    const [getSignal, setSignal] = createValue(1);
+    const [getAtom, setAtom] = createValue(1);
     const disposer = createDisposer();
     const reactionSpy = jest.fn();
     const cleanupSpy = jest.fn();
@@ -16,20 +16,20 @@ describe("createReaction", () => {
       createReaction(() => {
         onCleanup(cleanupSpy);
         reactionSpy();
-        getSignal();
+        getAtom();
       });
     });
 
     expect(reactionSpy.mock.calls.length).toBe(1);
     expect(cleanupSpy.mock.calls.length).toBe(0);
 
-    setSignal(2);
+    setAtom(2);
     jest.runAllTimers();
 
     expect(reactionSpy.mock.calls.length).toBe(2);
     expect(cleanupSpy.mock.calls.length).toBe(1);
 
-    setSignal(3);
+    setAtom(3);
     jest.runAllTimers();
 
     expect(reactionSpy.mock.calls.length).toBe(3);
@@ -40,7 +40,7 @@ describe("createReaction", () => {
     expect(reactionSpy.mock.calls.length).toBe(3);
     expect(cleanupSpy.mock.calls.length).toBe(3);
 
-    setSignal(4);
+    setAtom(4);
     jest.runAllTimers();
 
     expect(reactionSpy.mock.calls.length).toBe(3);
@@ -48,67 +48,67 @@ describe("createReaction", () => {
   });
 
   it("works with built-in async batching", () => {
-    const [getSignal, setSignal] = createValue("start");
+    const [getAtom, setAtom] = createValue("start");
 
     createReaction(() => {
-      setSignal("reaction");
-      getSignal();
+      setAtom("reaction");
+      getAtom();
     });
 
-    expect(getSignal()).toBe("reaction");
+    expect(getAtom()).toBe("reaction");
 
-    setSignal("order");
+    setAtom("order");
 
-    expect(getSignal()).toBe("order");
+    expect(getAtom()).toBe("order");
 
     jest.runAllTimers();
 
-    expect(getSignal()).toBe("reaction");
+    expect(getAtom()).toBe("reaction");
   });
 
   it("is batching updates", () => {
-    const [getSignal, setSignal] = createValue("start");
+    const [getAtom, setAtom] = createValue("start");
     const spy = jest.fn();
 
     createReaction(() => {
-      setSignal("reaction1");
-      setSignal("reaction2");
-      getSignal();
+      setAtom("reaction1");
+      setAtom("reaction2");
+      getAtom();
       spy();
     });
 
     expect(spy.mock.calls.length).toBe(1);
 
-    expect(getSignal()).toBe("reaction2");
+    expect(getAtom()).toBe("reaction2");
 
-    setSignal("order");
+    setAtom("order");
 
-    expect(getSignal()).toBe("order");
+    expect(getAtom()).toBe("order");
 
     jest.runAllTimers();
 
-    expect(getSignal()).toBe("reaction2");
+    expect(getAtom()).toBe("reaction2");
     expect(spy.mock.calls.length).toBe(2);
   });
 
   it("works with nested reactions", () => {
     const spy = jest.fn();
-    const [getSignal, setSignal] = createValue(false);
+    const [getAtom, setAtom] = createValue(false);
 
     createReaction(() => {
-      if (!getSignal()) return;
-      createReaction(() => spy(getSignal()));
+      if (!getAtom()) return;
+      createReaction(() => spy(getAtom()));
     });
 
     expect(spy.mock.calls.length).toBe(0);
 
-    setSignal(true);
+    setAtom(true);
 
     jest.runAllTimers();
 
     expect(spy.mock.calls.length).toBe(1);
 
-    setSignal(false);
+    setAtom(false);
 
     jest.runAllTimers();
 
@@ -119,11 +119,11 @@ describe("createReaction", () => {
     const cleanupSpy = jest.fn();
     const reactionSpy = jest.fn();
     const disposer = createDisposer();
-    const [getSignal, setSignal] = createValue(false);
+    const [getAtom, setAtom] = createValue(false);
 
     runWithContext({ disposer }, () => {
       createReaction(() => {
-        getSignal();
+        getAtom();
         reactionSpy();
         onCleanup(cleanupSpy);
       });
@@ -132,7 +132,7 @@ describe("createReaction", () => {
     expect(cleanupSpy.mock.calls.length).toBe(0);
     expect(reactionSpy.mock.calls.length).toBe(1);
 
-    setSignal(true);
+    setAtom(true);
 
     expect(cleanupSpy.mock.calls.length).toBe(0);
     expect(reactionSpy.mock.calls.length).toBe(1);

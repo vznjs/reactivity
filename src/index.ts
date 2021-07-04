@@ -5,6 +5,6 @@ export * from "./queue";
 export * from "./reaction";
 export * from "./root";
 export * from "./scheduler";
-export * from "./signal";
+export * from "./atom";
 export * from "./untrack";
 export * from "./value";
