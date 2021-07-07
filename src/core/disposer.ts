@@ -1,8 +1,8 @@
-import { flushQueue, Queue } from "../utils/queue";
-import { getContext } from "./context";
+import { flushQueue } from "../utils/queue";
+import { getContext, runWithContext } from "./context";
 
 export type Disposer = {
-  queue?: Queue;
+  queue?: Array<() => void>;
 };
 
 const globalDisposer: Disposer = createDisposer();
@@ -16,8 +16,12 @@ export function createDisposer(): Disposer {
 }
 
 export function flushDisposer(disposer: Disposer): void {
-  if (!disposer.queue) return;
-  flushQueue(disposer.queue);
+  if (!disposer.queue || !disposer.queue.length) return;
+
+  runWithContext({ disposer: undefined, reaction: undefined }, () =>
+    flushQueue(disposer.queue)
+  );
+
   disposer.queue = undefined;
 }
 
