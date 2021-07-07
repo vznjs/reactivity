@@ -91,27 +91,13 @@ describe("createMemo", () => {
       getMemo();
 
       expect(spy.mock.calls.length).toBe(2);
-
-      flushDisposer(disposer);
-
-      expect(spy.mock.calls.length).toBe(2);
-      
-      setAtom(4);
-      
-      jest.runAllTimers();
-      
-      expect(spy.mock.calls.length).toBe(2);
-
-      getMemo();
-
-      expect(spy.mock.calls.length).toBe(2);
     });
   });
 
   it("cleanups with each reaction", () => {
     const spy = jest.fn();
 
-    const [getAtom, setAtom] = createValue(1);
+    const [getAtom] = createValue(1);
     const disposer = createDisposer();
 
     runWithContext({ disposer }, () => {
@@ -125,22 +111,6 @@ describe("createMemo", () => {
       expect(spy.mock.calls.length).toBe(0);
 
       flushDisposer(disposer);
-
-      expect(spy.mock.calls.length).toBe(1);
-
-      getMemo();
-
-      setAtom(2);
-
-      getMemo();
-
-      jest.runAllTimers();
-
-      expect(spy.mock.calls.length).toBe(1);
-
-      setAtom(3);
-
-      jest.runAllTimers();
 
       expect(spy.mock.calls.length).toBe(1);
     });

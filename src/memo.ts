@@ -38,13 +38,13 @@ export function createMemo<T>(fn: () => T): () => T {
   };
 
   function recompute() {
-    reaction[ATOMS] = undefined;
+    reaction[ATOMS] = [];
     runWithContext({ reaction, disposer }, () => (memoValue = fn()));
     memoRevision = getLatestRevision(reaction[ATOMS]);
   }
 
   onCleanup(() => {
-    reaction[ATOMS] = [];
+    reaction[ATOMS] = undefined;
     cancelReaction(reaction);
     flushDisposer(disposer);
   });
