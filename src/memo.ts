@@ -25,41 +25,34 @@ function getLatestRevision(atoms?: Atom[]): Revision {
 
 export function createMemo<T>(fn: () => T): () => T {
   let memoValue: T;
-  let currentRevision = getRevision();
-  let lastRevision = currentRevision;
+  let memoRevision = getRevision();
+  let atomsRevision = memoRevision;
 
   const atom = createAtom();
   const disposer = createDisposer();
 
   const reaction: Reaction = () => {
-    lastRevision = getLatestRevision(reaction[ATOMS]);
+    atomsRevision = getLatestRevision(reaction[ATOMS]);
     flushDisposer(disposer);
     triggerAtom(atom);
   };
 
   function recompute() {
+    reaction[ATOMS] = undefined;
     runWithContext({ reaction, disposer }, () => (memoValue = fn()));
-    currentRevision = getLatestRevision(reaction[ATOMS]);
+    memoRevision = getLatestRevision(reaction[ATOMS]);
   }
 
   onCleanup(() => {
-    const atoms = [...(reaction[ATOMS] || [])];
-
+    reaction[ATOMS] = [];
     cancelReaction(reaction);
     flushDisposer(disposer);
-
-    reaction[ATOMS] = atoms;
   });
 
   function getter() {
-    const atoms = reaction[ATOMS];
-
-    if (!atoms) {
-      reaction[ATOMS] = [];
+    if (!reaction[ATOMS] || memoRevision < atomsRevision) {
       recompute();
-    } else if (currentRevision < lastRevision) {
-      recompute();
-    } else if (currentRevision < getLatestRevision(atoms)) {
+    } else if (memoRevision < getLatestRevision(reaction[ATOMS])) {
       flushDisposer(disposer);
       recompute();
     }

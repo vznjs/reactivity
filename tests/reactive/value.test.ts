@@ -133,7 +133,7 @@ describe("createValue", () => {
     expect(getAtom()).toBe(false);
   });
 
-  it("ignores rereaction with circular dependencies", () => {
+  it("ignores reaction with circular dependencies", () => {
     const spy = jest.fn();
     const [getAtom, setAtom] = createValue(0);
     const disposer = createDisposer();

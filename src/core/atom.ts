@@ -39,12 +39,7 @@ export function trackAtom(atom: Atom): void {
   onCleanup(() => {
     if (atom.reactions) {
       const index = atom.reactions.indexOf(reaction);
-      atom.reactions.splice(index, 1);
-    }
-
-    if (reaction[ATOMS]) {
-      const index = reaction[ATOMS]!.indexOf(atom);
-      if (index > -1) reaction[ATOMS]?.splice(index, 1);
+      if (index > -1) atom.reactions.splice(index, 1);
     }
   });
 }

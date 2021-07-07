@@ -33,7 +33,7 @@ describe("createMemo", () => {
     expect(spy.mock.calls.length).toBe(2);
   });
 
-  it("schedules only one rereaction", () => {
+  it("schedules only one reaction", () => {
     const [getAtom, setAtom] = createValue(1);
     const spy = jest.fn();
 
@@ -104,11 +104,11 @@ describe("createMemo", () => {
 
       getMemo();
 
-      expect(spy.mock.calls.length).toBe(3);
+      expect(spy.mock.calls.length).toBe(2);
     });
   });
 
-  it("cleanups with each rereaction", () => {
+  it("cleanups with each reaction", () => {
     const spy = jest.fn();
 
     const [getAtom, setAtom] = createValue(1);
@@ -142,7 +142,7 @@ describe("createMemo", () => {
 
       jest.runAllTimers();
 
-      expect(spy.mock.calls.length).toBe(2);
+      expect(spy.mock.calls.length).toBe(1);
     });
   });
 });
