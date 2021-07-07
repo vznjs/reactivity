@@ -4,4 +4,4 @@ export * from "./core/atom";
 export * from "./core/reactor";
 export * from "./reactive/value";
 export * from "./memo";
-export * from "./react";
+export * from "./reactive";

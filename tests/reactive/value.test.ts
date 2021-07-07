@@ -1,6 +1,6 @@
 import { root, runWithContext } from "../../src/core/context";
 import { createValue } from "../../src/reactive/value";
-import { react } from "../../src/react";
+import { reactive } from "../../src/reactive";
 import {
   createDisposer,
   flushDisposer,
@@ -156,13 +156,13 @@ describe("createValue", () => {
     const [getAtom, setAtom] = createValue(20);
 
     root(() => {
-      react(() => {
+      reactive(() => {
         while (getAtom() <= 10) {
           setAtom(getAtom() + 1);
         }
       });
 
-      react(() => spy(getAtom()));
+      reactive(() => spy(getAtom()));
     });
 
     expect(spy.mock.calls.length).toBe(1);
@@ -183,12 +183,12 @@ describe("createValue", () => {
     const [getData2, setData2] = createValue(2);
 
     root(() => {
-      react(() => {
+      reactive(() => {
         getData2();
         spy();
       });
 
-      react(() => {
+      reactive(() => {
         setData2(getData() + 1);
       });
 
@@ -212,14 +212,14 @@ describe("createValue", () => {
     const disposer = createDisposer();
 
     root(() => {
-      react(() => {
+      reactive(() => {
         onCleanup(() => flushDisposer(disposer));
         getData();
         spy();
       });
 
       runWithContext({ disposer }, () => {
-        react(() => {
+        reactive(() => {
           getData();
           spy2();
         });
@@ -252,7 +252,7 @@ describe("createValue", () => {
     root(() => {
       setAtom(true);
 
-      react(() => {
+      reactive(() => {
         getAtom();
         spy();
       });

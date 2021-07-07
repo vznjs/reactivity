@@ -5,7 +5,7 @@ import {
   runWithContext,
 } from "../../src/core/context";
 import { createValue } from "../../src/reactive/value";
-import { react } from "../../src/react";
+import { reactive } from "../../src/reactive";
 import {
   createDisposer,
   flushDisposer,
@@ -22,12 +22,12 @@ describe("root", () => {
       const outerSpy = jest.fn();
       const innerSpy = jest.fn();
 
-      react(() => {
+      reactive(() => {
         getOuterAtom();
         outerSpy();
 
         root(() => {
-          react(() => {
+          reactive(() => {
             getInnerAtom();
             innerSpy();
           });
@@ -61,7 +61,7 @@ describe("root", () => {
     root((dispose) => {
       const [getAtom, setAtom] = createValue(1);
 
-      react(() => {
+      reactive(() => {
         getAtom();
         spy();
       });

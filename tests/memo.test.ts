@@ -1,5 +1,5 @@
 import { createMemo } from "../src/memo";
-import { react } from "../src/react";
+import { reactive } from "../src/reactive";
 import { createValue } from "../src/reactive/value";
 import { createDisposer, flushDisposer, onCleanup } from "../src/core/disposer";
 import { runWithContext } from "../src/core/context";
@@ -44,7 +44,7 @@ describe("createMemo", () => {
       spy();
     });
 
-    react(() => {
+    reactive(() => {
       getMemo();
     });
 
@@ -75,7 +75,7 @@ describe("createMemo", () => {
 
       expect(spy.mock.calls.length).toBe(0);
 
-      react(() => {
+      reactive(() => {
         getMemo();
       });
 
