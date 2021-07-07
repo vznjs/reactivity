@@ -11,14 +11,14 @@ let isScheduled = false;
 function scheduler() {
   updatesQueue = new Set(
     [...atomsQueue.values()]
-          .flat()
-          .filter((reaction) => !unscheduleQueue.has(reaction))
+      .flat()
+      .filter((reaction) => !unscheduleQueue.has(reaction))
   );
 
   atomsQueue.clear();
   unscheduleQueue.clear();
 
-  flushQueue(updatesQueue)
+  flushQueue(updatesQueue);
 
   updatesQueue = undefined;
   isScheduled = false;
@@ -47,7 +47,7 @@ export function scheduleAtomReactions(atom: Atom): void {
 
 export function cancelReaction(reaction: () => void): void {
   if (updatesQueue) {
-    updatesQueue.delete(reaction)
+    updatesQueue.delete(reaction);
     return;
   }
 
