@@ -88,7 +88,7 @@ root((dispose) => {
 
   const greetings = createMemo(() => `Hey ${getName()}!`);
 
-  react(() => {
+  reactive(() => {
     console.log(greetings()); // Log greetings every time they will change
   });
 
@@ -144,7 +144,7 @@ import { react, createValue } from "@vzn/reactivity";
 const button = document.createElement("button");
 const [getName, setName] = createValue("VZN");
 
-react(() => {
+reactive(() => {
   console.log("Say my name:", getName());
 });
 
@@ -165,7 +165,7 @@ import { root, createValue, react } from "@vzn/reactivity";
 root((dispose) => {
   const [getName] = createValue("VZN");
 
-  react(() => {
+  reactive(() => {
     console.log(getName());
   });
 
@@ -195,7 +195,7 @@ const getGreetings = createMemo(() => `Hey ${getName()}!`); // It does not compu
 getGreetings(); // First usage runs the computation
 
 // The reaction will not recompute the memo as it has been already calculated
-react(() => {
+reactive(() => {
   console.log(getGreetings());
 });
 
@@ -216,7 +216,7 @@ import { react, createValue, onCleanup } from "@vzn/reactivity";
 const button = document.createElement("button");
 const [getEvent, setEvent] = createValue("click");
 
-react(() => {
+reactive(() => {
   const eventType = getEvent();
   const action = () => console.log("I did something!");
 
@@ -237,7 +237,7 @@ import { react, createValue } from "@vzn/reactivity";
 
 const [getName, setName] = createValue("VZN");
 
-react(() => {
+reactive(() => {
   freeze(() => {
     console.log(getName());
   });
@@ -263,32 +263,36 @@ import { createAtom, trackAtom, triggerAtom, react } from "@vzn/reactivity";
 
 const myAtom = createAtom();
 
-react(() => {
-  trackAtom(myAtom); // track and remember the computation
+reactive(() => {
+  trackAtom(myAtom); // tracks and remembers current reaction
 });
 
-triggerAtom(myAtom); // notify all computations about a change (the reaction will be scheduled for recomputation)
+triggerAtom(myAtom); // schedules new reactor's cycle which informs reactions about a chnage
 ```
 
 ## `getContext`
 
-It returns the current Reactive Context. Useful for retrieving current computation and disposer, as well as remembering the context, e.g., for async operations.
+It returns the current Context. Useful for retrieving current reaction and disposer, as well as remembering the context, e.g., for async operations.
 
 ```js
 import { getContext } from "@vzn/reactivity";
 
-const currentContext = getContext(); // { disposer?: Set<() => void>, computation?: () => void}
+const currentContext = getContext(); // { disposer?: Set<() => void>, reaction?: () => void}
 ```
 
 ## `runWithContext`
 
-It merges passed computation and disposer with current Context, creating a new one and running passed function with it.
+It merges reaction and disposer with current Context and running passed function with it.
 
 ```js
 import { runWithContext } from "@vzn/reactivity";
 
 runWithContext({ disposer: undefined }, () => {
-  console.log("I have no disposer but I still use the inherited computation");
+  console.log("I have no disposer but I still use the inherited reaction");
+});
+
+runWithContext({ reaction: undefined }, () => {
+  console.log("I have no reaction but I still use the inherited disposer");
 });
 ```
 

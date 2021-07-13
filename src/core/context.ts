@@ -1,4 +1,4 @@
-import type { Reaction } from "./atom";
+import { flushReaction, Reaction } from "./atom";
 import { createDisposer, Disposer, flushDisposer } from "./disposer";
 
 export interface Context {
@@ -6,29 +6,44 @@ export interface Context {
   reaction?: Reaction;
 }
 
-const context: Context = {};
+let context: Context = {};
 
 export function getContext(): Context {
   return context;
 }
 
 export function runWithContext<T>(newContext: Context, fn: () => T): T {
-  const currentDisposer = context.disposer;
-  const currentReaction = context.reaction;
+  const currentContext = context;
 
-  if ("disposer" in newContext) context.disposer = newContext.disposer;
-  if ("reaction" in newContext) context.reaction = newContext.reaction;
+  context = newContext;
 
   try {
     return fn();
   } finally {
-    context.disposer = currentDisposer;
-    context.reaction = currentReaction;
+    context = currentContext;
   }
 }
 
+export function runReaction<T>(context: Context, fn: () => T): Reaction {
+  if (context.disposer) flushDisposer(context.disposer);
+
+  const newReaction = () => context.reaction?.();
+
+  try {
+    runWithContext({ reaction: newReaction, disposer: context.disposer }, fn);
+  } catch (error) {
+    if (context.disposer) flushDisposer(context.disposer);
+    flushReaction(newReaction);
+    throw error;
+  }
+
+  if (context.reaction) flushReaction(context.reaction);
+
+  return newReaction;
+}
+
 export function freeze<T>(fn: () => T): T {
-  return runWithContext({ reaction: undefined }, fn);
+  return runWithContext({ disposer: context.disposer }, fn);
 }
 
 /**
@@ -42,7 +57,5 @@ export function freeze<T>(fn: () => T): T {
 export function root<T>(fn: (disposer: () => void) => T): T {
   const disposer = createDisposer();
 
-  return runWithContext({ disposer, reaction: undefined }, () =>
-    fn(() => flushDisposer(disposer))
-  );
+  return runWithContext({ disposer }, () => fn(() => flushDisposer(disposer)));
 }

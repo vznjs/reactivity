@@ -18,9 +18,7 @@ export function createDisposer(): Disposer {
 export function flushDisposer(disposer: Disposer): void {
   if (!disposer.queue || !disposer.queue.length) return;
 
-  runWithContext({ disposer: undefined, reaction: undefined }, () =>
-    flushQueue(disposer.queue)
-  );
+  runWithContext({}, () => flushQueue(disposer.queue));
 
   disposer.queue = undefined;
 }

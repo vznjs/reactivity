@@ -1,5 +1,5 @@
 import { createDisposer, flushDisposer, onCleanup } from "./core/disposer";
-import { runWithContext } from "./core/context";
+import { runReaction } from "./core/context";
 import {
   createAtom,
   getRevision,
@@ -7,6 +7,7 @@ import {
   Revision,
   Atom,
   trackAtom,
+  flushReaction,
 } from "./core/atom";
 import { Reaction, ATOMS } from "./core/atom";
 import { cancelReaction } from "./core/reactor";
@@ -31,30 +32,25 @@ export function createMemo<T>(fn: () => T): () => T {
   const atom = createAtom();
   const disposer = createDisposer();
 
-  const reaction: Reaction = () => {
+  let reaction: Reaction = () => {
     atomsRevision = getLatestRevision(reaction[ATOMS]);
-    flushDisposer(disposer);
     triggerAtom(atom);
   };
 
-  function recompute() {
-    reaction[ATOMS] = [];
-    runWithContext({ reaction, disposer }, () => (memoValue = fn()));
-    memoRevision = getLatestRevision(reaction[ATOMS]);
-  }
-
   onCleanup(() => {
-    reaction[ATOMS] = undefined;
     cancelReaction(reaction);
+    flushReaction(reaction);
     flushDisposer(disposer);
   });
 
   function getter() {
-    if (!reaction[ATOMS] || memoRevision < atomsRevision) {
-      recompute();
-    } else if (memoRevision < getLatestRevision(reaction[ATOMS])) {
-      flushDisposer(disposer);
-      recompute();
+    if (
+      !reaction[ATOMS] ||
+      memoRevision < atomsRevision ||
+      memoRevision < getLatestRevision(reaction[ATOMS])
+    ) {
+      reaction = runReaction({ reaction, disposer }, () => (memoValue = fn()));
+      memoRevision = getLatestRevision(reaction[ATOMS]);
     }
 
     trackAtom(atom);

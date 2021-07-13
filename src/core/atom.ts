@@ -1,25 +1,35 @@
-import { getContext } from "./context";
-import { onCleanup } from "./disposer";
+import { getContext, runWithContext } from "./context";
 import { scheduleAtomReactions } from "./reactor";
 
-export const ATOMS = Symbol("ATOMS");
+export type Revision = number;
 
 let CLOCK: Revision = 0;
 
-export type Reaction = {
-  (): void;
-  [ATOMS]?: Atom[];
-};
+export function getRevision(): Revision {
+  return CLOCK;
+}
 
-export type Revision = number;
+export const ATOMS = Symbol("ATOMS");
 
 export type Atom = {
   reactions?: Reaction[];
   revision: Revision;
 };
 
-export function getRevision(): Revision {
-  return CLOCK;
+export type Reaction = {
+  (): void;
+  [ATOMS]?: Atom[];
+};
+
+export function flushReaction(reaction: Reaction) {
+  if (!reaction[ATOMS]) return;
+
+  runWithContext({ reaction }, () => {
+    for (let index = 0; index < reaction[ATOMS]!.length; index++) {
+      const atom = reaction[ATOMS]![index];
+      untrackAtom(atom);
+    }
+  });
 }
 
 export function trackAtom(atom: Atom): void {
@@ -28,28 +38,32 @@ export function trackAtom(atom: Atom): void {
   if (!reaction) return;
   if (atom.reactions?.includes(reaction)) return;
 
+  atom.reactions
+    ? atom.reactions.push(reaction)
+    : (atom.reactions = [reaction]);
+
+  reaction[ATOMS] ? reaction[ATOMS]!.push(atom) : (reaction[ATOMS] = [atom]);
+}
+
+export function untrackAtom(atom: Atom): void {
+  const { reaction } = getContext();
+
+  if (!reaction) return;
+
   if (atom.reactions) {
-    atom.reactions.push(reaction);
-  } else {
-    atom.reactions = [reaction];
+    const index = atom.reactions.indexOf(reaction);
+    if (index > -1) atom.reactions.splice(index, 1);
   }
 
-  reaction[ATOMS]?.push(atom);
-
-  onCleanup(() => {
-    if (atom.reactions) {
-      const index = atom.reactions.indexOf(reaction);
-      if (index > -1) atom.reactions.splice(index, 1);
-    }
-  });
+  if (reaction[ATOMS]) {
+    const index = reaction[ATOMS]!.indexOf(atom);
+    if (index > -1) reaction[ATOMS]!.splice(index, 1);
+  }
 }
 
 export function triggerAtom(atom: Atom): void {
   atom.revision = ++CLOCK;
-
-  if (atom.reactions?.length) {
-    scheduleAtomReactions(atom);
-  }
+  scheduleAtomReactions(atom);
 }
 
 export function createAtom(): Atom {
