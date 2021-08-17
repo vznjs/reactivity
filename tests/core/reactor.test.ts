@@ -1,18 +1,19 @@
-import { runWithContext } from "../../src/core/context";
 import { createAtom, trackAtom } from "../../src/core/atom";
-import { scheduleAtomReactions, cancelReaction } from "../../src/core/reactor";
+import { scheduleAtom, cancelReaction } from "../../src/core/reactor";
+import { createReaction } from "../../src/core/reaction";
 
 jest.useFakeTimers("modern");
 
-describe("scheduleAtomReactions", () => {
+describe("scheduleAtom", () => {
   it("batches calls", () => {
     const spy = jest.fn();
+    const reaction = createReaction(spy);
     const atom = createAtom();
 
-    runWithContext({ reaction: spy }, () => trackAtom(atom));
+    trackAtom(atom, reaction);
 
-    scheduleAtomReactions(atom);
-    scheduleAtomReactions(atom);
+    scheduleAtom(atom);
+    scheduleAtom(atom);
 
     expect(spy.mock.calls.length).toBe(0);
 
@@ -24,15 +25,15 @@ describe("scheduleAtomReactions", () => {
   it("works with nested schedules", () => {
     const spy = jest.fn();
     const atom = createAtom();
-    const reaction = () => {
-      runWithContext({ reaction: () => spy("nested") }, () => trackAtom(atom));
-      scheduleAtomReactions(atom);
+    const reaction = createReaction(() => {
+      trackAtom(atom, createReaction(() => spy("nested")));
+      scheduleAtom(atom);
       spy("flat");
-    };
+    });
 
-    runWithContext({ reaction }, () => trackAtom(atom));
+    trackAtom(atom, reaction);
 
-    scheduleAtomReactions(atom);
+    scheduleAtom(atom);
 
     expect(spy.mock.calls.length).toBe(0);
 
@@ -47,11 +48,12 @@ describe("scheduleAtomReactions", () => {
 describe("cancelReaction", () => {
   it("unschedules a task", () => {
     const spy = jest.fn();
+    const reaction = createReaction(spy);
     const atom = createAtom();
 
-    runWithContext({ reaction: spy }, () => trackAtom(atom));
-    scheduleAtomReactions(atom);
-    cancelReaction(spy);
+    trackAtom(atom, reaction);
+    scheduleAtom(atom);
+    cancelReaction(reaction);
 
     expect(spy.mock.calls.length).toBe(0);
 

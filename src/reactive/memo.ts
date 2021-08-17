@@ -1,5 +1,4 @@
-import { createDisposer, flushDisposer, onCleanup } from "./core/disposer";
-import { runReaction } from "./core/context";
+import { createDisposer, flushDisposer, onCleanup } from "../core/disposer";
 import {
   createAtom,
   getRevision,
@@ -7,10 +6,10 @@ import {
   Revision,
   Atom,
   trackAtom,
-  flushReaction,
-} from "./core/atom";
-import { Reaction, ATOMS } from "./core/atom";
-import { cancelReaction } from "./core/reactor";
+} from "../core/atom";
+import { cancelReaction } from "../core/reactor";
+import { getReaction, runComputation } from "../core/context";
+import { createReaction, flushReaction } from "../core/reaction";
 
 function getLatestRevision(atoms?: Atom[]): Revision {
   if (!atoms) return 0;
@@ -32,10 +31,10 @@ export function createMemo<T>(fn: () => T): () => T {
   const atom = createAtom();
   const disposer = createDisposer();
 
-  let reaction: Reaction = () => {
-    atomsRevision = getLatestRevision(reaction[ATOMS]);
+  const reaction = createReaction(() => {
+    atomsRevision = getLatestRevision(reaction.atoms);
     triggerAtom(atom);
-  };
+  });
 
   onCleanup(() => {
     cancelReaction(reaction);
@@ -45,15 +44,17 @@ export function createMemo<T>(fn: () => T): () => T {
 
   function getter() {
     if (
-      !reaction[ATOMS] ||
+      !reaction.atoms ||
       memoRevision < atomsRevision ||
-      memoRevision < getLatestRevision(reaction[ATOMS])
+      memoRevision < getLatestRevision(reaction.atoms)
     ) {
-      reaction = runReaction({ reaction, disposer }, () => (memoValue = fn()));
-      memoRevision = getLatestRevision(reaction[ATOMS]);
+      runComputation(disposer, reaction, () => (memoValue = fn()));
+      memoRevision = getLatestRevision(reaction.atoms);
     }
-
-    trackAtom(atom);
+    
+    const currentReaction = getReaction();
+    
+    if (currentReaction) trackAtom(atom, currentReaction);
 
     return memoValue;
   }

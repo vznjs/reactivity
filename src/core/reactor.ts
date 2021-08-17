@@ -1,7 +1,8 @@
 import { flushQueue } from "../utils/queue";
 import type { Atom } from "./atom";
+import { Reaction } from "./reaction";
 
-const atomsQueue = new Map<Atom, Array<() => void>>();
+const atomsQueue = new Map<Atom, Array<Reaction>>();
 const unscheduleQueue = new Set<() => void>();
 
 let updatesQueue: Set<() => void> | undefined;
@@ -12,7 +13,8 @@ function scheduler() {
   updatesQueue = new Set(
     [...atomsQueue.values()]
       .flat()
-      .filter((reaction) => !unscheduleQueue.has(reaction))
+      .map((reaction) => reaction.compute)
+      .filter((compute) => !unscheduleQueue.has(compute))
   );
 
   atomsQueue.clear();
@@ -24,14 +26,14 @@ function scheduler() {
   isScheduled = false;
 }
 
-export function scheduleAtomReactions(atom: Atom): void {
+export function scheduleAtom(atom: Atom): void {
   const reactions = atom.reactions || [];
 
   if (!reactions.length) return;
 
   if (updatesQueue) {
     for (let index = 0; index < reactions.length; index++) {
-      updatesQueue.add(reactions[index]);
+      updatesQueue.add(reactions[index].compute);
     }
     return;
   }
@@ -45,11 +47,11 @@ export function scheduleAtomReactions(atom: Atom): void {
   isScheduled = true;
 }
 
-export function cancelReaction(reaction: () => void): void {
+export function cancelReaction(reaction: Reaction): void {
   if (updatesQueue) {
-    updatesQueue.delete(reaction);
+    updatesQueue.delete(reaction.compute);
     return;
   }
 
-  if (isScheduled) unscheduleQueue.add(reaction);
+  if (isScheduled) unscheduleQueue.add(reaction.compute);
 }

@@ -1,8 +1,8 @@
-import { createMemo } from "../src/memo";
-import { reactive } from "../src/reactive";
-import { createValue } from "../src/reactive/value";
-import { createDisposer, flushDisposer, onCleanup } from "../src/core/disposer";
-import { runWithContext } from "../src/core/context";
+import { createMemo } from "../../src/reactive/memo";
+import { reactive } from "../../src/core/reactive";
+import { createValue } from "../../src/reactive/value";
+import { createDisposer, flushDisposer, onCleanup } from "../../src/core/disposer";
+import { setContext } from "../../src/core/context";
 
 jest.useFakeTimers("modern");
 
@@ -65,7 +65,7 @@ describe("createMemo", () => {
     const disposer = createDisposer();
     const spy = jest.fn();
 
-    runWithContext({ disposer }, () => {
+    setContext(disposer, undefined, () => {
       expect(spy.mock.calls.length).toBe(0);
 
       const getMemo = createMemo(() => {
@@ -100,7 +100,7 @@ describe("createMemo", () => {
     const [getAtom] = createValue(1);
     const disposer = createDisposer();
 
-    runWithContext({ disposer }, () => {
+    setContext(disposer, undefined, () => {
       const getMemo = createMemo(() => {
         onCleanup(spy);
         getAtom();

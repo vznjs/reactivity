@@ -1,5 +1,5 @@
 import { flushQueue } from "../utils/queue";
-import { getContext, runWithContext } from "./context";
+import { getDisposer, setContext } from "./context";
 
 export type Disposer = {
   queue?: Array<() => void>;
@@ -17,14 +17,14 @@ export function createDisposer(): Disposer {
 
 export function flushDisposer(disposer: Disposer): void {
   if (!disposer.queue || !disposer.queue.length) return;
-
-  runWithContext({}, () => flushQueue(disposer.queue));
+  
+  setContext(undefined, undefined, () => flushQueue(disposer.queue));
 
   disposer.queue = undefined;
 }
 
 export function onCleanup(fn: () => void): void {
-  const currentDisposer = getContext().disposer;
+  const currentDisposer = getDisposer();
 
   if (currentDisposer) {
     if (!currentDisposer.queue) {

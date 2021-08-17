@@ -1,11 +1,12 @@
-import { root, runWithContext } from "../../src/core/context";
+import { root, setContext } from "../../src/core/context";
 import { createValue } from "../../src/reactive/value";
-import { reactive } from "../../src/reactive";
+import { reactive } from "../../src/core/reactive";
 import {
   createDisposer,
   flushDisposer,
   onCleanup,
 } from "../../src/core/disposer";
+import { createReaction } from "../../src/core/reaction";
 
 jest.useFakeTimers("modern");
 
@@ -23,9 +24,10 @@ describe("createValue", () => {
 
   it("triggers reaction if values are not equal", () => {
     const spy = jest.fn();
+    const reaction = createReaction(spy);
     const [getAtom, setAtom] = createValue(false);
 
-    runWithContext({ reaction: spy }, () => getAtom());
+    setContext(undefined, reaction, () => getAtom());
 
     expect(spy.mock.calls.length).toBe(0);
     expect(getAtom()).toBe(false);
@@ -42,9 +44,10 @@ describe("createValue", () => {
 
   it("triggers reaction if compare option is false and values are equal", () => {
     const spy = jest.fn();
+    const reaction = createReaction(spy);
     const [getAtom, setAtom] = createValue(true, false);
 
-    runWithContext({ reaction: spy }, () => getAtom());
+    setContext(undefined, reaction, () => getAtom());
 
     expect(spy.mock.calls.length).toBe(0);
 
@@ -59,10 +62,11 @@ describe("createValue", () => {
 
   it("does not trigger reaction if set to equal value", () => {
     const spy = jest.fn();
+    const reaction = createReaction(spy);
     const [getAtom, setAtom] = createValue(false);
 
     root(() => {
-      runWithContext({ reaction: spy }, () => getAtom());
+      setContext(undefined, reaction, () => getAtom());
 
       expect(spy.mock.calls.length).toBe(0);
       expect(getAtom()).toBe(false);
@@ -88,10 +92,11 @@ describe("createValue", () => {
 
   it("can take an equality predicate", () => {
     const spy = jest.fn();
+    const reaction = createReaction(spy);
     const [getAtom, setAtom] = createValue([1], (a, b) => a[0] === b[0]);
 
     root(() => {
-      runWithContext({ reaction: spy }, () => getAtom());
+      setContext(undefined, reaction, () => getAtom());
 
       expect(spy.mock.calls.length).toBe(0);
 
@@ -111,10 +116,11 @@ describe("createValue", () => {
 
   it("removes subscriptions on cleanup", () => {
     const spy = jest.fn();
+    const reaction = createReaction(spy);
     const [getAtom, setAtom] = createValue(false);
     const disposer = createDisposer();
 
-    runWithContext({ disposer, reaction: spy }, () => getAtom());
+    setContext(disposer, reaction, () => getAtom());
 
     setAtom(true);
 
@@ -135,10 +141,11 @@ describe("createValue", () => {
 
   it("ignores reaction with circular dependencies", () => {
     const spy = jest.fn();
+    const reaction = createReaction(spy);
     const [getAtom, setAtom] = createValue(0);
     const disposer = createDisposer();
 
-    runWithContext({ disposer, reaction: spy }, () => setAtom(getAtom() + 1));
+    setContext(disposer, reaction, () => setAtom(getAtom() + 1));
 
     expect(spy.mock.calls.length).toBe(0);
     expect(getAtom()).toBe(1);
@@ -218,7 +225,7 @@ describe("createValue", () => {
         spy();
       });
 
-      runWithContext({ disposer }, () => {
+      setContext(disposer, undefined, () => {
         reactive(() => {
           getData();
           spy2();

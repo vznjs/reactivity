@@ -1,7 +1,7 @@
-import { createDisposer, flushDisposer, onCleanup } from "../src/core/disposer";
-import { reactive } from "../src/reactive";
-import { runWithContext } from "../src/core/context";
-import { createValue } from "../src/reactive/value";
+import { createDisposer, flushDisposer, onCleanup } from "../../src/core/disposer";
+import { reactive } from "../../src/core/reactive";
+import { setContext } from "../../src/core/context";
+import { createValue } from "../../src/reactive/value";
 
 jest.useFakeTimers("modern");
 
@@ -12,7 +12,7 @@ describe("reactive", () => {
     const reactionSpy = jest.fn();
     const cleanupSpy = jest.fn();
 
-    runWithContext({ disposer }, () => {
+    setContext(disposer, undefined, () => {
       reactive(() => {
         onCleanup(cleanupSpy);
         reactionSpy();
@@ -121,7 +121,7 @@ describe("reactive", () => {
     const disposer = createDisposer();
     const [getAtom, setAtom] = createValue(false);
 
-    runWithContext({ disposer }, () => {
+    setContext(disposer, undefined, () => {
       reactive(() => {
         getAtom();
         reactionSpy();

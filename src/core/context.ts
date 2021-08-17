@@ -1,61 +1,87 @@
-import { flushReaction, Reaction } from "./atom";
+import { trackAtom } from "./atom";
 import { createDisposer, Disposer, flushDisposer } from "./disposer";
+import { flushReaction, Reaction } from "./reaction";
 
-export interface Context {
-  disposer?: Disposer;
-  reaction?: Reaction;
+let reaction: Reaction | undefined;
+let disposer: Disposer | undefined;
+
+export function getReaction(): Reaction | undefined {
+  return reaction;
 }
 
-let context: Context = {};
-
-export function getContext(): Context {
-  return context;
+export function getDisposer(): Disposer | undefined {
+  return disposer;
 }
 
-export function runWithContext<T>(newContext: Context, fn: () => T): T {
-  const currentContext = context;
+export function setContext<T>(newDisposer: Disposer | undefined, newReaction: Reaction | undefined, fn: () => T): T {
+  const currentReaction = reaction;
+  const currentDisposer = disposer;
 
-  context = newContext;
+  reaction = newReaction;
+  disposer = newDisposer;
 
   try {
     return fn();
   } finally {
-    context = currentContext;
+    reaction = currentReaction;
+    disposer = currentDisposer;
   }
 }
 
-export function runReaction<T>(context: Context, fn: () => T): Reaction {
-  if (context.disposer) flushDisposer(context.disposer);
+export function runComputation<T>(newDisposer: Disposer | undefined, newReaction: Reaction | undefined, fn: () => T): T {
+  const atoms = [...(newReaction?.atoms || [])];
 
-  const newReaction = () => context.reaction?.();
+  if (newReaction) flushReaction(newReaction);
+  if (newDisposer) flushDisposer(newDisposer);
+
+  const currentReaction = reaction;
+  const currentDisposer = disposer;
+
+  reaction = newReaction;
+  disposer = newDisposer;
 
   try {
-    runWithContext({ reaction: newReaction, disposer: context.disposer }, fn);
+    return fn();
   } catch (error) {
-    if (context.disposer) flushDisposer(context.disposer);
-    flushReaction(newReaction);
+    if (disposer) flushDisposer(disposer);
+
+    if (reaction) {
+      for (let index = 0; index < atoms.length; index++) {
+        trackAtom(atoms[index], reaction);
+      }
+    }
+
     throw error;
+  } finally {
+    reaction = currentReaction;
+    disposer = currentDisposer;
   }
-
-  if (context.reaction) flushReaction(context.reaction);
-
-  return newReaction;
 }
 
 export function freeze<T>(fn: () => T): T {
-  return runWithContext({ disposer: context.disposer }, fn);
+  const currentReaction = reaction;
+
+  reaction = undefined;
+
+  try {
+    return fn();
+  } finally {
+    reaction = currentReaction;
+  }
 }
 
-/**
- * Reactions created by root will live until dispose is called
- *
- * @export
- * @template T
- * @param {(disposer: () => void) => T} fn
- * @returns {T}
- */
 export function root<T>(fn: (disposer: () => void) => T): T {
-  const disposer = createDisposer();
+  const newDisposer = createDisposer();
+  const currentReaction = reaction;
+  const currentDisposer = disposer;
 
-  return runWithContext({ disposer }, () => fn(() => flushDisposer(disposer)));
+  reaction = undefined;
+  disposer = newDisposer;
+  
+  try {
+    return fn(() => flushDisposer(newDisposer))
+  } finally {
+    reaction = currentReaction;
+    disposer = currentDisposer;
+  }
 }

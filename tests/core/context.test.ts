@@ -1,16 +1,18 @@
 import {
   root,
   freeze,
-  getContext,
-  runWithContext,
+  setContext,
+  getReaction,
+  getDisposer,
 } from "../../src/core/context";
 import { createValue } from "../../src/reactive/value";
-import { reactive } from "../../src/reactive";
+import { reactive } from "../../src/core/reactive";
 import {
   createDisposer,
   flushDisposer,
   onCleanup,
 } from "../../src/core/disposer";
+import { createReaction } from "../../src/core/reaction";
 
 jest.useFakeTimers("modern");
 
@@ -87,32 +89,32 @@ describe("root", () => {
 
 describe("freeze", () => {
   it("runs without any reaction", () => {
-    const reaction = () => {
+    const reaction = createReaction(() => {
       // dummy
-    };
-
-    expect(getContext().reaction).toBeUndefined();
-
-    runWithContext({ reaction }, () => {
-      expect(getContext().reaction).toBe(reaction);
-
-      freeze(() => {
-        expect(getContext().reaction).toBeUndefined();
-      });
-
-      expect(getContext().reaction).toBe(reaction);
     });
 
-    expect(getContext().reaction).toBeUndefined();
+    expect(getReaction()).toBeUndefined();
+
+    setContext(undefined, reaction, () => {
+      expect(getReaction()).toBe(reaction);
+
+      freeze(() => {
+        expect(getReaction()).toBeUndefined();
+      });
+
+      expect(getReaction()).toBe(reaction);
+    });
+
+    expect(getReaction()).toBeUndefined();
   });
 
   it("runs cleanups in reaction correctly", () => {
     const disposer = createDisposer();
     const cleanupMock = jest.fn();
 
-    expect(getContext().disposer).toBeUndefined();
+    expect(getDisposer()).toBeUndefined();
 
-    runWithContext({ disposer }, () => {
+    setContext(disposer, undefined, () => {
       freeze(() => {
         onCleanup(cleanupMock);
       });

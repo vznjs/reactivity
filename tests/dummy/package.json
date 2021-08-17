@@ -10,7 +10,7 @@
     "@vzn/reactivity": "*"
   },
   "devDependencies": {
-    "typescript": "^4.3.2",
-    "vite": "^2.3.8"
+    "typescript": "^4.3.5",
+    "vite": "^2.5.0"
   }
 }
