@@ -22,7 +22,7 @@ VZN makes your code reactive. It does things when other things change. When you 
 
 📖 **Clean** - Read the code as a good book and learn something new.
 
-🐣 **Small** - 300kb? 15kb? 5kb? 1kb? 0.7kb? Take a guess.
+🐣 **Small** - 300kb? 15kb? 5kb? 1kb? Take a guess.
 
 🧬 **Flexible** - No limitations, access to internal API (not private), build it yourself.
 
@@ -134,12 +134,12 @@ If you wish to trigger a change on every update use `createValue(value, false)` 
 createValue(value, (oldValue, newValue) => oldValue == newValue);
 ```
 
-## `react`
+## `reactive`
 
-A reaction will make your block of code reactive. Change of any reactive value used in that block will make the code recompute. This gives you a granular reactivity and a place to call side effects.
+A reactive block will make your code reactive. Change of any reactive value used in that block will make the code recompute. This gives you a granular reactivity and a place to call side effects.
 
 ```js
-import { react, createValue } from "@vzn/reactivity";
+import { reactive, createValue } from "@vzn/reactivity";
 
 const button = document.createElement("button");
 const [getName, setName] = createValue("VZN");
@@ -250,56 +250,11 @@ setName(
 );
 ```
 
-# Low-level API
-
-This API has been used to create a High-level API. It is discouraged to use it directly in your features. It should serve as a way to create a new custom High-level API if needed. E.g., if you think you need your own `createMemo` implementation, you can do it yourself by using this API.
-
-## `createAtom`
-
-An Atom is the smallest reactive primitive. Its role is to track and trigger changes.
-
-```js
-import { createAtom, trackAtom, triggerAtom, react } from "@vzn/reactivity";
-
-const myAtom = createAtom();
-
-reactive(() => {
-  trackAtom(myAtom); // tracks and remembers current reaction
-});
-
-triggerAtom(myAtom); // schedules new reactor's cycle which informs reactions about a chnage
-```
-
-## `getContext`
-
-It returns the current Context. Useful for retrieving current reaction and disposer, as well as remembering the context, e.g., for async operations.
-
-```js
-import { getContext } from "@vzn/reactivity";
-
-const currentContext = getContext(); // { disposer?: Set<() => void>, reaction?: () => void}
-```
-
-## `runWithContext`
-
-It merges reaction and disposer with current Context and running passed function with it.
-
-```js
-import { runWithContext } from "@vzn/reactivity";
-
-runWithContext({ disposer: undefined }, () => {
-  console.log("I have no disposer but I still use the inherited reaction");
-});
-
-runWithContext({ reaction: undefined }, () => {
-  console.log("I have no reaction but I still use the inherited disposer");
-});
-```
-
 # TO DO
 
 - [ ] full reactivity for objects and arrays
 - [ ] `reactive` decorator?
+- [ ] document low-level API
 
 # Contributing
 
