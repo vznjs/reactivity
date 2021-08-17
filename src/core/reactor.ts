@@ -2,23 +2,29 @@ import { flushQueue } from "../utils/queue";
 import type { Atom } from "./atom";
 import { Reaction } from "./reaction";
 
-const atomsQueue = new Map<Atom, Array<Reaction>>();
-const unscheduleQueue = new Set<() => void>();
+const atomsQueue = new Set<Atom>();
+const cancelQueue = new Set<() => void>();
 
 let updatesQueue: Set<() => void> | undefined;
 
 let isScheduled = false;
 
 function scheduler() {
-  updatesQueue = new Set(
-    [...atomsQueue.values()]
-      .flat()
-      .map((reaction) => reaction.compute)
-      .filter((compute) => !unscheduleQueue.has(compute))
-  );
+  updatesQueue = new Set();
+
+  for (const atom of atomsQueue) {
+    if (!atom.reactions) return;
+
+    for (let index = 0; index < atom.reactions.length; index++) {
+      const reaction = atom.reactions[index];
+
+      if (!reaction) return;
+      if (!cancelQueue.has(reaction.compute)) updatesQueue.add(reaction.compute);
+    }
+  }
 
   atomsQueue.clear();
-  unscheduleQueue.clear();
+  cancelQueue.clear();
 
   flushQueue(updatesQueue);
 
@@ -27,18 +33,16 @@ function scheduler() {
 }
 
 export function scheduleAtom(atom: Atom): void {
-  const reactions = atom.reactions || [];
-
-  if (!reactions.length) return;
+  if (!atom.reactions?.length) return;
 
   if (updatesQueue) {
-    for (let index = 0; index < reactions.length; index++) {
-      updatesQueue.add(reactions[index].compute);
+    for (let index = 0; index < atom.reactions.length; index++) {
+      updatesQueue.add(atom.reactions[index].compute);
     }
     return;
   }
 
-  atomsQueue.set(atom, reactions);
+  atomsQueue.add(atom);
 
   if (isScheduled) return;
 
@@ -53,5 +57,5 @@ export function cancelReaction(reaction: Reaction): void {
     return;
   }
 
-  if (isScheduled) unscheduleQueue.add(reaction.compute);
+  if (isScheduled) cancelQueue.add(reaction.compute);
 }

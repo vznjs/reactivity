@@ -1,7 +1,7 @@
 import {
   root,
   freeze,
-  setContext,
+  runWith,
   getReaction,
   getDisposer,
 } from "../../src/core/context";
@@ -95,7 +95,7 @@ describe("freeze", () => {
 
     expect(getReaction()).toBeUndefined();
 
-    setContext(undefined, reaction, () => {
+    runWith(undefined, reaction, () => {
       expect(getReaction()).toBe(reaction);
 
       freeze(() => {
@@ -114,7 +114,7 @@ describe("freeze", () => {
 
     expect(getDisposer()).toBeUndefined();
 
-    setContext(disposer, undefined, () => {
+    runWith(disposer, undefined, () => {
       freeze(() => {
         onCleanup(cleanupMock);
       });

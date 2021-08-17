@@ -3,7 +3,7 @@ import {
   flushDisposer,
   onCleanup,
 } from "../../src/core/disposer";
-import { root, setContext } from "../../src/core/context";
+import { root, runWith } from "../../src/core/context";
 
 jest.useFakeTimers("modern");
 
@@ -12,7 +12,7 @@ describe("onCleanup", () => {
     const disposer = createDisposer();
     const cleanupMock = jest.fn();
 
-    setContext(disposer, undefined, () => {
+    runWith(disposer, undefined, () => {
       onCleanup(cleanupMock);
     });
 

@@ -12,7 +12,7 @@ export function createReaction<T>(compute: () => T): Reaction {
 export function flushReaction(reaction: Reaction): void {
   if (!reaction.atoms) return;
 
-  const atoms = [...reaction.atoms!];
+  const atoms = [...reaction.atoms];
 
   for (let index = 0; index < atoms.length; index++) {
     const atom = atoms[index];

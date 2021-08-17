@@ -1,5 +1,7 @@
 import { flushQueue } from "../utils/queue";
-import { getDisposer, setContext } from "./context";
+import { getDisposer } from "./context";
+
+let isFlushing = false;
 
 export type Disposer = {
   queue?: Array<() => void>;
@@ -18,18 +20,25 @@ export function createDisposer(): Disposer {
 export function flushDisposer(disposer: Disposer): void {
   if (!disposer.queue || !disposer.queue.length) return;
   
-  setContext(undefined, undefined, () => flushQueue(disposer.queue));
+  isFlushing = true;
+  flushQueue(disposer.queue);
+  isFlushing = false;
 
   disposer.queue = undefined;
 }
 
 export function onCleanup(fn: () => void): void {
+  if (isFlushing) {
+    fn();
+    return;
+  }
+
   const currentDisposer = getDisposer();
 
   if (currentDisposer) {
     if (!currentDisposer.queue) {
       currentDisposer.queue = [fn];
-    } else if (currentDisposer.queue.indexOf(fn) === -1) {
+    } else if (!currentDisposer.queue.includes(fn)) {
       currentDisposer.queue.push(fn);
     }
 
@@ -39,7 +48,7 @@ export function onCleanup(fn: () => void): void {
   if (!globalDisposer.queue) {
     globalDisposer.queue = [fn];
     setTimeout(flush, 0);
-  } else if (globalDisposer.queue.indexOf(fn) === -1) {
+  } else if (!globalDisposer.queue.includes(fn)) {
     globalDisposer.queue.push(fn);
   }
 }
