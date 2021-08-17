@@ -19,7 +19,8 @@ function scheduler() {
       const reaction = atom.reactions[index];
 
       if (!reaction) return;
-      if (!cancelQueue.has(reaction.compute)) updatesQueue.add(reaction.compute);
+      if (!cancelQueue.has(reaction.compute))
+        updatesQueue.add(reaction.compute);
     }
   }
 

@@ -1,7 +1,11 @@
 import { createMemo } from "../../src/reactive/memo";
 import { reactive } from "../../src/core/reactive";
 import { createValue } from "../../src/reactive/value";
-import { createDisposer, flushDisposer, onCleanup } from "../../src/core/disposer";
+import {
+  createDisposer,
+  flushDisposer,
+  onCleanup,
+} from "../../src/core/disposer";
 import { runWith } from "../../src/core/context";
 
 jest.useFakeTimers("modern");

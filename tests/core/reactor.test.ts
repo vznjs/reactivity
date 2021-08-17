@@ -26,7 +26,10 @@ describe("scheduleAtom", () => {
     const spy = jest.fn();
     const atom = createAtom();
     const reaction = createReaction(() => {
-      trackAtom(atom, createReaction(() => spy("nested")));
+      trackAtom(
+        atom,
+        createReaction(() => spy("nested"))
+      );
       scheduleAtom(atom);
       spy("flat");
     });

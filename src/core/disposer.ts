@@ -19,7 +19,7 @@ export function createDisposer(): Disposer {
 
 export function flushDisposer(disposer: Disposer): void {
   if (!disposer.queue || !disposer.queue.length) return;
-  
+
   isFlushing = true;
   flushQueue(disposer.queue);
   isFlushing = false;

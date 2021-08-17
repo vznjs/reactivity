@@ -51,9 +51,9 @@ export function createMemo<T>(fn: () => T): () => T {
       runUpdate(disposer, reaction, () => (memoValue = fn()));
       memoRevision = getLatestRevision(reaction.atoms);
     }
-    
+
     const currentReaction = getReaction();
-    
+
     if (currentReaction) trackAtom(atom, currentReaction);
 
     return memoValue;

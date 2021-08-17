@@ -39,7 +39,7 @@ export function createValue<T>(
       atom ??= createAtom();
       trackAtom(atom, reaction);
     }
-    
+
     return value;
   }
 

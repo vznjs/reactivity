@@ -13,7 +13,11 @@ export function getDisposer(): Disposer | undefined {
   return disposer;
 }
 
-export function runWith<T>(newDisposer: Disposer | undefined, newReaction: Reaction | undefined, fn: () => T): T {
+export function runWith<T>(
+  newDisposer: Disposer | undefined,
+  newReaction: Reaction | undefined,
+  fn: () => T
+): T {
   const currentReaction = reaction;
   const currentDisposer = disposer;
 
@@ -28,7 +32,11 @@ export function runWith<T>(newDisposer: Disposer | undefined, newReaction: React
   }
 }
 
-export function runUpdate<T>(newDisposer: Disposer | undefined, newReaction: Reaction | undefined, fn: () => T): T {
+export function runUpdate<T>(
+  newDisposer: Disposer | undefined,
+  newReaction: Reaction | undefined,
+  fn: () => T
+): T {
   const atoms = [...(newReaction?.atoms || [])];
 
   if (newReaction) flushReaction(newReaction);
@@ -77,9 +85,9 @@ export function root<T>(fn: (disposer: () => void) => T): T {
 
   reaction = undefined;
   disposer = newDisposer;
-  
+
   try {
-    return fn(() => flushDisposer(newDisposer))
+    return fn(() => flushDisposer(newDisposer));
   } finally {
     reaction = currentReaction;
     disposer = currentDisposer;
