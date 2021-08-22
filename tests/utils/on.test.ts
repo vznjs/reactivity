@@ -13,7 +13,7 @@ describe("on", () => {
 
     root(() => {
       reactive(
-        on(getAtom, (value) => {
+        on(getAtom, (value?: number) => {
           spy(value);
           return getAtom2();
         })
@@ -44,7 +44,7 @@ describe("on", () => {
       reactive(
         on(
           getAtom,
-          (value) => {
+          (value?: number) => {
             spy(value);
             return getAtom2();
           },
