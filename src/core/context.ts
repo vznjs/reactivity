@@ -1,5 +1,10 @@
 import { trackAtom } from "./atom";
-import { createDisposer, Disposer, flushDisposer } from "./disposer";
+import {
+  createDisposer,
+  Disposable,
+  Disposer,
+  flushDisposer,
+} from "./disposer";
 import { flushReaction, Reaction } from "./reaction";
 
 let reaction: Reaction | undefined;
@@ -78,7 +83,7 @@ export function freeze<T>(fn: () => T): T {
   }
 }
 
-export function root<T>(fn: (disposer: () => void) => T): T {
+export function root<T>(fn: (disposer: Disposable) => T): T {
   const newDisposer = createDisposer();
   const currentReaction = reaction;
   const currentDisposer = disposer;

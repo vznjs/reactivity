@@ -1,11 +1,11 @@
 import { flushQueue } from "../utils/queue";
 import type { Atom } from "./atom";
-import { Reaction } from "./reaction";
+import { Computation, Reaction } from "./reaction";
 
 const atomsQueue = new Set<Atom>();
-const cancelQueue = new Set<() => void>();
+const cancelQueue = new Set<Computation>();
 
-let updatesQueue: Set<() => void> | undefined;
+let updatesQueue: Set<Computation> | undefined;
 
 let isScheduled = false;
 

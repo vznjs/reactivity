@@ -1,12 +1,14 @@
 import { Atom, untrackAtom } from "./atom";
 
+export type Computation = () => void;
+
 export type Reaction = {
-  compute: () => void;
-  atoms?: Atom[];
+  readonly compute: Computation;
+  readonly atoms?: Atom[];
 };
 
-export function createReaction<T>(compute: () => T): Reaction {
-  return { compute } as const;
+export function createReaction(compute: Computation): Reaction {
+  return { compute } as Reaction;
 }
 
 export function flushReaction(reaction: Reaction): void {

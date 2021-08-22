@@ -3,8 +3,10 @@ import { getDisposer } from "./context";
 
 let isFlushing = false;
 
+export type Disposable = () => void;
+
 export type Disposer = {
-  queue?: Array<() => void>;
+  queue?: Array<Disposable>;
 };
 
 const globalDisposer: Disposer = createDisposer();
@@ -14,7 +16,7 @@ function flush(): void {
 }
 
 export function createDisposer(): Disposer {
-  return {} as const;
+  return {} as Disposer;
 }
 
 export function flushDisposer(disposer: Disposer): void {
@@ -27,7 +29,7 @@ export function flushDisposer(disposer: Disposer): void {
   disposer.queue = undefined;
 }
 
-export function onCleanup(fn: () => void): void {
+export function onCleanup(fn: Disposable): void {
   if (isFlushing) {
     fn();
     return;
