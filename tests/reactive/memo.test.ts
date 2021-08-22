@@ -1,5 +1,5 @@
 import { createMemo } from "../../src/reactive/memo";
-import { reactive } from "../../src/core/reactive";
+import { reactive } from "../../src/utils/reactive";
 import { createValue } from "../../src/reactive/value";
 import {
   createDisposer,

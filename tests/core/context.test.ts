@@ -6,7 +6,7 @@ import {
   getDisposer,
 } from "../../src/core/context";
 import { createValue } from "../../src/reactive/value";
-import { reactive } from "../../src/core/reactive";
+import { reactive } from "../../src/utils/reactive";
 import {
   createDisposer,
   flushDisposer,

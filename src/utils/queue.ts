@@ -1,4 +1,4 @@
-type Queue = Array<() => void> | Set<() => void>;
+export type Queue = Iterable<() => void>;
 
 export function flushQueue(queue?: Queue): void {
   if (!queue) return;

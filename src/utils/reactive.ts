@@ -1,7 +1,7 @@
-import { createDisposer, flushDisposer, onCleanup } from "./disposer";
-import { createReaction, flushReaction } from "./reaction";
-import { cancelReaction } from "./reactor";
-import { runUpdate } from "./context";
+import { createDisposer, flushDisposer, onCleanup } from "../core/disposer";
+import { createReaction, flushReaction } from "../core/reaction";
+import { cancelReaction } from "../core/reactor";
+import { runUpdate } from "../core/context";
 
 export function reactive<T>(fn: (v: T) => T, value: T): void;
 export function reactive<T>(fn: (v?: T) => T | undefined): void;
