@@ -7,54 +7,48 @@ import {
 } from "./disposer";
 import { flushReaction, Reaction } from "./reaction";
 
-let reaction: Reaction | undefined;
-let disposer: Disposer | undefined;
+let currentReaction: Reaction | undefined;
+let currentDisposer: Disposer | undefined;
 
 export function getReaction(): Reaction | undefined {
-  return reaction;
+  return currentReaction;
 }
 
 export function getDisposer(): Disposer | undefined {
-  return disposer;
+  return currentDisposer;
 }
 
 export function runWith<T>(
-  newDisposer: Disposer | undefined,
-  newReaction: Reaction | undefined,
+  disposer: Disposer | undefined,
+  reaction: Reaction | undefined,
   fn: () => T
 ): T {
-  const currentReaction = reaction;
-  const currentDisposer = disposer;
+  const oldReaction = currentReaction;
+  const oldDisposer = currentDisposer;
 
-  reaction = newReaction;
-  disposer = newDisposer;
+  currentReaction = reaction;
+  currentDisposer = disposer;
 
   try {
     return fn();
   } finally {
-    reaction = currentReaction;
-    disposer = currentDisposer;
+    currentReaction = oldReaction;
+    currentDisposer = oldDisposer;
   }
 }
 
 export function runUpdate<T>(
-  newDisposer: Disposer | undefined,
-  newReaction: Reaction | undefined,
+  disposer: Disposer | undefined,
+  reaction: Reaction | undefined,
   fn: () => T
 ): T {
-  const atoms = [...(newReaction?.atoms || [])];
+  const atoms = [...(reaction?.atoms || [])];
 
-  if (newReaction) flushReaction(newReaction);
-  if (newDisposer) flushDisposer(newDisposer);
-
-  const currentReaction = reaction;
-  const currentDisposer = disposer;
-
-  reaction = newReaction;
-  disposer = newDisposer;
+  if (reaction) flushReaction(reaction);
+  if (disposer) flushDisposer(disposer);
 
   try {
-    return fn();
+    return runWith(disposer, reaction, fn);
   } catch (error) {
     if (disposer) flushDisposer(disposer);
 
@@ -65,36 +59,33 @@ export function runUpdate<T>(
     }
 
     throw error;
-  } finally {
-    reaction = currentReaction;
-    disposer = currentDisposer;
   }
 }
 
 export function freeze<T>(fn: () => T): T {
-  const currentReaction = reaction;
+  const oldReaction = currentReaction;
 
-  reaction = undefined;
+  currentReaction = undefined;
 
   try {
     return fn();
   } finally {
-    reaction = currentReaction;
+    currentReaction = oldReaction;
   }
 }
 
 export function root<T>(fn: (disposer: Disposable) => T): T {
-  const newDisposer = createDisposer();
-  const currentReaction = reaction;
-  const currentDisposer = disposer;
+  const disposer = createDisposer();
+  const oldReaction = currentReaction;
+  const oldDisposer = currentDisposer;
 
-  reaction = undefined;
-  disposer = newDisposer;
+  currentReaction = undefined;
+  currentDisposer = disposer;
 
   try {
-    return fn(() => flushDisposer(newDisposer));
+    return fn(() => flushDisposer(disposer));
   } finally {
-    reaction = currentReaction;
-    disposer = currentDisposer;
+    currentReaction = oldReaction;
+    currentDisposer = oldDisposer;
   }
 }

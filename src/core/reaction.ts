@@ -4,7 +4,7 @@ export type Computation = () => void;
 
 export type Reaction = {
   readonly compute: Computation;
-  readonly atoms?: Atom[];
+  atoms?: Atom[];
 };
 
 export function createReaction(compute: Computation): Reaction {
