@@ -259,19 +259,19 @@ import { reactive, on, createValue } from "@vzn/reactivity";
 
 const [getName, setName] = createValue("Hello");
 
-reactive(on(getName, (v) => console.log('Name has changed!')));
+reactive(on(getName, (v) => console.log("Name has changed!")));
 
 // is equivalent to:
 reactive(() => {
   getName();
-  freeze(() => console.log('Name has changed!'));
+  freeze(() => console.log("Name has changed!"));
 });
 ```
 
 You can also not run the reaction immediately and instead opt in for it to only run on change by setting the defer option to true.
 
 ```js
-reactive(on(getName, (v) => console.log('Name has changed!'), true));
+reactive(on(getName, (v) => console.log("Name has changed!"), true));
 ```
 
 # TO DO
