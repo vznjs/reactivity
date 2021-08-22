@@ -73,7 +73,7 @@ import {
   root,
   createValue,
   createMemo,
-  react,
+  reactive,
   onCleanup,
 } from "@vzn/reactivity";
 
@@ -108,7 +108,7 @@ root((dispose) => {
 - [Counter as component](https://codesandbox.io/s/counter-as-component-iw6mj?file=/src/index.ts)
 - [State management](https://codesandbox.io/s/authentication-o87py?file=/src/index.ts)
 
-# High-level APIz
+# High-level API
 
 This API should be perceived as public, and you should feel free to use it in your implementations.
 
@@ -186,7 +186,7 @@ If you did not create the Root, the reaction would be automatically disposed of 
 A memo is like a mix of reaction and reactive value. It recomputes only when accessed and only if changed.
 
 ```js
-import { createMemo, react, createValue } from "@vzn/reactivity";
+import { createMemo, reactive, createValue } from "@vzn/reactivity";
 
 const [getName, setName] = createValue("VZN");
 
@@ -211,7 +211,7 @@ setName("Maciej"); // Triggers computation which recomputes the memo directly
 Use onCleanup for scheduling a task that will be run before the computation recomputes or is scheduled for root's disposal.
 
 ```js
-import { react, createValue, onCleanup } from "@vzn/reactivity";
+import { reactive, createValue, onCleanup } from "@vzn/reactivity";
 
 const button = document.createElement("button");
 const [getEvent, setEvent] = createValue("click");
@@ -233,7 +233,7 @@ setEvent("mouseover");
 By using `freeze` you can get the value without setting a dependency on the current reaction or memo (computation) which means that they will not recompute in case values inside of `freeze` will change.
 
 ```js
-import { react, createValue } from "@vzn/reactivity";
+import { reactive, createValue } from "@vzn/reactivity";
 
 const [getName, setName] = createValue("VZN");
 
@@ -250,11 +250,36 @@ setName(
 );
 ```
 
+## `on`
+
+`on` is designed to be passed into a `reactive` to make its dependencies explicit.
+
+```js
+import { reactive, on, createValue } from "@vzn/reactivity";
+
+const [getName, setName] = createValue("Hello");
+
+reactive(on(getName, (v) => console.log('Name has changed!')));
+
+// is equivalent to:
+reactive(() => {
+  getName();
+  freeze(() => console.log('Name has changed!'));
+});
+```
+
+You can also not run the reaction immediately and instead opt in for it to only run on change by setting the defer option to true.
+
+```js
+reactive(on(getName, (v) => console.log('Name has changed!'), true));
+```
+
 # TO DO
 
 - [ ] full reactivity for objects and arrays
 - [ ] `reactive` decorator?
 - [ ] document low-level API
+- [ ] create proper Reactor API
 
 # Contributing
 
