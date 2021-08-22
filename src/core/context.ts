@@ -6,9 +6,11 @@ import {
   flushDisposer,
 } from "./disposer";
 import { flushReaction, Reaction } from "./reaction";
+import { Reactor } from "./reactor";
 
 let currentReaction: Reaction | undefined;
 let currentDisposer: Disposer | undefined;
+let currentReactor: Reactor | undefined;
 
 export function getReaction(): Reaction | undefined {
   return currentReaction;
@@ -16,6 +18,10 @@ export function getReaction(): Reaction | undefined {
 
 export function getDisposer(): Disposer | undefined {
   return currentDisposer;
+}
+
+export function getReactor(): Reactor | undefined {
+  return currentReactor;
 }
 
 export function runWith<T>(

@@ -279,7 +279,6 @@ reactive(on(getName, (v) => console.log("Name has changed!"), true));
 - [ ] full reactivity for objects and arrays
 - [ ] `reactive` decorator?
 - [ ] document low-level API
-- [ ] create proper Reactor API
 
 # Contributing
 

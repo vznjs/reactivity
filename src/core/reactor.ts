@@ -1,62 +1,81 @@
 import { flushQueue } from "../utils/queue";
 import type { Atom } from "./atom";
+import { getReactor } from "./context";
 import { Computation, Reaction } from "./reaction";
 
-const atomsQueue = new Set<Atom>();
-const cancelQueue = new Set<Computation>();
+export type Reactor = {
+  updatesQueue?: Set<Computation>;
+  cancelQueue?: Set<Computation>;
+  atomsQueue?: Set<Atom>;
+};
 
-let updatesQueue: Set<Computation> | undefined;
+const globalReactor: Reactor = createReactor();
 
-let isScheduled = false;
+export function createReactor(): Reactor {
+  return {} as Reactor;
+}
 
-function scheduler() {
-  updatesQueue = new Set();
+export function startReactor(reactor: Reactor): void {
+  reactor.updatesQueue = new Set();
 
-  for (const atom of atomsQueue) {
-    if (!atom.reactions) return;
+  if (reactor.atomsQueue) {
+    for (const atom of reactor.atomsQueue) {
+      if (!atom.reactions) return;
 
-    for (let index = 0; index < atom.reactions.length; index++) {
-      const reaction = atom.reactions[index];
+      for (let index = 0; index < atom.reactions.length; index++) {
+        const reaction = atom.reactions[index];
 
-      if (!reaction) return;
-      if (!cancelQueue.has(reaction.compute))
-        updatesQueue.add(reaction.compute);
+        if (!reaction) return;
+
+        if (!reactor.cancelQueue?.has(reaction.compute)) {
+          reactor.updatesQueue.add(reaction.compute);
+        }
+      }
     }
   }
 
-  atomsQueue.clear();
-  cancelQueue.clear();
+  reactor.atomsQueue = undefined;
+  reactor.cancelQueue = undefined;
 
-  flushQueue(updatesQueue);
+  flushQueue(reactor.updatesQueue);
 
-  updatesQueue = undefined;
-  isScheduled = false;
+  reactor.updatesQueue = undefined;
 }
 
 export function scheduleAtom(atom: Atom): void {
   if (!atom.reactions?.length) return;
 
-  if (updatesQueue) {
+  const currentReactor = getReactor();
+  const reactor = currentReactor || globalReactor;
+
+  if (reactor.updatesQueue) {
     for (let index = 0; index < atom.reactions.length; index++) {
-      updatesQueue.add(atom.reactions[index].compute);
+      reactor.updatesQueue.add(atom.reactions[index].compute);
     }
     return;
   }
 
-  atomsQueue.add(atom);
+  if (!reactor.atomsQueue) {
+    reactor.atomsQueue = new Set();
 
-  if (isScheduled) return;
+    if (!currentReactor) {
+      queueMicrotask(() => startReactor(globalReactor));
+    }
+  }
 
-  queueMicrotask(scheduler);
-
-  isScheduled = true;
+  reactor.atomsQueue.add(atom);
 }
 
 export function cancelReaction(reaction: Reaction): void {
-  if (updatesQueue) {
-    updatesQueue.delete(reaction.compute);
+  const reactor = getReactor() || globalReactor;
+
+  if (reactor.updatesQueue) {
+    reactor.updatesQueue.delete(reaction.compute);
     return;
   }
 
-  if (isScheduled) cancelQueue.add(reaction.compute);
+  if (reactor.atomsQueue) {
+    reactor.cancelQueue ??= new Set();
+    reactor.cancelQueue.add(reaction.compute);
+  }
 }
