@@ -22,7 +22,7 @@ VZN makes your code reactive. It does things when other things change. When you 
 
 📖 **Clean** - Read the code as a good book and learn something new.
 
-🐣 **Small** - 300kb? 15kb? 5kb? 1kb? Take a guess.
+🐣 **Small** - Less than 2kb (brottli)!
 
 🧬 **Flexible** - No limitations, access to internal API (not private), build it yourself.
 
@@ -32,30 +32,10 @@ VZN makes your code reactive. It does things when other things change. When you 
 
 💎 **Modern** - Written in TS with full typings and modular structure.
 
----
-
-Source code of **VZN | Reactivity** (minified and compressed with brotli, for demonstration only)
-
-```
-G4gGAByFcRs9m+SnSVc4mZm66r+pgKxHZ3o9VohlkpOPJY+8B9R8Jj8rVRPXtEJ3hBXthIhpKKX99zv//
-OX0RkM0wivF/1t701ivMemworA0jkplTMAW2BmAOR9E7NrGMZm1DuvRmnG12mhsfBKESIlRecN4HOOkSu
-kw48tdWJ03BDWI59UiC7z/YEUAEuGbZZwGlugbrdiCUZwXDa0sEBoT8oPYQ9yUQCzEuTsC4gSr99fo3Pl
-ws7Aaef8/yeBzYqC8LOnhIDoXw0a4803QBiMiKzCxGWgtzVYrEsMgfsDx/Zg1VIwmGe2gFVST7maNT4FE
-uTfPFiRO8o7dx3xe5ZTnxNzr7baHIGK8hJmrXksuvnUfsmYX7gioiC+6x/yiOtlQg1ws0eqLkDC/Wtlj9
-xjBjLyq9gRQc6ei46Yz0y8mUNEqZBCnKDZrG+BjBVQmWOnGlqg5tWuo9JECM0OrlEpgMZbNDrKF1LvYNh
-DHrcDnHzYR3rbUsL8sktmiNQZlkyNi5GkIB1air8VV24TtHBtdtF6PHa/Ee6sCt7oOoh3CNR0bU/tKBQ0
-G0r8sI4NUGWKk2ar3ACMWCY1ssdMCid980K1GfeCU/oaqQncvz2fScidScwTSe9CqoHvJpGoHuA5kDBVI
-AYkt2TxQPijLzC47LFiHcFYlEIqqUjkjURDBKCgu/wXTLpmozR6mgykYd8i3ToCxo/yH2gKrKwAos8D9Z
-QcL8QZNCYzPO7GEzryMpWWVpD3Jys54FMm7I//e6hBQJqtrJPNO7KXJnKqgmWjqEKOomDjzTE+zky73jb
-rcE+zAs4wfp+0w/A2hgNdQ+rWawJd0zwzc9/B23Hja99Lp+lWOgKja093hj+ih7Hgm0xv6Br8yJ4HTv/T
-WqtLJqKl0Q2w8/Q9MExWNU7EF
-```
-
 # Compatibility
 
 - Node v14 and above
-- Chrome, Firefox, Safari
-- Other? Transpile the code yourself, use polyfills.
+- ES2020 (or transpile the code using your own target)
 
 # Installation
 
