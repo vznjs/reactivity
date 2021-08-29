@@ -1,6 +1,6 @@
 import { flushQueue } from "../utils/queue";
 import type { Atom } from "./atom";
-import { getReactor } from "./context";
+import { getContext } from "./context";
 import { Computation, Reaction } from "./reaction";
 
 export type Reactor = {
@@ -45,7 +45,7 @@ export function startReactor(reactor: Reactor): void {
 export function scheduleAtom(atom: Atom): void {
   if (!atom.reactions?.length) return;
 
-  const currentReactor = getReactor();
+  const currentReactor = getContext().reactor;
   const reactor = currentReactor || globalReactor;
 
   if (reactor.updatesQueue) {
@@ -67,7 +67,7 @@ export function scheduleAtom(atom: Atom): void {
 }
 
 export function cancelReaction(reaction: Reaction): void {
-  const reactor = getReactor() || globalReactor;
+  const reactor = getContext().reactor || globalReactor;
 
   if (reactor.updatesQueue) {
     reactor.updatesQueue.delete(reaction.compute);

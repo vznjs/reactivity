@@ -27,7 +27,7 @@ describe("createValue", () => {
     const reaction = createReaction(spy);
     const [getAtom, setAtom] = createValue(false);
 
-    runWith(undefined, reaction, () => getAtom());
+    runWith({ disposer: undefined, reaction }, () => getAtom());
 
     expect(spy.mock.calls.length).toBe(0);
     expect(getAtom()).toBe(false);
@@ -47,7 +47,7 @@ describe("createValue", () => {
     const reaction = createReaction(spy);
     const [getAtom, setAtom] = createValue(true, false);
 
-    runWith(undefined, reaction, () => getAtom());
+    runWith({ disposer: undefined, reaction }, () => getAtom());
 
     expect(spy.mock.calls.length).toBe(0);
 
@@ -66,7 +66,7 @@ describe("createValue", () => {
     const [getAtom, setAtom] = createValue(false);
 
     root(() => {
-      runWith(undefined, reaction, () => getAtom());
+      runWith({ disposer: undefined, reaction }, () => getAtom());
 
       expect(spy.mock.calls.length).toBe(0);
       expect(getAtom()).toBe(false);
@@ -96,7 +96,7 @@ describe("createValue", () => {
     const [getAtom, setAtom] = createValue([1], (a, b) => a[0] === b[0]);
 
     root(() => {
-      runWith(undefined, reaction, () => getAtom());
+      runWith({ disposer: undefined, reaction }, () => getAtom());
 
       expect(spy.mock.calls.length).toBe(0);
 
@@ -120,7 +120,7 @@ describe("createValue", () => {
     const [getAtom, setAtom] = createValue(false);
     const disposer = createDisposer();
 
-    runWith(disposer, reaction, () => getAtom());
+    runWith({ disposer, reaction }, () => getAtom());
 
     setAtom(true);
 
@@ -145,7 +145,7 @@ describe("createValue", () => {
     const [getAtom, setAtom] = createValue(0);
     const disposer = createDisposer();
 
-    runWith(disposer, reaction, () => setAtom(getAtom() + 1));
+    runWith({ disposer, reaction }, () => setAtom(getAtom() + 1));
 
     expect(spy.mock.calls.length).toBe(0);
     expect(getAtom()).toBe(1);
@@ -225,7 +225,7 @@ describe("createValue", () => {
         spy();
       });
 
-      runWith(disposer, undefined, () => {
+      runWith({ disposer, reaction: undefined }, () => {
         reactive(() => {
           getData();
           spy2();

@@ -1,5 +1,5 @@
 import { createAtom, triggerAtom, Atom, trackAtom } from "../core/atom";
-import { getReaction } from "../core/context";
+import { getContext } from "../core/context";
 
 /**
  * Values are the foundation of reactive system.
@@ -33,7 +33,7 @@ export function createValue<T>(
   compare ??= true;
 
   function getter(): T | undefined {
-    const reaction = getReaction();
+    const reaction = getContext().reaction;
 
     if (reaction) {
       atom ??= createAtom();

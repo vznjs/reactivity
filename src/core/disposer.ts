@@ -1,5 +1,5 @@
 import { flushQueue } from "../utils/queue";
-import { getDisposer } from "./context";
+import { getContext } from "./context";
 
 let isFlushing = false;
 
@@ -35,7 +35,7 @@ export function onCleanup(fn: Disposable): void {
     return;
   }
 
-  const currentDisposer = getDisposer();
+  const currentDisposer = getContext().disposer;
 
   if (currentDisposer) {
     if (!currentDisposer.queue) {

@@ -8,7 +8,7 @@ import {
   trackAtom,
 } from "../core/atom";
 import { cancelReaction } from "../core/reactor";
-import { getReaction, runUpdate } from "../core/context";
+import { getContext, runUpdate } from "../core/context";
 import { createReaction, flushReaction } from "../core/reaction";
 
 function getLatestRevision(atoms?: Atom[]): Revision {
@@ -48,11 +48,11 @@ export function createMemo<T>(fn: () => T): () => T {
       memoRevision < atomsRevision ||
       memoRevision < getLatestRevision(reaction.atoms)
     ) {
-      runUpdate(disposer, reaction, () => (memoValue = fn()));
+      runUpdate({ disposer, reaction }, () => (memoValue = fn()));
       memoRevision = getLatestRevision(reaction.atoms);
     }
 
-    const currentReaction = getReaction();
+    const currentReaction = getContext().reaction;
 
     if (currentReaction) trackAtom(atom, currentReaction);
 

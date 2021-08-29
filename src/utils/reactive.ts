@@ -8,7 +8,7 @@ export function reactive<T>(fn: (v?: T) => T | undefined): void;
 export function reactive<T>(fn: (v?: T) => T, value?: T): void {
   const disposer = createDisposer();
   const reaction = createReaction(() => {
-    runUpdate(disposer, reaction, () => (value = fn(value)));
+    runUpdate({ disposer, reaction }, () => (value = fn(value)));
   });
 
   onCleanup(() => {

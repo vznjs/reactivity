@@ -8,59 +8,46 @@ import {
 import { flushReaction, Reaction } from "./reaction";
 import { Reactor } from "./reactor";
 
-let currentReaction: Reaction | undefined;
-let currentDisposer: Disposer | undefined;
-let currentReactor: Reactor | undefined;
+export type Context = {
+  disposer?: Disposer;
+  reaction?: Reaction;
+  reactor?: Reactor;
+};
 
-export function getReaction(): Reaction | undefined {
-  return currentReaction;
+let currentContext: Context = {};
+
+export function getContext(): Context {
+  return currentContext;
 }
 
-export function getDisposer(): Disposer | undefined {
-  return currentDisposer;
-}
+export function runWith<T>(context: Context, fn: () => T): T {
+  const oldContext = { ...currentContext };
 
-export function getReactor(): Reactor | undefined {
-  return currentReactor;
-}
-
-export function runWith<T>(
-  disposer: Disposer | undefined,
-  reaction: Reaction | undefined,
-  fn: () => T
-): T {
-  const oldReaction = currentReaction;
-  const oldDisposer = currentDisposer;
-
-  currentReaction = reaction;
-  currentDisposer = disposer;
+  if ("reaction" in context) currentContext.reaction = context.reaction;
+  if ("disposer" in context) currentContext.disposer = context.disposer;
+  if ("reactor" in context) currentContext.reactor = context.reactor;
 
   try {
     return fn();
   } finally {
-    currentReaction = oldReaction;
-    currentDisposer = oldDisposer;
+    currentContext = oldContext;
   }
 }
 
-export function runUpdate<T>(
-  disposer: Disposer | undefined,
-  reaction: Reaction | undefined,
-  fn: () => T
-): T {
-  const atoms = [...(reaction?.atoms || [])];
+export function runUpdate<T>(context: Context, fn: () => T): T {
+  const atoms = [...(context.reaction?.atoms || [])];
 
-  if (reaction) flushReaction(reaction);
-  if (disposer) flushDisposer(disposer);
+  if (context.reaction) flushReaction(context.reaction);
+  if (context.disposer) flushDisposer(context.disposer);
 
   try {
-    return runWith(disposer, reaction, fn);
+    return runWith(context, fn);
   } catch (error) {
-    if (disposer) flushDisposer(disposer);
+    if (context.disposer) flushDisposer(context.disposer);
 
-    if (reaction) {
+    if (context.reaction && atoms.length) {
       for (let index = 0; index < atoms.length; index++) {
-        trackAtom(atoms[index], reaction);
+        trackAtom(atoms[index], context.reaction);
       }
     }
 
@@ -69,29 +56,13 @@ export function runUpdate<T>(
 }
 
 export function freeze<T>(fn: () => T): T {
-  const oldReaction = currentReaction;
-
-  currentReaction = undefined;
-
-  try {
-    return fn();
-  } finally {
-    currentReaction = oldReaction;
-  }
+  return runWith({ reaction: undefined }, fn);
 }
 
 export function root<T>(fn: (disposer: Disposable) => T): T {
   const disposer = createDisposer();
-  const oldReaction = currentReaction;
-  const oldDisposer = currentDisposer;
 
-  currentReaction = undefined;
-  currentDisposer = disposer;
-
-  try {
-    return fn(() => flushDisposer(disposer));
-  } finally {
-    currentReaction = oldReaction;
-    currentDisposer = oldDisposer;
-  }
+  return runWith({ disposer, reaction: undefined }, () =>
+    fn(() => flushDisposer(disposer))
+  );
 }

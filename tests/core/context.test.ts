@@ -1,10 +1,4 @@
-import {
-  root,
-  freeze,
-  runWith,
-  getReaction,
-  getDisposer,
-} from "../../src/core/context";
+import { root, freeze, runWith, getContext } from "../../src/core/context";
 import { createValue } from "../../src/reactive/value";
 import { reactive } from "../../src/utils/reactive";
 import {
@@ -93,28 +87,28 @@ describe("freeze", () => {
       // dummy
     });
 
-    expect(getReaction()).toBeUndefined();
+    expect(getContext().reaction).toBeUndefined();
 
-    runWith(undefined, reaction, () => {
-      expect(getReaction()).toBe(reaction);
+    runWith({ disposer: undefined, reaction }, () => {
+      expect(getContext().reaction).toBe(reaction);
 
       freeze(() => {
-        expect(getReaction()).toBeUndefined();
+        expect(getContext().reaction).toBeUndefined();
       });
 
-      expect(getReaction()).toBe(reaction);
+      expect(getContext().reaction).toBe(reaction);
     });
 
-    expect(getReaction()).toBeUndefined();
+    expect(getContext().reaction).toBeUndefined();
   });
 
   it("runs cleanups in reaction correctly", () => {
     const disposer = createDisposer();
     const cleanupMock = jest.fn();
 
-    expect(getDisposer()).toBeUndefined();
+    expect(getContext().disposer).toBeUndefined();
 
-    runWith(disposer, undefined, () => {
+    runWith({ disposer, reaction: undefined }, () => {
       freeze(() => {
         onCleanup(cleanupMock);
       });

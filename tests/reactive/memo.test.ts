@@ -69,7 +69,7 @@ describe("createMemo", () => {
     const disposer = createDisposer();
     const spy = jest.fn();
 
-    runWith(disposer, undefined, () => {
+    runWith({ disposer, reaction: undefined }, () => {
       expect(spy.mock.calls.length).toBe(0);
 
       const getMemo = createMemo(() => {
@@ -104,7 +104,7 @@ describe("createMemo", () => {
     const [getAtom] = createValue(1);
     const disposer = createDisposer();
 
-    runWith(disposer, undefined, () => {
+    runWith({ disposer, reaction: undefined }, () => {
       const getMemo = createMemo(() => {
         onCleanup(spy);
         getAtom();

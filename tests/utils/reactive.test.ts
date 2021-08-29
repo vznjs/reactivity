@@ -16,7 +16,7 @@ describe("reactive", () => {
     const reactionSpy = jest.fn();
     const cleanupSpy = jest.fn();
 
-    runWith(disposer, undefined, () => {
+    runWith({ disposer, reaction: undefined }, () => {
       reactive(() => {
         onCleanup(cleanupSpy);
         reactionSpy();
@@ -125,7 +125,7 @@ describe("reactive", () => {
     const disposer = createDisposer();
     const [getAtom, setAtom] = createValue(false);
 
-    runWith(disposer, undefined, () => {
+    runWith({ disposer, reaction: undefined }, () => {
       reactive(() => {
         getAtom();
         reactionSpy();
