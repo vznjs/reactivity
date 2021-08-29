@@ -10,7 +10,6 @@
   "module": "dist/es/index.js",
   "browser": "dist/es/index.js",
   "unpkg": "dist/es/index.js",
-  "jsdelivr": "dist/es/index.js",
   "source": "dist/src/index.js",
   "types": "dist/types/index.d.ts",
   "sideEffects": false,
