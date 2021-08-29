@@ -3,7 +3,8 @@ import {
   flushDisposer,
   onCleanup,
 } from "../../src/core/disposer";
-import { root, runWith } from "../../src/core/context";
+import { runWith } from "../../src/core/context";
+import { root } from "../../src/utils/root";
 
 jest.useFakeTimers("modern");
 

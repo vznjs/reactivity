@@ -1,10 +1,5 @@
 import { trackAtom } from "./atom";
-import {
-  createDisposer,
-  Disposable,
-  Disposer,
-  flushDisposer,
-} from "./disposer";
+import { Disposer, flushDisposer } from "./disposer";
 import { flushReaction, Reaction } from "./reaction";
 import { Reactor } from "./reactor";
 
@@ -53,16 +48,4 @@ export function runUpdate<T>(context: Context, fn: () => T): T {
 
     throw error;
   }
-}
-
-export function freeze<T>(fn: () => T): T {
-  return runWith({ reaction: undefined }, fn);
-}
-
-export function root<T>(fn: (disposer: Disposable) => T): T {
-  const disposer = createDisposer();
-
-  return runWith({ disposer, reaction: undefined }, () =>
-    fn(() => flushDisposer(disposer))
-  );
 }

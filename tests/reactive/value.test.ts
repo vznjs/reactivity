@@ -1,6 +1,7 @@
-import { root, runWith } from "../../src/core/context";
+import { runWith } from "../../src/core/context";
 import { createValue } from "../../src/reactive/value";
 import { reactive } from "../../src/utils/reactive";
+import { root } from "../../src/utils/root";
 import {
   createDisposer,
   flushDisposer,

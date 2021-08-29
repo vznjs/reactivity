@@ -1,6 +1,6 @@
 import { reactive } from "../../src/utils/reactive";
 import { on } from "../../src/utils/on";
-import { root } from "../../src/core/context";
+import { root } from "../../src/utils/root";
 import { createValue } from "../../src/reactive/value";
 
 jest.useFakeTimers("modern");

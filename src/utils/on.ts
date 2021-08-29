@@ -1,4 +1,4 @@
-import { freeze } from "../core/context";
+import { freeze } from "./freeze";
 
 export function on<T>(
   atom: Array<() => any> | (() => any),

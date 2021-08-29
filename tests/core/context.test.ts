@@ -1,6 +1,8 @@
-import { root, freeze, runWith, getContext } from "../../src/core/context";
+import { runWith, getContext } from "../../src/core/context";
 import { createValue } from "../../src/reactive/value";
 import { reactive } from "../../src/utils/reactive";
+import { root } from "../../src/utils/root";
+import { freeze } from "../../src/utils/freeze";
 import {
   createDisposer,
   flushDisposer,
