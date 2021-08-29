@@ -32,6 +32,8 @@ VZN makes your code reactive. It does things when other things change. When you 
 
 💎 **Modern** - Written in TS with full typings and modular structure.
 
+🦴 **Independent** - No big company behind, no dependencies. Bare bones.
+
 # Compatibility
 
 - Node v14 and above
