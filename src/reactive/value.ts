@@ -1,5 +1,12 @@
-import { createAtom, triggerAtom, Atom, trackAtom } from "../core/atom";
+import { scheduleAtom } from "..";
+import { createAtom } from "../core/atom";
 import { getContext } from "../core/context";
+import { trackAtom } from "../core/tracking";
+
+import type { AtomId } from "../core/atom";
+
+export type ValueGetter<T> = () => T;
+export type ValueSetter<T> = (newValue: T) => void;
 
 /**
  * Values are the foundation of reactive system.
@@ -11,47 +18,40 @@ import { getContext } from "../core/context";
  * const handle = setInterval(() => setCount(getCount() + 1), 1000);
  * onCleanup(() => clearInterval(handle));
  * reactive(() => console.log(getCount()))
- *
- * @export
- * @template T
- * @returns {([() => T | undefined, <U extends T | undefined>(value?: U) => void])}
  */
-export function createValue<T>(): [
-  () => T | undefined,
-  <U extends T | undefined>(value?: U) => void
-];
+export function createValue<T>(): [ValueGetter<T | undefined>, ValueSetter<T>];
 export function createValue<T>(
   value: T,
   compare?: boolean | ((prev: T, next: T) => boolean)
-): [() => T, (value: T) => void];
+): [ValueGetter<T>, ValueSetter<T>];
 export function createValue<T>(
   value?: T,
   compare?: boolean | ((prev: T | undefined, next: T) => boolean)
-): [() => T | undefined, (newValue: T) => void] {
-  let atom: Atom;
+): [ValueGetter<T | undefined>, ValueSetter<T>] {
+  let atomId: AtomId;
 
   compare ??= true;
 
-  function getter(): T | undefined {
-    const reaction = getContext().reaction;
+  function valueGetter(): T | undefined {
+    const { reactionId } = getContext();
 
-    if (reaction) {
-      atom ??= createAtom();
-      trackAtom(atom, reaction);
+    if (reactionId) {
+      atomId ??= createAtom();
+      trackAtom(atomId, reactionId);
     }
 
     return value;
   }
 
-  function setter(newValue: T): void {
+  function valueSetter(newValue: T): void {
     if (typeof compare === "function" && compare(value, newValue)) return;
 
     if (compare === true && value === newValue) return;
 
     value = newValue;
 
-    if (atom) triggerAtom(atom);
+    if (atomId) scheduleAtom(atomId);
   }
 
-  return [getter, setter];
+  return [valueGetter, valueSetter];
 }

@@ -85,23 +85,23 @@ describe("root", () => {
 
 describe("freeze", () => {
   it("runs without any reaction", () => {
-    const reaction = createReaction(() => {
+    const reactionId = createReaction(() => {
       // dummy
     });
 
-    expect(getContext().reaction).toBeUndefined();
+    expect(getContext().reactionId).toBeUndefined();
 
-    runWith({ disposer: undefined, reaction }, () => {
-      expect(getContext().reaction).toBe(reaction);
+    runWith({ disposer: undefined, reactionId }, () => {
+      expect(getContext().reactionId).toBe(reactionId);
 
       freeze(() => {
-        expect(getContext().reaction).toBeUndefined();
+        expect(getContext().reactionId).toBeUndefined();
       });
 
-      expect(getContext().reaction).toBe(reaction);
+      expect(getContext().reactionId).toBe(reactionId);
     });
 
-    expect(getContext().reaction).toBeUndefined();
+    expect(getContext().reactionId).toBeUndefined();
   });
 
   it("runs cleanups in reaction correctly", () => {
@@ -110,7 +110,7 @@ describe("freeze", () => {
 
     expect(getContext().disposer).toBeUndefined();
 
-    runWith({ disposer, reaction: undefined }, () => {
+    runWith({ disposer, reactionId: undefined }, () => {
       freeze(() => {
         onCleanup(cleanupMock);
       });

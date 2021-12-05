@@ -1,60 +1,50 @@
 import { createDisposer, flushDisposer, onCleanup } from "../core/disposer";
+import { createAtom } from "../core/atom";
 import {
-  createAtom,
-  getRevision,
-  triggerAtom,
-  Revision,
-  Atom,
-  trackAtom,
-} from "../core/atom";
-import { cancelReaction } from "../core/reactor";
+  cancelReaction,
+  hasScheduledReaction,
+  scheduleAtom,
+} from "../core/reactor";
 import { getContext, runUpdate } from "../core/context";
-import { createReaction, flushReaction } from "../core/reaction";
+import { createReaction, destroyReaction } from "../core/reaction";
+import { trackAtom, untrackReaction } from "../core/tracking";
 
-function getLatestRevision(atoms?: Atom[]): Revision {
-  if (!atoms) return 0;
-  let max = 0;
+export type MemoGetter<T> = () => T;
 
-  for (let index = 0; index < atoms.length; index++) {
-    const atom = atoms[index];
-    if (atom.revision > max) max = atom.revision;
-  }
-
-  return max;
-}
-
-export function createMemo<T>(fn: () => T): () => T {
+export function createMemo<T>(fn: () => T): MemoGetter<T> {
   let memoValue: T;
-  let memoRevision = getRevision();
-  let atomsRevision = memoRevision;
+  let currentIteration = 0;
+  let nextIteration = 1;
 
-  const atom = createAtom();
+  const atomId = createAtom();
+
   const disposer = createDisposer();
-
-  const reaction = createReaction(() => {
-    atomsRevision = getLatestRevision(reaction.atoms);
-    triggerAtom(atom);
+  const reactionId = createReaction(() => {
+    scheduleAtom(atomId);
+    ++nextIteration;
   });
 
   onCleanup(() => {
-    cancelReaction(reaction);
-    flushReaction(reaction);
+    cancelReaction(reactionId);
+    untrackReaction(reactionId);
+    destroyReaction(reactionId);
     flushDisposer(disposer);
   });
 
   function getter() {
-    if (
-      !reaction.atoms ||
-      memoRevision < atomsRevision ||
-      memoRevision < getLatestRevision(reaction.atoms)
+    if (currentIteration < nextIteration) {
+      runUpdate({ disposer, reactionId: reactionId }, () => (memoValue = fn()));
+      currentIteration = nextIteration;
+    } else if (
+      currentIteration === nextIteration &&
+      hasScheduledReaction(reactionId)
     ) {
-      runUpdate({ disposer, reaction }, () => (memoValue = fn()));
-      memoRevision = getLatestRevision(reaction.atoms);
+      runUpdate({ disposer, reactionId: reactionId }, () => (memoValue = fn()));
+      currentIteration = nextIteration + 1;
     }
 
-    const currentReaction = getContext().reaction;
-
-    if (currentReaction) trackAtom(atom, currentReaction);
+    const currentReactionId = getContext().reactionId;
+    if (currentReactionId) trackAtom(atomId, currentReactionId);
 
     return memoValue;
   }

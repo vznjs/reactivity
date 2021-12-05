@@ -1,12 +1,14 @@
 import { flushQueue } from "../utils/queue";
-import type { Atom } from "./atom";
 import { getContext } from "./context";
-import { Computation, Reaction } from "./reaction";
+import { getComputation } from "./reaction";
+import { getReactions } from "./tracking";
+
+import type { AtomId } from "./atom";
+import type { Computation, ReactionId } from "./reaction";
 
 export type Reactor = {
   updatesQueue?: Set<Computation>;
-  cancelQueue?: Set<Computation>;
-  atomsQueue?: Set<Atom>;
+  reactionsQueue?: Set<ReactionId>;
 };
 
 const globalReactor: Reactor = createReactor();
@@ -18,64 +20,72 @@ export function createReactor(): Reactor {
 export function startReactor(reactor: Reactor): void {
   reactor.updatesQueue = new Set();
 
-  if (reactor.atomsQueue) {
-    for (const atom of reactor.atomsQueue) {
-      if (!atom.reactions) return;
+  if (reactor.reactionsQueue) {
+    for (const reactionId of reactor.reactionsQueue) {
+      const computation = getComputation(reactionId);
+      if (!computation) return;
 
-      for (let index = 0; index < atom.reactions.length; index++) {
-        const reaction = atom.reactions[index];
-
-        if (!reaction) return;
-
-        if (!reactor.cancelQueue?.has(reaction.compute)) {
-          reactor.updatesQueue.add(reaction.compute);
-        }
-      }
+      reactor.updatesQueue.add(computation);
     }
   }
 
-  reactor.atomsQueue = undefined;
-  reactor.cancelQueue = undefined;
+  delete reactor.reactionsQueue;
 
   flushQueue(reactor.updatesQueue);
 
-  reactor.updatesQueue = undefined;
+  delete reactor.updatesQueue;
 }
 
-export function scheduleAtom(atom: Atom): void {
-  if (!atom.reactions?.length) return;
+export function scheduleAtom(atomId: AtomId): void {
+  const reactionsIds = getReactions(atomId);
+  if (!reactionsIds?.length) return;
 
   const currentReactor = getContext().reactor;
   const reactor = currentReactor || globalReactor;
 
   if (reactor.updatesQueue) {
-    for (let index = 0; index < atom.reactions.length; index++) {
-      reactor.updatesQueue.add(atom.reactions[index].compute);
+    for (let index = 0; index < reactionsIds.length; index++) {
+      const reactionId = reactionsIds[index];
+      if (!reactionId) return;
+
+      const computation = getComputation(reactionId);
+      if (!computation) return;
+
+      reactor.updatesQueue.add(computation);
     }
     return;
   }
 
-  if (!reactor.atomsQueue) {
-    reactor.atomsQueue = new Set();
+  if (!reactor.reactionsQueue) {
+    reactor.reactionsQueue = new Set();
 
     if (!currentReactor) {
       queueMicrotask(() => startReactor(globalReactor));
     }
   }
 
-  reactor.atomsQueue.add(atom);
+  for (let index = 0; index < reactionsIds.length; index++) {
+    reactor.reactionsQueue.add(reactionsIds[index]);
+  }
 }
 
-export function cancelReaction(reaction: Reaction): void {
+export function cancelReaction(reactionId: ReactionId): void {
   const reactor = getContext().reactor || globalReactor;
 
   if (reactor.updatesQueue) {
-    reactor.updatesQueue.delete(reaction.compute);
+    const computation = getComputation(reactionId);
+    if (!computation) return;
+
+    reactor.updatesQueue.delete(computation);
     return;
   }
 
-  if (reactor.atomsQueue) {
-    reactor.cancelQueue ??= new Set();
-    reactor.cancelQueue.add(reaction.compute);
+  if (reactor.reactionsQueue) {
+    reactor.reactionsQueue.delete(reactionId);
   }
+}
+
+export function hasScheduledReaction(reactionId: ReactionId): boolean {
+  const reactor = getContext().reactor || globalReactor;
+  return !!reactor.reactionsQueue?.has(reactionId);
 }

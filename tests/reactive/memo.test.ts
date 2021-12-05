@@ -7,20 +7,21 @@ import {
   onCleanup,
 } from "../../src/core/disposer";
 import { runWith } from "../../src/core/context";
+import { root } from "../../src";
 
 jest.useFakeTimers("modern");
 
 describe("createMemo", () => {
   it("does recompute once only if changed", () => {
-    const [getAtom, setAtom] = createValue(1);
+    const [getValue, setValue] = createValue(1);
     const spy = jest.fn();
 
     const getMemo = createMemo(() => {
-      getAtom();
+      getValue();
       spy();
     });
 
-    setAtom(2);
+    setValue(2);
 
     expect(spy.mock.calls.length).toBe(0);
 
@@ -29,39 +30,85 @@ describe("createMemo", () => {
 
     expect(spy.mock.calls.length).toBe(1);
 
-    setAtom(3);
-    setAtom(4);
+    setValue(3);
+    setValue(4);
 
+    getMemo();
     getMemo();
 
     expect(spy.mock.calls.length).toBe(2);
   });
 
   it("schedules only one reaction", () => {
-    const [getAtom, setAtom] = createValue(1);
+    const [getValue, setValue] = createValue(1);
     const spy = jest.fn();
 
     expect(spy.mock.calls.length).toBe(0);
 
-    const getMemo = createMemo(() => {
-      getAtom();
-      spy();
-    });
+    root(() => {
+      const getMemo = createMemo(() => {
+        getValue();
+        spy();
+      });
 
-    reactive(() => {
+      reactive(() => {
+        getMemo();
+      });
+
+      expect(spy.mock.calls.length).toBe(1);
+
+      setValue(2);
+      setValue(3);
+
+      jest.runAllTimers();
+
+      expect(spy.mock.calls.length).toBe(2);
+    });
+  });
+
+  it("schedules only one reaction even when using getter", () => {
+    const [getValue, setValue] = createValue(1);
+    const spy = jest.fn();
+
+    expect(spy.mock.calls.length).toBe(0);
+
+    root(() => {
+      const getMemo = createMemo(() => {
+        getValue();
+        spy();
+      });
+
+      reactive(() => {
+        getMemo();
+      });
+
+      expect(spy.mock.calls.length).toBe(1);
+
+      jest.runAllTimers();
+
+      expect(spy.mock.calls.length).toBe(1);
+
+      setValue(2);
+      setValue(3);
+
       getMemo();
+
+      expect(spy.mock.calls.length).toBe(2);
+
+      jest.runAllTimers();
+
+      expect(spy.mock.calls.length).toBe(2);
+
+      setValue(4);
+
+      jest.runAllTimers();
+
+      expect(spy.mock.calls.length).toBe(3);
+
+      getMemo();
+
+      expect(spy.mock.calls.length).toBe(3);
     });
-
-    expect(spy.mock.calls.length).toBe(1);
-
-    setAtom(2);
-    setAtom(3);
-
-    expect(spy.mock.calls.length).toBe(1);
-
-    jest.runAllTimers();
-
-    expect(spy.mock.calls.length).toBe(2);
   });
 
   it("does recompute on every change in reaction", () => {
@@ -69,7 +116,7 @@ describe("createMemo", () => {
     const disposer = createDisposer();
     const spy = jest.fn();
 
-    runWith({ disposer, reaction: undefined }, () => {
+    runWith({ disposer, reactionId: undefined }, () => {
       expect(spy.mock.calls.length).toBe(0);
 
       const getMemo = createMemo(() => {
@@ -104,7 +151,7 @@ describe("createMemo", () => {
     const [getAtom] = createValue(1);
     const disposer = createDisposer();
 
-    runWith({ disposer, reaction: undefined }, () => {
+    runWith({ disposer, reactionId: undefined }, () => {
       const getMemo = createMemo(() => {
         onCleanup(spy);
         getAtom();

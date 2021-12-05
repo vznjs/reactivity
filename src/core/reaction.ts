@@ -1,23 +1,23 @@
-import { Atom, untrackAtom } from "./atom";
-
+export type ReactionId = number;
 export type Computation = () => void;
 
-export type Reaction = {
-  readonly compute: Computation;
-  atoms?: Atom[];
-};
+let ID: ReactionId = 0;
 
-export function createReaction(compute: Computation): Reaction {
-  return { compute } as Reaction;
+export const reactionsRegistry: { [key: ReactionId]: Computation | undefined } =
+  {};
+
+export function createReaction(compute: Computation): ReactionId {
+  const reactionId = ++ID;
+  reactionsRegistry[reactionId] = compute;
+  return reactionId;
 }
 
-export function flushReaction(reaction: Reaction): void {
-  if (!reaction.atoms) return;
+export function destroyReaction(reactionId: ReactionId): void {
+  delete reactionsRegistry[reactionId];
+}
 
-  const atoms = [...reaction.atoms];
-
-  for (let index = 0; index < atoms.length; index++) {
-    const atom = atoms[index];
-    untrackAtom(atom, reaction);
-  }
+export function getComputation(
+  reactionId: ReactionId
+): Computation | undefined {
+  return reactionsRegistry[reactionId];
 }

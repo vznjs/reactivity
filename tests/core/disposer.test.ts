@@ -13,7 +13,7 @@ describe("onCleanup", () => {
     const disposer = createDisposer();
     const cleanupMock = jest.fn();
 
-    runWith({ disposer, reaction: undefined }, () => {
+    runWith({ disposer, reactionId: undefined }, () => {
       onCleanup(cleanupMock);
     });
 

@@ -1,6 +1,7 @@
-import { createAtom, trackAtom } from "../../src/core/atom";
+import { createAtom } from "../../src/core/atom";
 import { scheduleAtom, cancelReaction } from "../../src/core/reactor";
 import { createReaction } from "../../src/core/reaction";
+import { trackAtom } from "../../src/core/tracking";
 
 jest.useFakeTimers("modern");
 

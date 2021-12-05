@@ -3,6 +3,7 @@ export * from "./core/context";
 export * from "./core/disposer";
 export * from "./core/reaction";
 export * from "./core/reactor";
+export * from "./core/tracking";
 
 export * from "./reactive/value";
 export * from "./reactive/memo";
