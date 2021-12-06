@@ -16,7 +16,7 @@ function flush(): void {
 }
 
 export function createDisposer(): Disposer {
-  return {} as Disposer;
+  return Object.create(null) as Disposer;
 }
 
 export function flushDisposer(disposer: Disposer): void {

@@ -11,7 +11,7 @@ export type Context = {
   reactionId?: ReactionId;
 };
 
-let currentContext: Context = {};
+let currentContext: Context = Object.create(null);
 
 export function getContext(): Context {
   return currentContext;

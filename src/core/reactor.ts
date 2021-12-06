@@ -14,7 +14,7 @@ export type Reactor = {
 const globalReactor: Reactor = createReactor();
 
 export function createReactor(): Reactor {
-  return {} as Reactor;
+  return Object.create(null) as Reactor;
 }
 
 export function startReactor(reactor: Reactor): void {

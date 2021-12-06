@@ -4,7 +4,7 @@ export type Computation = () => void;
 let ID: ReactionId = 0;
 
 export const reactionsRegistry: { [key: ReactionId]: Computation | undefined } =
-  {};
+  Object.create(null);
 
 export function createReaction(compute: Computation): ReactionId {
   const reactionId = ++ID;
