@@ -12,11 +12,11 @@ jest.useFakeTimers("modern");
 describe("reactive", () => {
   it("reruns and cleanups on change", () => {
     const [getAtom, setAtom] = createValue(1);
-    const disposer = createDisposer();
+    const disposerId = createDisposer();
     const reactionSpy = jest.fn();
     const cleanupSpy = jest.fn();
 
-    runWith({ disposer, reactionId: undefined }, () => {
+    runWith({ disposerId, reactionId: undefined }, () => {
       reactive(() => {
         onCleanup(cleanupSpy);
         reactionSpy();
@@ -39,7 +39,7 @@ describe("reactive", () => {
     expect(reactionSpy.mock.calls.length).toBe(3);
     expect(cleanupSpy.mock.calls.length).toBe(2);
 
-    flushDisposer(disposer);
+    flushDisposer(disposerId);
 
     expect(reactionSpy.mock.calls.length).toBe(3);
     expect(cleanupSpy.mock.calls.length).toBe(3);
@@ -122,10 +122,10 @@ describe("reactive", () => {
   it("does not run scheduled reaction after context cleanup", () => {
     const cleanupSpy = jest.fn();
     const reactionSpy = jest.fn();
-    const disposer = createDisposer();
+    const disposerId = createDisposer();
     const [getAtom, setAtom] = createValue(false);
 
-    runWith({ disposer, reactionId: undefined }, () => {
+    runWith({ disposerId, reactionId: undefined }, () => {
       reactive(() => {
         getAtom();
         reactionSpy();
@@ -141,7 +141,7 @@ describe("reactive", () => {
     expect(cleanupSpy.mock.calls.length).toBe(0);
     expect(reactionSpy.mock.calls.length).toBe(1);
 
-    flushDisposer(disposer);
+    flushDisposer(disposerId);
 
     expect(cleanupSpy.mock.calls.length).toBe(1);
 

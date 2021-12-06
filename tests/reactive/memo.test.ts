@@ -113,10 +113,10 @@ describe("createMemo", () => {
 
   it("does recompute on every change in reaction", () => {
     const [getAtom, setAtom] = createValue(1);
-    const disposer = createDisposer();
+    const disposerId = createDisposer();
     const spy = jest.fn();
 
-    runWith({ disposer, reactionId: undefined }, () => {
+    runWith({ disposerId, reactionId: undefined }, () => {
       expect(spy.mock.calls.length).toBe(0);
 
       const getMemo = createMemo(() => {
@@ -149,9 +149,9 @@ describe("createMemo", () => {
     const spy = jest.fn();
 
     const [getAtom] = createValue(1);
-    const disposer = createDisposer();
+    const disposerId = createDisposer();
 
-    runWith({ disposer, reactionId: undefined }, () => {
+    runWith({ disposerId, reactionId: undefined }, () => {
       const getMemo = createMemo(() => {
         onCleanup(spy);
         getAtom();
@@ -161,7 +161,7 @@ describe("createMemo", () => {
 
       expect(spy.mock.calls.length).toBe(0);
 
-      flushDisposer(disposer);
+      flushDisposer(disposerId);
 
       expect(spy.mock.calls.length).toBe(1);
     });

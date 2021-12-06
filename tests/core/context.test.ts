@@ -91,7 +91,7 @@ describe("freeze", () => {
 
     expect(getContext().reactionId).toBeUndefined();
 
-    runWith({ disposer: undefined, reactionId }, () => {
+    runWith({ disposerId: undefined, reactionId }, () => {
       expect(getContext().reactionId).toBe(reactionId);
 
       freeze(() => {
@@ -105,12 +105,12 @@ describe("freeze", () => {
   });
 
   it("runs cleanups in reaction correctly", () => {
-    const disposer = createDisposer();
+    const disposerId = createDisposer();
     const cleanupMock = jest.fn();
 
-    expect(getContext().disposer).toBeUndefined();
+    expect(getContext().disposerId).toBeUndefined();
 
-    runWith({ disposer, reactionId: undefined }, () => {
+    runWith({ disposerId, reactionId: undefined }, () => {
       freeze(() => {
         onCleanup(cleanupMock);
       });
@@ -118,7 +118,7 @@ describe("freeze", () => {
 
     expect(cleanupMock.mock.calls.length).toBe(0);
 
-    flushDisposer(disposer);
+    flushDisposer(disposerId);
 
     expect(cleanupMock.mock.calls.length).toBe(1);
   });

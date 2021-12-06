@@ -28,7 +28,7 @@ describe("createValue", () => {
     const reactionId = createReaction(spy);
     const [getAtom, setAtom] = createValue(false);
 
-    runWith({ disposer: undefined, reactionId }, () => getAtom());
+    runWith({ disposerId: undefined, reactionId }, () => getAtom());
 
     expect(spy.mock.calls.length).toBe(0);
     expect(getAtom()).toBe(false);
@@ -48,7 +48,7 @@ describe("createValue", () => {
     const reactionId = createReaction(spy);
     const [getAtom, setAtom] = createValue(true, false);
 
-    runWith({ disposer: undefined, reactionId }, () => getAtom());
+    runWith({ disposerId: undefined, reactionId }, () => getAtom());
 
     expect(spy.mock.calls.length).toBe(0);
 
@@ -67,7 +67,7 @@ describe("createValue", () => {
     const [getAtom, setAtom] = createValue(false);
 
     root(() => {
-      runWith({ disposer: undefined, reactionId }, () => getAtom());
+      runWith({ disposerId: undefined, reactionId }, () => getAtom());
 
       expect(spy.mock.calls.length).toBe(0);
       expect(getAtom()).toBe(false);
@@ -97,7 +97,7 @@ describe("createValue", () => {
     const [getAtom, setAtom] = createValue([1], (a, b) => a[0] === b[0]);
 
     root(() => {
-      runWith({ disposer: undefined, reactionId }, () => getAtom());
+      runWith({ disposerId: undefined, reactionId }, () => getAtom());
 
       expect(spy.mock.calls.length).toBe(0);
 
@@ -119,9 +119,9 @@ describe("createValue", () => {
     const spy = jest.fn();
     const reactionId = createReaction(spy);
     const [getAtom, setAtom] = createValue(false);
-    const disposer = createDisposer();
+    const disposerId = createDisposer();
 
-    runWith({ disposer, reactionId }, () => getAtom());
+    runWith({ disposerId, reactionId }, () => getAtom());
 
     setAtom(true);
 
@@ -132,7 +132,7 @@ describe("createValue", () => {
     expect(spy.mock.calls.length).toBe(1);
     expect(getAtom()).toBe(true);
 
-    flushDisposer(disposer);
+    flushDisposer(disposerId);
 
     setAtom(false);
 
@@ -144,9 +144,9 @@ describe("createValue", () => {
     const spy = jest.fn();
     const reactionId = createReaction(spy);
     const [getAtom, setAtom] = createValue(0);
-    const disposer = createDisposer();
+    const disposerId = createDisposer();
 
-    runWith({ disposer, reactionId }, () => setAtom(getAtom() + 1));
+    runWith({ disposerId, reactionId }, () => setAtom(getAtom() + 1));
 
     expect(spy.mock.calls.length).toBe(0);
     expect(getAtom()).toBe(1);
@@ -217,16 +217,16 @@ describe("createValue", () => {
     const spy = jest.fn();
     const spy2 = jest.fn();
     const [getData, setData] = createValue(1);
-    const disposer = createDisposer();
+    const disposerId = createDisposer();
 
     root(() => {
       reactive(() => {
-        onCleanup(() => flushDisposer(disposer));
+        onCleanup(() => flushDisposer(disposerId));
         getData();
         spy();
       });
 
-      runWith({ disposer, reactionId: undefined }, () => {
+      runWith({ disposerId, reactionId: undefined }, () => {
         reactive(() => {
           getData();
           spy2();

@@ -7,18 +7,18 @@ import { untrackReaction } from "../core/tracking";
 export function reactive<T>(fn: (v: T) => T, value: T): void;
 export function reactive<T>(fn: (v?: T) => T | undefined): void;
 export function reactive<T>(fn: (v?: T) => T, value?: T): void {
-  const disposer = createDisposer();
+  const disposerId = createDisposer();
   const reactionId = createReaction(computation);
 
   function computation() {
-    runUpdate({ disposer, reactionId }, () => (value = fn(value)));
+    runUpdate({ disposerId, reactionId }, () => (value = fn(value)));
   }
 
   onCleanup(() => {
     cancelReaction(reactionId);
     untrackReaction(reactionId);
     destroyReaction(reactionId);
-    flushDisposer(disposer);
+    flushDisposer(disposerId);
   });
 
   computation();

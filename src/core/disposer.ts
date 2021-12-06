@@ -1,32 +1,36 @@
 import { flushQueue } from "../utils/queue";
 import { getContext } from "./context";
 
+export type Disposable = () => void;
+export type DisposerId = number;
+
 let isFlushing = false;
 
-export type Disposable = () => void;
+let ID: DisposerId = 0;
 
-export type Disposer = {
-  queue?: Array<Disposable>;
-};
+export const disposersRegistry: {
+  [key: DisposerId]: Array<Disposable> | undefined;
+} = Object.create(null);
 
-const globalDisposer: Disposer = createDisposer();
+const globalDisposerId: DisposerId = createDisposer();
 
 function flush(): void {
-  flushDisposer(globalDisposer);
+  flushDisposer(globalDisposerId);
 }
 
-export function createDisposer(): Disposer {
-  return Object.create(null) as Disposer;
+export function createDisposer(): DisposerId {
+  return ++ID;
 }
 
-export function flushDisposer(disposer: Disposer): void {
-  if (!disposer.queue || !disposer.queue.length) return;
+export function flushDisposer(disposerId: DisposerId): void {
+  const queue = disposersRegistry[disposerId];
+  if (!queue || !queue.length) return;
 
   isFlushing = true;
-  flushQueue(disposer.queue);
+  flushQueue(queue);
   isFlushing = false;
 
-  disposer.queue = undefined;
+  delete disposersRegistry[disposerId];
 }
 
 export function onCleanup(fn: Disposable): void {
@@ -35,22 +39,26 @@ export function onCleanup(fn: Disposable): void {
     return;
   }
 
-  const currentDisposer = getContext().disposer;
+  const { disposerId: disposerId } = getContext();
 
-  if (currentDisposer) {
-    if (!currentDisposer.queue) {
-      currentDisposer.queue = [fn];
-    } else if (!currentDisposer.queue.includes(fn)) {
-      currentDisposer.queue.push(fn);
+  if (disposerId) {
+    const queue = disposersRegistry[disposerId];
+
+    if (!queue) {
+      disposersRegistry[disposerId] = [fn];
+    } else if (!queue.includes(fn)) {
+      queue.push(fn);
     }
 
     return;
   }
 
-  if (!globalDisposer.queue) {
-    globalDisposer.queue = [fn];
+  const globalQueue = disposersRegistry[globalDisposerId];
+
+  if (!globalQueue) {
+    disposersRegistry[globalDisposerId] = [fn];
     setTimeout(flush, 0);
-  } else if (!globalDisposer.queue.includes(fn)) {
-    globalDisposer.queue.push(fn);
+  } else if (!globalQueue.includes(fn)) {
+    globalQueue.push(fn);
   }
 }

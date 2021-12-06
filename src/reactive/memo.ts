@@ -18,7 +18,7 @@ export function createMemo<T>(fn: () => T): MemoGetter<T> {
 
   const atomId = createAtom();
 
-  const disposer = createDisposer();
+  const disposerId = createDisposer();
   const reactionId = createReaction(() => {
     scheduleAtom(atomId);
     ++nextIteration;
@@ -28,18 +28,18 @@ export function createMemo<T>(fn: () => T): MemoGetter<T> {
     cancelReaction(reactionId);
     untrackReaction(reactionId);
     destroyReaction(reactionId);
-    flushDisposer(disposer);
+    flushDisposer(disposerId);
   });
 
   function getter() {
     if (currentIteration < nextIteration) {
-      runUpdate({ disposer, reactionId: reactionId }, () => (memoValue = fn()));
+      runUpdate({ disposerId, reactionId }, () => (memoValue = fn()));
       currentIteration = nextIteration;
     } else if (
       currentIteration === nextIteration &&
       hasScheduledReaction(reactionId)
     ) {
-      runUpdate({ disposer, reactionId: reactionId }, () => (memoValue = fn()));
+      runUpdate({ disposerId, reactionId }, () => (memoValue = fn()));
       currentIteration = nextIteration + 1;
     }
 

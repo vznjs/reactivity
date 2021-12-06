@@ -10,16 +10,16 @@ jest.useFakeTimers("modern");
 
 describe("onCleanup", () => {
   it("schedules disposer and calls it on flush", () => {
-    const disposer = createDisposer();
+    const disposerId = createDisposer();
     const cleanupMock = jest.fn();
 
-    runWith({ disposer, reactionId: undefined }, () => {
+    runWith({ disposerId, reactionId: undefined }, () => {
       onCleanup(cleanupMock);
     });
 
     expect(cleanupMock.mock.calls.length).toBe(0);
 
-    flushDisposer(disposer);
+    flushDisposer(disposerId);
 
     expect(cleanupMock.mock.calls.length).toBe(1);
   });
