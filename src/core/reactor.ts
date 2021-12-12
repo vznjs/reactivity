@@ -8,7 +8,7 @@ import type { Computation, ReactionId } from "./reaction";
 
 export type Reactor = {
   updatesQueue?: Set<Computation>;
-  reactionsQueue?: Set<ReactionId>;
+  reactionsQueue?: Array<ReactionId>;
 };
 
 const globalReactor: Reactor = createReactor();
@@ -21,8 +21,10 @@ export function startReactor(reactor: Reactor): void {
   reactor.updatesQueue = new Set();
 
   if (reactor.reactionsQueue) {
-    for (const reactionId of reactor.reactionsQueue) {
-      const computation = getComputation(reactionId);
+    reactor.reactionsQueue.sort();
+
+    for (let index = 0; index < reactor.reactionsQueue.length; index++) {
+      const computation = getComputation(reactor.reactionsQueue[index]);
       if (!computation) return;
 
       reactor.updatesQueue.add(computation);
@@ -57,7 +59,7 @@ export function scheduleAtom(atomId: AtomId): void {
   }
 
   if (!reactor.reactionsQueue) {
-    reactor.reactionsQueue = new Set();
+    reactor.reactionsQueue = [];
 
     if (!currentReactor) {
       queueMicrotask(() => startReactor(globalReactor));
@@ -65,7 +67,8 @@ export function scheduleAtom(atomId: AtomId): void {
   }
 
   for (let index = 0; index < reactionsIds.length; index++) {
-    reactor.reactionsQueue.add(reactionsIds[index]);
+    if (reactor.reactionsQueue.includes(reactionsIds[index])) return;
+    reactor.reactionsQueue.push(reactionsIds[index]);
   }
 }
 
@@ -77,15 +80,15 @@ export function cancelReaction(reactionId: ReactionId): void {
     if (!computation) return;
 
     reactor.updatesQueue.delete(computation);
-    return;
   }
 
   if (reactor.reactionsQueue) {
-    reactor.reactionsQueue.delete(reactionId);
+    const index = reactor.reactionsQueue.indexOf(reactionId);
+    if (index > -1) reactor.reactionsQueue.splice(index, 1);
   }
 }
 
 export function hasScheduledReaction(reactionId: ReactionId): boolean {
   const reactor = getContext().reactor || globalReactor;
-  return !!reactor.reactionsQueue?.has(reactionId);
+  return !!reactor.reactionsQueue?.includes(reactionId);
 }
