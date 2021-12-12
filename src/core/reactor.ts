@@ -1,9 +1,7 @@
 import { flushQueue } from "../utils/queue";
 import { getContext } from "./context";
 import { getComputation } from "./reaction";
-import { getReactions } from "./tracking";
 
-import type { AtomId } from "./atom";
 import type { Computation, ReactionId } from "./reaction";
 
 export type Reactor = {
@@ -25,7 +23,7 @@ export function startReactor(reactor: Reactor): void {
 
     for (let index = 0; index < reactor.reactionsQueue.length; index++) {
       const computation = getComputation(reactor.reactionsQueue[index]);
-      if (!computation) return;
+      if (!computation) continue;
 
       reactor.updatesQueue.add(computation);
     }
@@ -38,8 +36,7 @@ export function startReactor(reactor: Reactor): void {
   delete reactor.updatesQueue;
 }
 
-export function scheduleAtom(atomId: AtomId): void {
-  const reactionsIds = getReactions(atomId);
+export function scheduleReactions(reactionsIds: Array<ReactionId>): void {
   if (!reactionsIds?.length) return;
 
   const currentReactor = getContext().reactor;
@@ -48,10 +45,10 @@ export function scheduleAtom(atomId: AtomId): void {
   if (reactor.updatesQueue) {
     for (let index = 0; index < reactionsIds.length; index++) {
       const reactionId = reactionsIds[index];
-      if (!reactionId) return;
+      if (!reactionId) continue;
 
       const computation = getComputation(reactionId);
-      if (!computation) return;
+      if (!computation) continue;
 
       reactor.updatesQueue.add(computation);
     }
@@ -67,7 +64,7 @@ export function scheduleAtom(atomId: AtomId): void {
   }
 
   for (let index = 0; index < reactionsIds.length; index++) {
-    if (reactor.reactionsQueue.includes(reactionsIds[index])) return;
+    if (reactor.reactionsQueue.includes(reactionsIds[index])) continue;
     reactor.reactionsQueue.push(reactionsIds[index]);
   }
 }

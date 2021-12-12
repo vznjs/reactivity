@@ -1,20 +1,15 @@
-import { createAtom } from "../../src/core/atom";
-import { scheduleAtom, cancelReaction } from "../../src/core/reactor";
+import { scheduleReactions, cancelReaction } from "../../src/core/reactor";
 import { createReaction } from "../../src/core/reaction";
-import { trackAtom } from "../../src/core/tracking";
 
 jest.useFakeTimers("modern");
 
-describe("scheduleAtom", () => {
+describe("scheduleReactions", () => {
   it("batches calls", () => {
     const spy = jest.fn();
-    const reaction = createReaction(spy);
-    const atom = createAtom();
+    const reactionId = createReaction(spy);
 
-    trackAtom(atom, reaction);
-
-    scheduleAtom(atom);
-    scheduleAtom(atom);
+    scheduleReactions([reactionId]);
+    scheduleReactions([reactionId]);
 
     expect(spy.mock.calls.length).toBe(0);
 
@@ -25,19 +20,13 @@ describe("scheduleAtom", () => {
 
   it("works with nested schedules", () => {
     const spy = jest.fn();
-    const atom = createAtom();
     const reaction = createReaction(() => {
-      trackAtom(
-        atom,
-        createReaction(() => spy("nested"))
-      );
-      scheduleAtom(atom);
+      const reaction2 = createReaction(() => spy("nested"));
+      scheduleReactions([reaction2]);
       spy("flat");
     });
 
-    trackAtom(atom, reaction);
-
-    scheduleAtom(atom);
+    scheduleReactions([reaction]);
 
     expect(spy.mock.calls.length).toBe(0);
 
@@ -53,10 +42,8 @@ describe("cancelReaction", () => {
   it("unschedules a task", () => {
     const spy = jest.fn();
     const reaction = createReaction(spy);
-    const atom = createAtom();
 
-    trackAtom(atom, reaction);
-    scheduleAtom(atom);
+    scheduleReactions([reaction]);
     cancelReaction(reaction);
 
     expect(spy.mock.calls.length).toBe(0);
@@ -72,15 +59,9 @@ describe("startReactor", () => {
     const spy = jest.fn();
     const reaction1 = createReaction(() => spy(1));
     const reaction2 = createReaction(() => spy(2));
-    const atom1 = createAtom();
-    const atom2 = createAtom();
 
-    trackAtom(atom1, reaction1);
-    trackAtom(atom1, reaction2);
-    trackAtom(atom2, reaction2);
-
-    scheduleAtom(atom2);
-    scheduleAtom(atom1);
+    scheduleReactions([reaction2]);
+    scheduleReactions([reaction2, reaction1]);
 
     expect(spy.mock.calls.length).toBe(0);
 

@@ -3,11 +3,11 @@ import { createAtom } from "../core/atom";
 import {
   cancelReaction,
   hasScheduledReaction,
-  scheduleAtom,
+  scheduleReactions,
 } from "../core/reactor";
 import { getContext, runUpdate } from "../core/context";
 import { createReaction, destroyReaction } from "../core/reaction";
-import { trackAtom, untrackReaction } from "../core/tracking";
+import { getReactions, trackAtom, untrackReaction } from "../core/tracking";
 
 export type MemoGetter<T> = () => T;
 
@@ -20,7 +20,7 @@ export function createMemo<T>(fn: () => T): MemoGetter<T> {
 
   const disposerId = createDisposer();
   const reactionId = createReaction(() => {
-    scheduleAtom(atomId);
+    scheduleReactions(getReactions(atomId));
     ++nextIteration;
   });
 
