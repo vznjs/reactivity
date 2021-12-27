@@ -14,7 +14,7 @@ export function getReactions(atomId: AtomId): ReactionId[] {
   return atomsReactions[atomId] || [];
 }
 
-export function trackAtom(atomId: AtomId, reactionId: ReactionId): void {
+export function track(atomId: AtomId, reactionId: ReactionId): void {
   const reactionsIds = atomsReactions[atomId];
   const atomsIds = reactionsAtoms[reactionId];
 
@@ -31,7 +31,7 @@ export function trackAtom(atomId: AtomId, reactionId: ReactionId): void {
   }
 }
 
-export function untrackAtom(atomId: AtomId, reactionId: ReactionId): void {
+export function untrack(atomId: AtomId, reactionId: ReactionId): void {
   const reactionsIds = atomsReactions[atomId];
   const atomsIds = reactionsAtoms[reactionId];
 

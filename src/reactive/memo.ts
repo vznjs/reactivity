@@ -7,7 +7,7 @@ import {
 } from "../core/reactor";
 import { getContext, runUpdate } from "../core/context";
 import { createReaction, destroyReaction } from "../core/reaction";
-import { getReactions, trackAtom, untrackReaction } from "../core/tracking";
+import { getReactions, track, untrackReaction } from "../core/tracking";
 
 export type MemoGetter<T> = () => T;
 
@@ -17,8 +17,8 @@ export function createMemo<T>(fn: () => T): MemoGetter<T> {
   let nextIteration = 1;
 
   const atomId = createAtom();
-
   const disposerId = createDisposer();
+
   const reactionId = createReaction(() => {
     scheduleReactions(getReactions(atomId));
     ++nextIteration;
@@ -44,7 +44,7 @@ export function createMemo<T>(fn: () => T): MemoGetter<T> {
     }
 
     const currentReactionId = getContext().reactionId;
-    if (currentReactionId) trackAtom(atomId, currentReactionId);
+    if (currentReactionId) track(atomId, currentReactionId);
 
     return memoValue;
   }

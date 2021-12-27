@@ -1,24 +1,45 @@
-import { scheduleAtom } from "..";
 import { createAtom } from "../core/atom";
 import { getContext } from "../core/context";
-import { trackAtom } from "../core/tracking";
+import { getReactions, track } from "../core/tracking";
 
 import type { AtomId } from "../core/atom";
+import { scheduleReactions } from "../core/reactor";
 
 export type ValueGetter<T> = () => T;
 export type ValueSetter<T> = (newValue: T) => void;
 
-/**
- * Values are the foundation of reactive system.
- * By using them, you are creating implicit dependencies for reactions.
- * Once the value is updated all reactions with the value as dependency will be scheduled for update as well.
- *
- * @example
- * const [getCount, setCount] = createValue(0),
- * const handle = setInterval(() => setCount(getCount() + 1), 1000);
- * onCleanup(() => clearInterval(handle));
- * reactive(() => console.log(getCount()))
- */
+type ValueContext<T> = {
+  atomId?: AtomId;
+  value?: T;
+  compare?: undefined | boolean | ((prev: T | undefined, next: T) => boolean);
+};
+
+function valueGetter<T>(this: ValueContext<T>): T | undefined {
+  const { reactionId } = getContext();
+
+  if (reactionId) {
+    this.atomId ??= createAtom();
+    track(this.atomId, reactionId);
+  }
+
+  return this.value;
+}
+
+function valueSetter<T>(this: ValueContext<T>, newValue: T): void {
+  if (typeof this.compare === "function" && this.compare(this.value, newValue))
+    return;
+
+  if (
+    (this.compare === undefined || this.compare === true) &&
+    this.value === newValue
+  )
+    return;
+
+  this.value = newValue;
+
+  if (this.atomId) scheduleReactions(getReactions(this.atomId));
+}
+
 export function createValue<T>(): [ValueGetter<T | undefined>, ValueSetter<T>];
 export function createValue<T>(
   value: T,
@@ -28,30 +49,12 @@ export function createValue<T>(
   value?: T,
   compare?: boolean | ((prev: T | undefined, next: T) => boolean)
 ): [ValueGetter<T | undefined>, ValueSetter<T>] {
-  let atomId: AtomId;
+  const valueContext = Object.create(null) as ValueContext<T>;
+  valueContext.value = value;
+  valueContext.compare = compare;
 
-  compare ??= true;
-
-  function valueGetter(): T | undefined {
-    const { reactionId } = getContext();
-
-    if (reactionId) {
-      atomId ??= createAtom();
-      trackAtom(atomId, reactionId);
-    }
-
-    return value;
-  }
-
-  function valueSetter(newValue: T): void {
-    if (typeof compare === "function" && compare(value, newValue)) return;
-
-    if (compare === true && value === newValue) return;
-
-    value = newValue;
-
-    if (atomId) scheduleAtom(atomId);
-  }
-
-  return [valueGetter, valueSetter];
+  return [
+    valueGetter.bind<ValueGetter<T | undefined>>(valueContext),
+    valueSetter.bind<ValueSetter<T>>(valueContext),
+  ];
 }

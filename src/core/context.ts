@@ -1,5 +1,5 @@
 import { flushDisposer } from "./disposer";
-import { getAtoms, trackAtom, untrackReaction } from "./tracking";
+import { getAtoms, track, untrackReaction } from "./tracking";
 
 import type { Reactor } from "./reactor";
 import type { DisposerId } from "./disposer";
@@ -44,7 +44,7 @@ export function runUpdate<T>(context: Context, fn: () => T): T {
 
     if (context.reactionId && atomsIds.length) {
       for (let index = 0; index < atomsIds.length; index++) {
-        trackAtom(atomsIds[index], context.reactionId);
+        track(atomsIds[index], context.reactionId);
       }
     }
 

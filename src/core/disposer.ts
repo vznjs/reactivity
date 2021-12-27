@@ -8,7 +8,7 @@ let isFlushing = false;
 
 let ID: DisposerId = 0;
 
-export const disposersRegistry: {
+const disposersRegistry: {
   [key: DisposerId]: Array<Disposable> | undefined;
 } = Object.create(null);
 
