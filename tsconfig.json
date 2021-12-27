@@ -6,7 +6,8 @@
     "strict": true,
     "outDir": "./dist/src",
     "esModuleInterop": true,
-    "removeComments": true
+    "removeComments": true,
+    "isolatedModules": true,
   },
 
   "include": ["./src"]
