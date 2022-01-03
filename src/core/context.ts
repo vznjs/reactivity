@@ -1,12 +1,10 @@
 import { flushDisposer } from "./disposer";
 import { getAtoms, track, untrackReaction } from "./tracking";
 
-import type { Reactor } from "./reactor";
 import type { DisposerId } from "./disposer";
 import type { ReactionId } from "./reaction";
 
 export type Context = {
-  reactor?: Reactor;
   disposerId?: DisposerId;
   reactionId?: ReactionId;
 };
@@ -22,7 +20,6 @@ export function runWith<T>(context: Context, fn: () => T): T {
 
   if ("reactionId" in context) currentContext.reactionId = context.reactionId;
   if ("disposerId" in context) currentContext.disposerId = context.disposerId;
-  if ("reactor" in context) currentContext.reactor = context.reactor;
 
   try {
     return fn();

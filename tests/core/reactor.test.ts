@@ -53,22 +53,3 @@ describe("cancelReaction", () => {
     expect(spy.mock.calls.length).toBe(0);
   });
 });
-
-describe("startReactor", () => {
-  it("runs reactions always in creation order", () => {
-    const spy = jest.fn();
-    const reaction1 = createReaction(() => spy(1));
-    const reaction2 = createReaction(() => spy(2));
-
-    scheduleReactions([reaction2]);
-    scheduleReactions([reaction2, reaction1]);
-
-    expect(spy.mock.calls.length).toBe(0);
-
-    jest.runAllTimers();
-
-    expect(spy.mock.calls.length).toBe(2);
-    expect(spy.mock.calls[0][0]).toBe(1);
-    expect(spy.mock.calls[1][0]).toBe(2);
-  });
-});
