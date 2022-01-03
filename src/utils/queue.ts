@@ -1,11 +1,11 @@
-export type Queue = Iterable<() => void>;
+export type Queue = Iterable<(() => void) | undefined>;
 
 export function flushQueue(queue?: Queue): void {
   if (!queue) return;
 
   for (const task of queue) {
     try {
-      task();
+      if (task) task();
     } catch (error) {
       setTimeout(() => {
         throw error;
