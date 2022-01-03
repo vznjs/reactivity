@@ -1,4 +1,3 @@
-import { flushQueue } from "../utils/queue";
 import { getContext } from "./context";
 
 export type Disposable = () => void;
@@ -27,7 +26,17 @@ export function flushDisposer(disposerId: DisposerId): void {
   if (!queue || !queue.length) return;
 
   isFlushing = true;
-  flushQueue(queue);
+
+  for (const task of queue) {
+    try {
+      task?.();
+    } catch (error) {
+      setTimeout(() => {
+        throw error;
+      }, 0);
+    }
+  }
+
   isFlushing = false;
 
   delete disposersRegistry[disposerId];

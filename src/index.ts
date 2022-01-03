@@ -11,8 +11,8 @@ export * from "./reactive/value";
 export * from "./reactive/memo";
 
 // utils
+export * from "./utils/concurrently";
 export * from "./utils/freeze";
 export * from "./utils/on";
-export * from "./utils/queue";
 export * from "./utils/reactive";
 export * from "./utils/root";
