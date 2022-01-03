@@ -11,15 +11,15 @@ type NavigatorScheduling = Navigator & {
   scheduling: { isInputPending?: () => boolean };
 };
 
+const taskQueue: Task[] = [];
+const yieldInterval = 5;
+const maxYieldInterval = 300;
 let taskIdCounter = 1,
   isCallbackScheduled = false,
   isPerformingWork = false,
-  taskQueue: Task[] = [],
   currentTask: Task | null = null,
   shouldYieldToHost: (() => boolean) | null = null,
-  yieldInterval = 5,
   deadline = 0,
-  maxYieldInterval = 300,
   scheduleCallback: (() => void) | null = null,
   scheduledCallback:
     | ((hasTimeRemaining: boolean, initialTime: number) => boolean)
