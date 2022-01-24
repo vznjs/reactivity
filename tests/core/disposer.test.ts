@@ -1,3 +1,4 @@
+import { describe, test, vi, expect } from "vitest";
 import {
   createDisposer,
   flushDisposer,
@@ -6,12 +7,12 @@ import {
 import { runWith } from "../../src/core/context";
 import { root } from "../../src/utils/root";
 
-jest.useFakeTimers("modern");
+vi.useFakeTimers();
 
 describe("onCleanup", () => {
-  it("schedules disposer and calls it on flush", () => {
+  test("schedules disposer and calls it on flush", () => {
     const disposerId = createDisposer();
-    const cleanupMock = jest.fn();
+    const cleanupMock = vi.fn();
 
     runWith({ disposerId, reactionId: undefined }, () => {
       onCleanup(cleanupMock);
@@ -24,8 +25,8 @@ describe("onCleanup", () => {
     expect(cleanupMock.mock.calls.length).toBe(1);
   });
 
-  it("supports nested cleanups", () => {
-    const spy = jest.fn();
+  test("supports nested cleanups", () => {
+    const spy = vi.fn();
 
     root((dispose) => {
       onCleanup(() => {
@@ -35,19 +36,19 @@ describe("onCleanup", () => {
       dispose();
     });
 
-    jest.runAllTimers();
+    vi.runAllTimers();
 
     expect(spy.mock.calls.length).toBe(2);
   });
 
-  it("does not run onCleanup if there is no reaction", () => {
-    const cleanupMock = jest.fn();
+  test("does not run onCleanup if there is no reaction", () => {
+    const cleanupMock = vi.fn();
 
     root(() => onCleanup(cleanupMock));
 
     expect(cleanupMock.mock.calls.length).toBe(0);
 
-    jest.runAllTimers();
+    vi.runAllTimers();
 
     expect(cleanupMock.mock.calls.length).toBe(0);
   });

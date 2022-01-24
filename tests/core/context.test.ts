@@ -1,3 +1,4 @@
+import { describe, test, vi, expect } from "vitest";
 import { runWith, getContext } from "../../src/core/context";
 import { createValue } from "../../src/reactive/value";
 import { reactive } from "../../src/utils/reactive";
@@ -10,15 +11,15 @@ import {
 } from "../../src/core/disposer";
 import { createReaction } from "../../src/core/reaction";
 
-jest.useFakeTimers("modern");
+vi.useFakeTimers();
 
 describe("root", () => {
-  it("allows subreactions to escape their parents", () => {
+  test("allows subreactions to escape their parents", () => {
     root(() => {
       const [getOuterAtom, setOuterAtom] = createValue(0);
       const [getInnerAtom, setInnerAtom] = createValue(0);
-      const outerSpy = jest.fn();
-      const innerSpy = jest.fn();
+      const outerSpy = vi.fn();
+      const innerSpy = vi.fn();
 
       reactive(() => {
         getOuterAtom();
@@ -39,22 +40,22 @@ describe("root", () => {
       setOuterAtom(1);
       setOuterAtom(2);
 
-      jest.runAllTimers();
+      vi.runAllTimers();
 
       expect(outerSpy.mock.calls.length).toBe(2);
       expect(innerSpy.mock.calls.length).toBe(2);
 
       setInnerAtom(1);
 
-      jest.runAllTimers();
+      vi.runAllTimers();
 
       expect(outerSpy.mock.calls.length).toBe(2);
       expect(innerSpy.mock.calls.length).toBe(4);
     });
   });
 
-  it("allows to dispose all nested reactions", () => {
-    const spy = jest.fn();
+  test("allows to dispose all nested reactions", () => {
+    const spy = vi.fn();
 
     root((dispose) => {
       const [getAtom, setAtom] = createValue(1);
@@ -68,7 +69,7 @@ describe("root", () => {
 
       setAtom(2);
 
-      jest.runAllTimers();
+      vi.runAllTimers();
 
       expect(spy.mock.calls.length).toBe(2);
 
@@ -76,7 +77,7 @@ describe("root", () => {
 
       setAtom(3);
 
-      jest.runAllTimers();
+      vi.runAllTimers();
 
       expect(spy.mock.calls.length).toBe(2);
     });
@@ -84,7 +85,7 @@ describe("root", () => {
 });
 
 describe("freeze", () => {
-  it("runs without any reaction", () => {
+  test("runs without any reaction", () => {
     const reactionId = createReaction(() => {
       // dummy
     });
@@ -104,9 +105,9 @@ describe("freeze", () => {
     expect(getContext().reactionId).toBeUndefined();
   });
 
-  it("runs cleanups in reaction correctly", () => {
+  test("runs cleanups in reaction correctly", () => {
     const disposerId = createDisposer();
-    const cleanupMock = jest.fn();
+    const cleanupMock = vi.fn();
 
     expect(getContext().disposerId).toBeUndefined();
 

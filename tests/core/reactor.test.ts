@@ -1,11 +1,12 @@
+import { describe, test, vi, expect } from "vitest";
 import { scheduleReactions, cancelReaction } from "../../src/core/reactor";
 import { createReaction } from "../../src/core/reaction";
 
-jest.useFakeTimers("modern");
+vi.useFakeTimers();
 
 describe("scheduleReactions", () => {
-  it("batches calls", () => {
-    const spy = jest.fn();
+  test("batches calls", () => {
+    const spy = vi.fn();
     const reactionId = createReaction(spy);
 
     scheduleReactions([reactionId]);
@@ -13,13 +14,13 @@ describe("scheduleReactions", () => {
 
     expect(spy.mock.calls.length).toBe(0);
 
-    jest.runAllTimers();
+    vi.runAllTimers();
 
     expect(spy.mock.calls.length).toBe(1);
   });
 
-  it("works with nested schedules", () => {
-    const spy = jest.fn();
+  test("works with nested schedules", () => {
+    const spy = vi.fn();
     const reaction = createReaction(() => {
       const reaction2 = createReaction(() => spy("nested"));
       scheduleReactions([reaction2]);
@@ -30,7 +31,7 @@ describe("scheduleReactions", () => {
 
     expect(spy.mock.calls.length).toBe(0);
 
-    jest.runAllTimers();
+    vi.runAllTimers();
 
     expect(spy.mock.calls.length).toBe(2);
     expect(spy.mock.calls[0][0]).toBe("flat");
@@ -39,8 +40,8 @@ describe("scheduleReactions", () => {
 });
 
 describe("cancelReaction", () => {
-  it("unschedules a task", () => {
-    const spy = jest.fn();
+  test("unschedules a task", () => {
+    const spy = vi.fn();
     const reaction = createReaction(spy);
 
     scheduleReactions([reaction]);
@@ -48,7 +49,7 @@ describe("cancelReaction", () => {
 
     expect(spy.mock.calls.length).toBe(0);
 
-    jest.runAllTimers();
+    vi.runAllTimers();
 
     expect(spy.mock.calls.length).toBe(0);
   });
