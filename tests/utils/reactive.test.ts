@@ -5,7 +5,7 @@ import {
   onCleanup,
 } from "../../src/core/disposer";
 import { reactive } from "../../src/utils/reactive";
-import { runWith } from "../../src/core/context";
+import { runWithContext } from "../../src/core/context";
 import { createValue } from "../../src/reactive/value";
 
 vi.useFakeTimers();
@@ -17,7 +17,7 @@ describe("reactive", () => {
     const reactionSpy = vi.fn();
     const cleanupSpy = vi.fn();
 
-    runWith({ disposerId, reactionId: undefined }, () => {
+    runWithContext({ disposerId, reactionId: undefined }, () => {
       reactive(() => {
         onCleanup(cleanupSpy);
         reactionSpy();
@@ -126,7 +126,7 @@ describe("reactive", () => {
     const disposerId = createDisposer();
     const [getAtom, setAtom] = createValue(false);
 
-    runWith({ disposerId, reactionId: undefined }, () => {
+    runWithContext({ disposerId, reactionId: undefined }, () => {
       reactive(() => {
         getAtom();
         reactionSpy();

@@ -15,12 +15,15 @@ const reactionsQueue = new Map<ReactionId, Task | number>();
 let taskPriority: Priority = Priority.NormalPriority;
 let scheduled = false;
 
-export function withPriority(priority: Priority, fn?: () => any) {
+export function runWithPriority<T>(
+  priority: Priority,
+  fn?: () => T
+): T | undefined {
   const prev = taskPriority;
 
   try {
     taskPriority = priority;
-    fn?.();
+    return fn?.();
   } finally {
     taskPriority = prev;
   }
@@ -64,7 +67,7 @@ export function scheduleReactions(reactionsIds: Array<ReactionId>): void {
         requestCallback(
           () => {
             reactionsQueue.delete(reactionId);
-            withPriority(task, getComputation(reactionId));
+            runWithPriority(task, getComputation(reactionId));
           },
           { timeout: LOW_PRIORITY_TIMEOUT }
         )

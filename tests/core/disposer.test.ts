@@ -4,7 +4,7 @@ import {
   flushDisposer,
   onCleanup,
 } from "../../src/core/disposer";
-import { runWith } from "../../src/core/context";
+import { runWithContext } from "../../src/core/context";
 import { root } from "../../src/utils/root";
 
 vi.useFakeTimers();
@@ -14,7 +14,7 @@ describe("onCleanup", () => {
     const disposerId = createDisposer();
     const cleanupMock = vi.fn();
 
-    runWith({ disposerId, reactionId: undefined }, () => {
+    runWithContext({ disposerId, reactionId: undefined }, () => {
       onCleanup(cleanupMock);
     });
 

@@ -1,5 +1,5 @@
 import { describe, test, vi, expect } from "vitest";
-import { runWith, getContext } from "../../src/core/context";
+import { runWithContext, getContext } from "../../src/core/context";
 import { createValue } from "../../src/reactive/value";
 import { reactive } from "../../src/utils/reactive";
 import { root } from "../../src/utils/root";
@@ -92,7 +92,7 @@ describe("freeze", () => {
 
     expect(getContext().reactionId).toBeUndefined();
 
-    runWith({ disposerId: undefined, reactionId }, () => {
+    runWithContext({ disposerId: undefined, reactionId }, () => {
       expect(getContext().reactionId).toBe(reactionId);
 
       freeze(() => {
@@ -111,7 +111,7 @@ describe("freeze", () => {
 
     expect(getContext().disposerId).toBeUndefined();
 
-    runWith({ disposerId, reactionId: undefined }, () => {
+    runWithContext({ disposerId, reactionId: undefined }, () => {
       freeze(() => {
         onCleanup(cleanupMock);
       });

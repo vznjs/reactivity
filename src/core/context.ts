@@ -15,7 +15,7 @@ export function getContext(): Context {
   return currentContext;
 }
 
-export function runWith<T>(context: Context, fn: () => T): T {
+export function runWithContext<T>(context: Context, fn: () => T): T {
   const oldContext = { ...currentContext };
 
   if ("reactionId" in context) currentContext.reactionId = context.reactionId;
@@ -35,7 +35,7 @@ export function runUpdate<T>(context: Context, fn: () => T): T {
   if (context.disposerId) flushDisposer(context.disposerId);
 
   try {
-    return runWith(context, fn);
+    return runWithContext(context, fn);
   } catch (error) {
     if (context.disposerId) flushDisposer(context.disposerId);
 

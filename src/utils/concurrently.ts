@@ -1,5 +1,5 @@
-import { Priority, withPriority } from "../core/reactor";
+import { Priority, runWithPriority } from "../core/reactor";
 
 export function concurrently(fn: () => any) {
-  return withPriority(Priority.LowPriority, fn);
+  return runWithPriority(Priority.LowPriority, fn);
 }

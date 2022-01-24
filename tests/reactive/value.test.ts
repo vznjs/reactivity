@@ -1,5 +1,5 @@
 import { describe, test, vi, expect } from "vitest";
-import { runWith } from "../../src/core/context";
+import { runWithContext } from "../../src/core/context";
 import { createValue } from "../../src/reactive/value";
 import { reactive } from "../../src/utils/reactive";
 import { root } from "../../src/utils/root";
@@ -29,7 +29,7 @@ describe("createValue", () => {
     const reactionId = createReaction(spy);
     const [getAtom, setAtom] = createValue(false);
 
-    runWith({ disposerId: undefined, reactionId }, () => getAtom());
+    runWithContext({ disposerId: undefined, reactionId }, () => getAtom());
 
     expect(spy.mock.calls.length).toBe(0);
     expect(getAtom()).toBe(false);
@@ -49,7 +49,7 @@ describe("createValue", () => {
     const reactionId = createReaction(spy);
     const [getAtom, setAtom] = createValue(true, false);
 
-    runWith({ disposerId: undefined, reactionId }, () => getAtom());
+    runWithContext({ disposerId: undefined, reactionId }, () => getAtom());
 
     expect(spy.mock.calls.length).toBe(0);
 
@@ -68,7 +68,7 @@ describe("createValue", () => {
     const [getAtom, setAtom] = createValue(false);
 
     root(() => {
-      runWith({ disposerId: undefined, reactionId }, () => getAtom());
+      runWithContext({ disposerId: undefined, reactionId }, () => getAtom());
 
       expect(spy.mock.calls.length).toBe(0);
       expect(getAtom()).toBe(false);
@@ -98,7 +98,7 @@ describe("createValue", () => {
     const [getAtom, setAtom] = createValue([1], (a, b) => a[0] === b[0]);
 
     root(() => {
-      runWith({ disposerId: undefined, reactionId }, () => getAtom());
+      runWithContext({ disposerId: undefined, reactionId }, () => getAtom());
 
       expect(spy.mock.calls.length).toBe(0);
 
@@ -122,7 +122,7 @@ describe("createValue", () => {
     const [getAtom, setAtom] = createValue(false);
     const disposerId = createDisposer();
 
-    runWith({ disposerId, reactionId }, () => getAtom());
+    runWithContext({ disposerId, reactionId }, () => getAtom());
 
     setAtom(true);
 
@@ -147,7 +147,7 @@ describe("createValue", () => {
     const [getAtom, setAtom] = createValue(0);
     const disposerId = createDisposer();
 
-    runWith({ disposerId, reactionId }, () => setAtom(getAtom() + 1));
+    runWithContext({ disposerId, reactionId }, () => setAtom(getAtom() + 1));
 
     expect(spy.mock.calls.length).toBe(0);
     expect(getAtom()).toBe(1);
@@ -227,7 +227,7 @@ describe("createValue", () => {
         spy();
       });
 
-      runWith({ disposerId, reactionId: undefined }, () => {
+      runWithContext({ disposerId, reactionId: undefined }, () => {
         reactive(() => {
           getData();
           spy2();

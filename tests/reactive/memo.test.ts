@@ -7,7 +7,7 @@ import {
   flushDisposer,
   onCleanup,
 } from "../../src/core/disposer";
-import { runWith } from "../../src/core/context";
+import { runWithContext } from "../../src/core/context";
 import { root } from "../../src";
 
 vi.useFakeTimers();
@@ -117,7 +117,7 @@ describe("createMemo", () => {
     const disposerId = createDisposer();
     const spy = vi.fn();
 
-    runWith({ disposerId, reactionId: undefined }, () => {
+    runWithContext({ disposerId, reactionId: undefined }, () => {
       expect(spy.mock.calls.length).toBe(0);
 
       const getMemo = createMemo(() => {
@@ -152,7 +152,7 @@ describe("createMemo", () => {
     const [getAtom] = createValue(1);
     const disposerId = createDisposer();
 
-    runWith({ disposerId, reactionId: undefined }, () => {
+    runWithContext({ disposerId, reactionId: undefined }, () => {
       const getMemo = createMemo(() => {
         onCleanup(spy);
         getAtom();
