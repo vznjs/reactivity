@@ -1,4 +1,4 @@
-import { describe, test, vi, expect } from "vitest";
+import { describe, it, vi, expect } from "vitest";
 import { createMemo } from "../../src/reactive/memo";
 import { reactive } from "../../src/utils/reactive";
 import { createValue } from "../../src/reactive/value";
@@ -13,7 +13,7 @@ import { root } from "../../src";
 vi.useFakeTimers();
 
 describe("createMemo", () => {
-  test("does recompute once only if changed", () => {
+  it("does recompute once only if changed", () => {
     const [getValue, setValue] = createValue(1);
     const spy = vi.fn();
 
@@ -40,7 +40,7 @@ describe("createMemo", () => {
     expect(spy.mock.calls.length).toBe(2);
   });
 
-  test("schedules only one reaction", () => {
+  it("schedules only one reaction", () => {
     const [getValue, setValue] = createValue(1);
     const spy = vi.fn();
 
@@ -67,7 +67,7 @@ describe("createMemo", () => {
     });
   });
 
-  test("schedules only one reaction even when using getter", () => {
+  it("schedules only one reaction even when using getter", () => {
     const [getValue, setValue] = createValue(1);
     const spy = vi.fn();
 
@@ -112,7 +112,7 @@ describe("createMemo", () => {
     });
   });
 
-  test("does recompute on every change in reaction", () => {
+  it("does recompute on every change in reaction", () => {
     const [getAtom, setAtom] = createValue(1);
     const disposerId = createDisposer();
     const spy = vi.fn();
@@ -146,7 +146,7 @@ describe("createMemo", () => {
     });
   });
 
-  test("cleanups with each reaction", () => {
+  it("cleanups with each reaction", () => {
     const spy = vi.fn();
 
     const [getAtom] = createValue(1);

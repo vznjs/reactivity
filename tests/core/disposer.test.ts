@@ -1,4 +1,4 @@
-import { describe, test, vi, expect } from "vitest";
+import { describe, it, vi, expect } from "vitest";
 import {
   createDisposer,
   flushDisposer,
@@ -10,7 +10,7 @@ import { root } from "../../src/utils/root";
 vi.useFakeTimers();
 
 describe("onCleanup", () => {
-  test("schedules disposer and calls it on flush", () => {
+  it("schedules disposer and calls it on flush", () => {
     const disposerId = createDisposer();
     const cleanupMock = vi.fn();
 
@@ -25,7 +25,7 @@ describe("onCleanup", () => {
     expect(cleanupMock.mock.calls.length).toBe(1);
   });
 
-  test("supports nested cleanups", () => {
+  it("supports nested cleanups", () => {
     const spy = vi.fn();
 
     root((dispose) => {
@@ -41,7 +41,7 @@ describe("onCleanup", () => {
     expect(spy.mock.calls.length).toBe(2);
   });
 
-  test("does not run onCleanup if there is no reaction", () => {
+  it("does not run onCleanup if there is no reaction", () => {
     const cleanupMock = vi.fn();
 
     root(() => onCleanup(cleanupMock));

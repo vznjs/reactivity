@@ -1,11 +1,11 @@
-import { describe, test, vi, expect } from "vitest";
+import { describe, it, vi, expect } from "vitest";
 import { scheduleReactions, cancelReaction } from "../../src/core/reactor";
 import { createReaction } from "../../src/core/reaction";
 
 vi.useFakeTimers();
 
 describe("scheduleReactions", () => {
-  test("batches calls", () => {
+  it("batches calls", () => {
     const spy = vi.fn();
     const reactionId = createReaction(spy);
 
@@ -19,7 +19,7 @@ describe("scheduleReactions", () => {
     expect(spy.mock.calls.length).toBe(1);
   });
 
-  test("works with nested schedules", () => {
+  it("works with nested schedules", () => {
     const spy = vi.fn();
     const reaction = createReaction(() => {
       const reaction2 = createReaction(() => spy("nested"));
@@ -40,7 +40,7 @@ describe("scheduleReactions", () => {
 });
 
 describe("cancelReaction", () => {
-  test("unschedules a task", () => {
+  it("unschedules a task", () => {
     const spy = vi.fn();
     const reaction = createReaction(spy);
 

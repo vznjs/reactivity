@@ -1,4 +1,4 @@
-import { describe, test, vi, expect } from "vitest";
+import { describe, it, vi, expect } from "vitest";
 import { reactive } from "../../src/utils/reactive";
 import { on } from "../../src/utils/on";
 import { root } from "../../src/utils/root";
@@ -7,7 +7,7 @@ import { createValue } from "../../src/reactive/value";
 vi.useFakeTimers();
 
 describe("on", () => {
-  test("reruns only on dependencies change", () => {
+  it("reruns only on dependencies change", () => {
     const spy = vi.fn();
     const [getAtom, setAtom] = createValue(1);
     const [getAtom2, setAtom2] = createValue(1);
@@ -36,7 +36,7 @@ describe("on", () => {
     expect(spy.mock.calls[1][0]).toBe(1);
   });
 
-  test("does not run for the first time if defer is true", () => {
+  it("does not run for the first time if defer is true", () => {
     const spy = vi.fn();
     const [getAtom, setAtom] = createValue(1);
     const [getAtom2, setAtom2] = createValue(1);

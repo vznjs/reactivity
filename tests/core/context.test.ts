@@ -1,4 +1,4 @@
-import { describe, test, vi, expect } from "vitest";
+import { describe, it, vi, expect } from "vitest";
 import { runWithContext, getContext } from "../../src/core/context";
 import { createValue } from "../../src/reactive/value";
 import { reactive } from "../../src/utils/reactive";
@@ -14,7 +14,7 @@ import { createReaction } from "../../src/core/reaction";
 vi.useFakeTimers();
 
 describe("root", () => {
-  test("allows subreactions to escape their parents", () => {
+  it("allows subreactions to escape their parents", () => {
     root(() => {
       const [getOuterAtom, setOuterAtom] = createValue(0);
       const [getInnerAtom, setInnerAtom] = createValue(0);
@@ -54,7 +54,7 @@ describe("root", () => {
     });
   });
 
-  test("allows to dispose all nested reactions", () => {
+  it("allows to dispose all nested reactions", () => {
     const spy = vi.fn();
 
     root((dispose) => {
@@ -85,7 +85,7 @@ describe("root", () => {
 });
 
 describe("freeze", () => {
-  test("runs without any reaction", () => {
+  it("runs without any reaction", () => {
     const reactionId = createReaction(() => {
       // dummy
     });
@@ -105,7 +105,7 @@ describe("freeze", () => {
     expect(getContext().reactionId).toBeUndefined();
   });
 
-  test("runs cleanups in reaction correctly", () => {
+  it("runs cleanups in reaction correctly", () => {
     const disposerId = createDisposer();
     const cleanupMock = vi.fn();
 

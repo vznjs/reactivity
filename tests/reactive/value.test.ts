@@ -1,4 +1,4 @@
-import { describe, test, vi, expect } from "vitest";
+import { describe, it, vi, expect } from "vitest";
 import { runWithContext } from "../../src/core/context";
 import { createValue } from "../../src/reactive/value";
 import { reactive } from "../../src/utils/reactive";
@@ -13,18 +13,18 @@ import { createReaction } from "../../src/core/reaction";
 vi.useFakeTimers();
 
 describe("createValue", () => {
-  test("takes and returns an initial value", () => {
+  it("takes and returns an initial value", () => {
     const [getValue] = createValue(1);
     expect(getValue()).toBe(1);
   });
 
-  test("can be set by passing in a new value", () => {
+  it("can be set by passing in a new value", () => {
     const [getValue, setValue] = createValue(1);
     setValue(2);
     expect(getValue()).toBe(2);
   });
 
-  test("triggers reaction if values are not equal", () => {
+  it("triggers reaction if values are not equal", () => {
     const spy = vi.fn();
     const reactionId = createReaction(spy);
     const [getAtom, setAtom] = createValue(false);
@@ -44,7 +44,7 @@ describe("createValue", () => {
     expect(getAtom()).toBe(true);
   });
 
-  test("triggers reaction if compare option is false and values are equal", () => {
+  it("triggers reaction if compare option is false and values are equal", () => {
     const spy = vi.fn();
     const reactionId = createReaction(spy);
     const [getAtom, setAtom] = createValue(true, false);
@@ -62,7 +62,7 @@ describe("createValue", () => {
     expect(spy.mock.calls.length).toBe(1);
   });
 
-  test("does not trigger reaction if set to equal value", () => {
+  it("does not trigger reaction if set to equal value", () => {
     const spy = vi.fn();
     const reactionId = createReaction(spy);
     const [getAtom, setAtom] = createValue(false);
@@ -92,7 +92,7 @@ describe("createValue", () => {
     });
   });
 
-  test("can take an equality predicate", () => {
+  it("can take an equality predicate", () => {
     const spy = vi.fn();
     const reactionId = createReaction(spy);
     const [getAtom, setAtom] = createValue([1], (a, b) => a[0] === b[0]);
@@ -116,7 +116,7 @@ describe("createValue", () => {
     });
   });
 
-  test("removes subscriptions on cleanup", () => {
+  it("removes subscriptions on cleanup", () => {
     const spy = vi.fn();
     const reactionId = createReaction(spy);
     const [getAtom, setAtom] = createValue(false);
@@ -141,7 +141,7 @@ describe("createValue", () => {
     expect(getAtom()).toBe(false);
   });
 
-  test("ignores reaction with circular dependencies", () => {
+  it("ignores reaction with circular dependencies", () => {
     const spy = vi.fn();
     const reactionId = createReaction(spy);
     const [getAtom, setAtom] = createValue(0);
@@ -160,7 +160,7 @@ describe("createValue", () => {
     expect(getAtom()).toBe(2);
   });
 
-  test("uses global queue of updates (aka S.js subclocks)", () => {
+  it("uses global queue of updates (aka S.js subclocks)", () => {
     const spy = vi.fn();
     const [getAtom, setAtom] = createValue(20);
 
@@ -186,7 +186,7 @@ describe("createValue", () => {
     expect(spy.mock.calls.length).toBe(2);
   });
 
-  test("works with cross-updates", () => {
+  it("works with cross-updates", () => {
     const spy = vi.fn();
     const [getData, setData] = createValue(2);
     const [getData2, setData2] = createValue(2);
@@ -214,7 +214,7 @@ describe("createValue", () => {
     });
   });
 
-  test("works with nested updates and cleanups", () => {
+  it("works with nested updates and cleanups", () => {
     const spy = vi.fn();
     const spy2 = vi.fn();
     const [getData, setData] = createValue(1);
@@ -254,7 +254,7 @@ describe("createValue", () => {
     });
   });
 
-  test("does not recompute reactions used after change", () => {
+  it("does not recompute reactions used after change", () => {
     const spy = vi.fn();
     const [getAtom, setAtom] = createValue(false);
 

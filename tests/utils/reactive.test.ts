@@ -1,4 +1,4 @@
-import { describe, test, vi, expect } from "vitest";
+import { describe, it, vi, expect } from "vitest";
 import {
   createDisposer,
   flushDisposer,
@@ -11,7 +11,7 @@ import { createValue } from "../../src/reactive/value";
 vi.useFakeTimers();
 
 describe("reactive", () => {
-  test("reruns and cleanups on change", () => {
+  it("reruns and cleanups on change", () => {
     const [getAtom, setAtom] = createValue(1);
     const disposerId = createDisposer();
     const reactionSpy = vi.fn();
@@ -52,7 +52,7 @@ describe("reactive", () => {
     expect(cleanupSpy.mock.calls.length).toBe(3);
   });
 
-  test("works with built-in async batching", () => {
+  it("works with built-in async batching", () => {
     const [getAtom, setAtom] = createValue("start");
 
     reactive(() => {
@@ -71,7 +71,7 @@ describe("reactive", () => {
     expect(getAtom()).toBe("reaction");
   });
 
-  test("is batching updates", () => {
+  it("is batching updates", () => {
     const [getAtom, setAtom] = createValue("start");
     const spy = vi.fn();
 
@@ -96,7 +96,7 @@ describe("reactive", () => {
     expect(spy.mock.calls.length).toBe(2);
   });
 
-  test("works with nested reactions", () => {
+  it("works with nested reactions", () => {
     const spy = vi.fn();
     const [getAtom, setAtom] = createValue(false);
 
@@ -120,7 +120,7 @@ describe("reactive", () => {
     expect(spy.mock.calls.length).toBe(1);
   });
 
-  test("does not run scheduled reaction after context cleanup", () => {
+  it("does not run scheduled reaction after context cleanup", () => {
     const cleanupSpy = vi.fn();
     const reactionSpy = vi.fn();
     const disposerId = createDisposer();
