@@ -1,6 +1,6 @@
 // core
 export * from "./core/atom";
-export * from "./core/context";
+export * from "./core/owner";
 export * from "./core/disposer";
 export * from "./core/reaction";
 export * from "./core/reactor";

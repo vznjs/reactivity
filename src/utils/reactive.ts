@@ -5,7 +5,7 @@ import {
   getComputation,
 } from "../core/reaction";
 import { cancelReaction } from "../core/reactor";
-import { runUpdate } from "../core/context";
+import { runUpdate } from "../core/owner";
 import { untrackReaction } from "../core/tracking";
 
 export function reactive<T>(fn: (v: T) => T, value: T): void;

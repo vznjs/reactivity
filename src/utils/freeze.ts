@@ -1,5 +1,5 @@
-import { runWithContext } from "../core/context";
+import { runWithOwner } from "../core/owner";
 
 export function freeze<T>(fn: () => T): T {
-  return runWithContext({ reactionId: undefined }, fn);
+  return runWithOwner({ reactionId: undefined }, fn);
 }

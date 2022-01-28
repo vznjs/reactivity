@@ -1,5 +1,5 @@
 import { createAtom } from "../core/atom";
-import { getContext } from "../core/context";
+import { getOwner } from "../core/owner";
 import { getReactions, track } from "../core/tracking";
 
 import type { AtomId } from "../core/atom";
@@ -15,7 +15,7 @@ type ValueContext<T> = {
 };
 
 function valueGetter<T>(this: ValueContext<T>): T | undefined {
-  const { reactionId } = getContext();
+  const { reactionId } = getOwner();
 
   if (reactionId) {
     this.atomId ??= createAtom();

@@ -1,4 +1,4 @@
-import { getContext } from "./context";
+import { getOwner } from "./owner";
 
 export type Disposable = () => void;
 export type DisposerId = number;
@@ -48,7 +48,7 @@ export function onCleanup(fn: Disposable): void {
     return;
   }
 
-  const { disposerId: disposerId } = getContext();
+  const { disposerId: disposerId } = getOwner();
 
   if (disposerId) {
     const queue = disposersRegistry[disposerId];

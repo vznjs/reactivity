@@ -5,7 +5,7 @@ import {
   hasScheduledReaction,
   scheduleReactions,
 } from "../core/reactor";
-import { getContext, runUpdate } from "../core/context";
+import { getOwner, runUpdate } from "../core/owner";
 import { createReaction, destroyReaction } from "../core/reaction";
 import { getReactions, track, untrackReaction } from "../core/tracking";
 
@@ -43,7 +43,7 @@ export function createMemo<T>(fn: () => T): MemoGetter<T> {
       currentIteration = nextIteration + 1;
     }
 
-    const currentReactionId = getContext().reactionId;
+    const currentReactionId = getOwner().reactionId;
     if (currentReactionId) track(atomId, currentReactionId);
 
     return memoValue;

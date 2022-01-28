@@ -1,5 +1,5 @@
 import { describe, it, vi, expect } from "vitest";
-import { runWithContext, getContext } from "../../src/core/context";
+import { runWithOwner, getOwner } from "../../src/core/owner";
 import { createValue } from "../../src/reactive/value";
 import { reactive } from "../../src/utils/reactive";
 import { root } from "../../src/utils/root";
@@ -90,28 +90,28 @@ describe("freeze", () => {
       // dummy
     });
 
-    expect(getContext().reactionId).toBeUndefined();
+    expect(getOwner().reactionId).toBeUndefined();
 
-    runWithContext({ disposerId: undefined, reactionId }, () => {
-      expect(getContext().reactionId).toBe(reactionId);
+    runWithOwner({ disposerId: undefined, reactionId }, () => {
+      expect(getOwner().reactionId).toBe(reactionId);
 
       freeze(() => {
-        expect(getContext().reactionId).toBeUndefined();
+        expect(getOwner().reactionId).toBeUndefined();
       });
 
-      expect(getContext().reactionId).toBe(reactionId);
+      expect(getOwner().reactionId).toBe(reactionId);
     });
 
-    expect(getContext().reactionId).toBeUndefined();
+    expect(getOwner().reactionId).toBeUndefined();
   });
 
   it("runs cleanups in reaction correctly", () => {
     const disposerId = createDisposer();
     const cleanupMock = vi.fn();
 
-    expect(getContext().disposerId).toBeUndefined();
+    expect(getOwner().disposerId).toBeUndefined();
 
-    runWithContext({ disposerId, reactionId: undefined }, () => {
+    runWithOwner({ disposerId, reactionId: undefined }, () => {
       freeze(() => {
         onCleanup(cleanupMock);
       });
