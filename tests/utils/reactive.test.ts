@@ -5,7 +5,7 @@ import {
   onCleanup,
 } from "../../src/core/disposer";
 import { reactive } from "../../src/utils/reactive";
-import { runWithOwner } from "../../src/core/owner";
+import { createOwner, runWithOwner } from "../../src/core/owner";
 import { createValue } from "../../src/reactive/value";
 
 vi.useFakeTimers();
@@ -17,7 +17,7 @@ describe("reactive", () => {
     const reactionSpy = vi.fn();
     const cleanupSpy = vi.fn();
 
-    runWithOwner({ disposerId, reactionId: undefined }, () => {
+    runWithOwner(createOwner({ disposerId, reactionId: undefined }), () => {
       reactive(() => {
         onCleanup(cleanupSpy);
         reactionSpy();
@@ -126,7 +126,7 @@ describe("reactive", () => {
     const disposerId = createDisposer();
     const [getAtom, setAtom] = createValue(false);
 
-    runWithOwner({ disposerId, reactionId: undefined }, () => {
+    runWithOwner(createOwner({ disposerId, reactionId: undefined }), () => {
       reactive(() => {
         getAtom();
         reactionSpy();

@@ -4,7 +4,7 @@ import {
   flushDisposer,
   onCleanup,
 } from "../../src/core/disposer";
-import { runWithOwner } from "../../src/core/owner";
+import { createOwner, runWithOwner } from "../../src/core/owner";
 import { root } from "../../src/utils/root";
 
 vi.useFakeTimers();
@@ -14,7 +14,7 @@ describe("onCleanup", () => {
     const disposerId = createDisposer();
     const cleanupMock = vi.fn();
 
-    runWithOwner({ disposerId, reactionId: undefined }, () => {
+    runWithOwner(createOwner({ disposerId, reactionId: undefined }), () => {
       onCleanup(cleanupMock);
     });
 

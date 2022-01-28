@@ -1,5 +1,5 @@
 import { describe, it, vi, expect } from "vitest";
-import { runWithOwner } from "../../src/core/owner";
+import { createOwner, runWithOwner } from "../../src/core/owner";
 import { createValue } from "../../src/reactive/value";
 import { reactive } from "../../src/utils/reactive";
 import { root } from "../../src/utils/root";
@@ -29,7 +29,9 @@ describe("createValue", () => {
     const reactionId = createReaction(spy);
     const [getAtom, setAtom] = createValue(false);
 
-    runWithOwner({ disposerId: undefined, reactionId }, () => getAtom());
+    runWithOwner(createOwner({ disposerId: undefined, reactionId }), () =>
+      getAtom()
+    );
 
     expect(spy.mock.calls.length).toBe(0);
     expect(getAtom()).toBe(false);
@@ -49,7 +51,9 @@ describe("createValue", () => {
     const reactionId = createReaction(spy);
     const [getAtom, setAtom] = createValue(true, false);
 
-    runWithOwner({ disposerId: undefined, reactionId }, () => getAtom());
+    runWithOwner(createOwner({ disposerId: undefined, reactionId }), () =>
+      getAtom()
+    );
 
     expect(spy.mock.calls.length).toBe(0);
 
@@ -68,7 +72,9 @@ describe("createValue", () => {
     const [getAtom, setAtom] = createValue(false);
 
     root(() => {
-      runWithOwner({ disposerId: undefined, reactionId }, () => getAtom());
+      runWithOwner(createOwner({ disposerId: undefined, reactionId }), () =>
+        getAtom()
+      );
 
       expect(spy.mock.calls.length).toBe(0);
       expect(getAtom()).toBe(false);
@@ -98,7 +104,9 @@ describe("createValue", () => {
     const [getAtom, setAtom] = createValue([1], (a, b) => a[0] === b[0]);
 
     root(() => {
-      runWithOwner({ disposerId: undefined, reactionId }, () => getAtom());
+      runWithOwner(createOwner({ disposerId: undefined, reactionId }), () =>
+        getAtom()
+      );
 
       expect(spy.mock.calls.length).toBe(0);
 
@@ -122,7 +130,7 @@ describe("createValue", () => {
     const [getAtom, setAtom] = createValue(false);
     const disposerId = createDisposer();
 
-    runWithOwner({ disposerId, reactionId }, () => getAtom());
+    runWithOwner(createOwner({ disposerId, reactionId }), () => getAtom());
 
     setAtom(true);
 
@@ -147,7 +155,9 @@ describe("createValue", () => {
     const [getAtom, setAtom] = createValue(0);
     const disposerId = createDisposer();
 
-    runWithOwner({ disposerId, reactionId }, () => setAtom(getAtom() + 1));
+    runWithOwner(createOwner({ disposerId, reactionId }), () =>
+      setAtom(getAtom() + 1)
+    );
 
     expect(spy.mock.calls.length).toBe(0);
     expect(getAtom()).toBe(1);
@@ -227,7 +237,7 @@ describe("createValue", () => {
         spy();
       });
 
-      runWithOwner({ disposerId, reactionId: undefined }, () => {
+      runWithOwner(createOwner({ disposerId, reactionId: undefined }), () => {
         reactive(() => {
           getData();
           spy2();

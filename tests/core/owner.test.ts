@@ -1,5 +1,5 @@
 import { describe, it, vi, expect } from "vitest";
-import { runWithOwner, getOwner } from "../../src/core/owner";
+import { runWithOwner, getOwner, createOwner } from "../../src/core/owner";
 import { createValue } from "../../src/reactive/value";
 import { reactive } from "../../src/utils/reactive";
 import { root } from "../../src/utils/root";
@@ -92,7 +92,7 @@ describe("freeze", () => {
 
     expect(getOwner().reactionId).toBeUndefined();
 
-    runWithOwner({ disposerId: undefined, reactionId }, () => {
+    runWithOwner(createOwner({ disposerId: undefined, reactionId }), () => {
       expect(getOwner().reactionId).toBe(reactionId);
 
       freeze(() => {
@@ -111,7 +111,7 @@ describe("freeze", () => {
 
     expect(getOwner().disposerId).toBeUndefined();
 
-    runWithOwner({ disposerId, reactionId: undefined }, () => {
+    runWithOwner(createOwner({ disposerId, reactionId: undefined }), () => {
       freeze(() => {
         onCleanup(cleanupMock);
       });

@@ -7,7 +7,7 @@ import {
   flushDisposer,
   onCleanup,
 } from "../../src/core/disposer";
-import { runWithOwner } from "../../src/core/owner";
+import { createOwner, runWithOwner } from "../../src/core/owner";
 import { root } from "../../src";
 
 vi.useFakeTimers();
@@ -117,7 +117,7 @@ describe("createMemo", () => {
     const disposerId = createDisposer();
     const spy = vi.fn();
 
-    runWithOwner({ disposerId, reactionId: undefined }, () => {
+    runWithOwner(createOwner({ disposerId, reactionId: undefined }), () => {
       expect(spy.mock.calls.length).toBe(0);
 
       const getMemo = createMemo(() => {
@@ -152,7 +152,7 @@ describe("createMemo", () => {
     const [getAtom] = createValue(1);
     const disposerId = createDisposer();
 
-    runWithOwner({ disposerId, reactionId: undefined }, () => {
+    runWithOwner(createOwner({ disposerId, reactionId: undefined }), () => {
       const getMemo = createMemo(() => {
         onCleanup(spy);
         getAtom();
