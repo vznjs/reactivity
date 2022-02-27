@@ -6,13 +6,13 @@ import {
 } from "../../src/core/reaction";
 
 describe("createReaction", () => {
-  it("registers computations and return unique id", () => {
+  it("returns unique id incrementally", () => {
     const spy = vi.fn();
     const reaction1 = createReaction(spy);
     const reaction2 = createReaction(spy);
 
-    expect(reaction1).toBe(1);
-    expect(reaction2).toBe(2);
+    expect(reaction1).toBeGreaterThan(0);
+    expect(reaction2).toBe(reaction1 + 1);
   });
 });
 
