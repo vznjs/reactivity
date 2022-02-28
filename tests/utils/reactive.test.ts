@@ -96,7 +96,33 @@ describe("reactive", () => {
     expect(spy.mock.calls.length).toBe(2);
   });
 
-  it("works with nested reactions", () => {
+  it("works with nested unrelated reactions", () => {
+    const spy = vi.fn();
+    const [getAtom1, setAtom1] = createValue(true);
+    const [getAtom2, setAtom2] = createValue(true);
+
+    reactive(() => {
+      spy("upper");
+
+      if (!getAtom1()) return;
+
+      reactive(() => {
+        getAtom2();
+        spy("sub");
+      });
+    });
+
+    expect(spy.mock.calls).toEqual([["upper"], ["sub"]]);
+
+    setAtom2(false);
+    setAtom1(false);
+
+    vi.runAllTimers();
+
+    expect(spy.mock.calls).toEqual([["upper"], ["sub"], ["upper"]]);
+  });
+
+  it("works with nested related reactions", () => {
     const spy = vi.fn();
     const [getAtom, setAtom] = createValue(false);
 
