@@ -1,51 +1,77 @@
 import { getComputation } from "./reaction";
 
 import type { ReactionId } from "./reaction";
-import { requestCallback, cancelCallback, Task } from "./scheduler";
+import type { Task } from "./scheduler";
 
 export enum Priority {
   NormalPriority = 3,
   LowPriority = 4,
 }
 
-const LOW_PRIORITY_TIMEOUT = 10000;
+// const LOW_PRIORITY_TIMEOUT = 10000;
+const queue = new Map<ReactionId, Task | Priority>();
 
-let reactionsQueue = new Map<ReactionId, Task | number>();
-
-let taskPriority: Priority = Priority.NormalPriority;
+let isWorking = false;
 let scheduled = false;
+let taskPriority = Priority.NormalPriority;
+let order: Array<ReactionId> = [];
+
+function findOrderPosition(value: number): number {
+  for (let index = 0; index < order.length; index++) {
+    const orderValue = order[index];
+    if (orderValue >= value) return index;
+  }
+
+  return order.length;
+}
+
+function scheduleWorker() {
+  scheduled = true;
+
+  queueMicrotask(() => {
+    order = [...Uint32Array.from(queue.keys()).sort()];
+
+    isWorking = true;
+    performQueue();
+    isWorking = false;
+
+    scheduled = false;
+  });
+}
 
 function performQueue() {
-  reactionsQueue = new Map([...reactionsQueue.entries()].sort());
+  while (order.length > 0) {
+    const reactionId = order[0];
+    const task = queue.get(reactionId);
+    if (!task || typeof task === "object") continue;
 
-  for (const [reactionId, task] of reactionsQueue.entries()) {
-    if (typeof task === "object") continue;
+    queue.delete(reactionId);
+    order.shift();
 
-    if (task === Priority.NormalPriority) {
-      reactionsQueue.delete(reactionId);
-
-      try {
-        getComputation(reactionId)?.();
-      } catch (error) {
-        setTimeout(() => {
-          throw error;
-        }, 0);
-      }
-
-      continue;
+    try {
+      getComputation(reactionId)?.();
+    } catch (error) {
+      setTimeout(() => {
+        throw error;
+      }, 0);
     }
-
-    reactionsQueue.set(
-      reactionId,
-      requestCallback(
-        () => {
-          reactionsQueue.delete(reactionId);
-          runWithPriority(task, getComputation(reactionId));
-        },
-        { timeout: LOW_PRIORITY_TIMEOUT }
-      )
-    );
   }
+
+  // if (task === Priority.NormalPriority) {
+  // continue;
+  // }
+
+  // workingQueue.set(
+  //   reactionId,
+  //   requestCallback(
+  //     () => {
+  //       workingQueue.delete(reactionId);
+  //       runWithPriority(task, getComputation(reactionId));
+  //     },
+  //     { timeout: LOW_PRIORITY_TIMEOUT }
+  //   )
+  // );
+  // }
 }
 
 export function runWithPriority<T>(
@@ -63,36 +89,34 @@ export function runWithPriority<T>(
 }
 
 export function scheduleReactions(reactionsIds: Array<ReactionId>): void {
-  if (!reactionsIds?.length) return;
-
   for (let index = 0; index < reactionsIds.length; index++) {
     const reactionId = reactionsIds[index];
-    const task = reactionsQueue.get(reactionId);
+    const task = queue.get(reactionId);
 
     if (!task || (typeof task === "number" && task > taskPriority)) {
-      reactionsQueue.set(reactionId, taskPriority);
+      queue.set(reactionId, taskPriority);
+    }
+
+    if (task) return;
+
+    if (isWorking) {
+      order.splice(findOrderPosition(reactionId), 0, reactionId);
+    } else {
+      order.push(reactionId);
     }
   }
 
-  if (!scheduled) {
-    scheduled = true;
-
-    queueMicrotask(() => {
-      performQueue();
-      scheduled = false;
-    });
-  }
+  if (!scheduled) scheduleWorker();
 }
 
 export function cancelReaction(reactionId: ReactionId): void {
-  if (!reactionsQueue.has(reactionId)) return;
+  // const task = reactorQueue.get(reactionId);
+  // if (task && typeof task === "object") cancelCallback(task);
 
-  const task = reactionsQueue.get(reactionId);
-  if (typeof task === "object") cancelCallback(task);
-
-  reactionsQueue.delete(reactionId);
+  queue.delete(reactionId);
+  order.splice(order.indexOf(reactionId), 1);
 }
 
 export function hasScheduledReaction(reactionId: ReactionId): boolean {
-  return !!reactionsQueue?.has(reactionId);
+  return queue.has(reactionId);
 }
