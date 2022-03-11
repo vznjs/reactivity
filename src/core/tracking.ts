@@ -1,10 +1,8 @@
 import type { AtomId } from "./atom";
 import type { ReactionId } from "./reaction";
 
-const reactionsAtoms: { [key: ReactionId]: AtomId[] | undefined } =
-  Object.create(null);
-const atomsReactions: { [key: AtomId]: ReactionId[] | undefined } =
-  Object.create(null);
+const reactionsAtoms: { [key: ReactionId]: AtomId[] | undefined } = {};
+const atomsReactions: { [key: AtomId]: ReactionId[] | undefined } = {};
 
 export function getAtoms(reactionId: ReactionId): AtomId[] {
   return reactionsAtoms[reactionId] || [];

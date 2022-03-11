@@ -49,9 +49,7 @@ export function createValue<T>(
   value?: T,
   compare?: boolean | ((prev: T | undefined, next: T) => boolean)
 ): [ValueGetter<T | undefined>, ValueSetter<T>] {
-  const valueContext = Object.create(null) as ValueContext<T>;
-  valueContext.value = value;
-  valueContext.compare = compare;
+  const valueContext: ValueContext<T> = { value, compare };
 
   return [
     valueGetter.bind<ValueGetter<T | undefined>>(valueContext),
