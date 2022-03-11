@@ -41,7 +41,8 @@ export function runWithOwner<T>(owner: Owner, fn: () => T): T {
 }
 
 export function runUpdate<T>(owner: Owner, fn: () => T): T {
-  const atomsIds = owner.reactionId ? getAtoms(owner.reactionId) : [];
+  let atomsIds;
+  if (owner.reactionId) atomsIds = getAtoms(owner.reactionId);
 
   if (owner.reactionId) untrackReaction(owner.reactionId);
   if (owner.disposerId) flushDisposer(owner.disposerId);
@@ -51,7 +52,7 @@ export function runUpdate<T>(owner: Owner, fn: () => T): T {
   } catch (error) {
     if (owner.disposerId) flushDisposer(owner.disposerId);
 
-    if (owner.reactionId && atomsIds.length) {
+    if (owner.reactionId && atomsIds) {
       for (let index = 0; index < atomsIds.length; index++) {
         track(atomsIds[index], owner.reactionId);
       }

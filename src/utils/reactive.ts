@@ -1,27 +1,49 @@
-import { createDisposer, flushDisposer, onCleanup } from "../core/disposer";
+import {
+  createDisposer,
+  DisposerId,
+  flushDisposer,
+  onCleanup,
+} from "../core/disposer";
 import {
   createReaction,
   destroyReaction,
-  getComputation,
+  ReactionId,
+  Computation,
 } from "../core/reaction";
-import { cancelReaction } from "../core/reactor";
 import { runUpdate } from "../core/owner";
+import { cancelReaction } from "../core/reactor";
 import { untrackReaction } from "../core/tracking";
+
+type ReactiveContext<T> = {
+  value: T | undefined;
+  disposerId: DisposerId;
+  fn: (v?: T) => T;
+};
+
+function run<T>(this: ReactiveContext<T>, reactionId: ReactionId) {
+  runUpdate(
+    { disposerId: this.disposerId, reactionId },
+    () => (this.value = this.fn(this.value))
+  );
+}
 
 export function reactive<T>(fn: (v: T) => T, value: T): void;
 export function reactive<T>(fn: (v?: T) => T | undefined): void;
 export function reactive<T>(fn: (v?: T) => T, value?: T): void {
-  const disposerId = createDisposer();
-  const reactionId = createReaction(() =>
-    runUpdate({ disposerId, reactionId }, () => (value = fn(value)))
-  );
+  const reactiveContext: ReactiveContext<T> = {
+    fn,
+    value,
+    disposerId: createDisposer(),
+  };
+  const computation = run.bind<Computation>(reactiveContext);
+  const reactionId = createReaction(computation);
 
   onCleanup(() => {
     cancelReaction(reactionId);
     untrackReaction(reactionId);
     destroyReaction(reactionId);
-    flushDisposer(disposerId);
+    flushDisposer(reactiveContext.disposerId);
   });
 
-  getComputation(reactionId)?.();
+  computation.call(reactiveContext, reactionId);
 }

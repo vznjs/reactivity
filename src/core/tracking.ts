@@ -4,12 +4,12 @@ import type { ReactionId } from "./reaction";
 const reactionsAtoms: { [key: ReactionId]: AtomId[] | undefined } = {};
 const atomsReactions: { [key: AtomId]: ReactionId[] | undefined } = {};
 
-export function getAtoms(reactionId: ReactionId): AtomId[] {
-  return reactionsAtoms[reactionId] || [];
+export function getAtoms(reactionId: ReactionId): AtomId[] | undefined {
+  return reactionsAtoms[reactionId];
 }
 
-export function getReactions(atomId: AtomId): ReactionId[] {
-  return atomsReactions[atomId] || [];
+export function getReactions(atomId: AtomId): ReactionId[] | undefined {
+  return atomsReactions[atomId];
 }
 
 export function track(atomId: AtomId, reactionId: ReactionId): void {

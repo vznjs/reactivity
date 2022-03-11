@@ -1,4 +1,4 @@
-import { getComputation } from "./reaction";
+import { runComputation } from "./reaction";
 
 import type { ReactionId } from "./reaction";
 import type { Task } from "./scheduler";
@@ -49,7 +49,7 @@ function performQueue() {
     order.shift();
 
     try {
-      getComputation(reactionId)?.();
+      runComputation(reactionId);
     } catch (error) {
       setTimeout(() => {
         throw error;
@@ -88,7 +88,9 @@ export function runWithPriority<T>(
   }
 }
 
-export function scheduleReactions(reactionsIds: Array<ReactionId>): void {
+export function scheduleReactions(reactionsIds?: Array<ReactionId>): void {
+  if (!reactionsIds) return;
+
   for (let index = 0; index < reactionsIds.length; index++) {
     const reactionId = reactionsIds[index];
     const task = queue.get(reactionId);
