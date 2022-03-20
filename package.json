@@ -44,7 +44,7 @@
     "hooks": {
       "before:init": [
         "npm run lint",
-        "npm test"
+        "npm test -- --run"
       ]
     }
   },
