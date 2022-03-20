@@ -5,10 +5,11 @@ import {
   onCleanup,
 } from "../core/disposer";
 import {
+  Computation,
   createReaction,
   destroyReaction,
   ReactionId,
-  Computation,
+  runReaction,
 } from "../core/reaction";
 import { runUpdate } from "../core/owner";
 import { cancelReaction } from "../core/reactor";
@@ -30,20 +31,21 @@ function run<T>(this: ReactiveContext<T>, reactionId: ReactionId) {
 export function reactive<T>(fn: (v: T) => T, value: T): void;
 export function reactive<T>(fn: (v?: T) => T | undefined): void;
 export function reactive<T>(fn: (v?: T) => T, value?: T): void {
-  const reactiveContext: ReactiveContext<T> = {
-    fn,
-    value,
-    disposerId: createDisposer(),
-  };
-  const computation = run.bind<Computation>(reactiveContext);
-  const reactionId = createReaction(computation);
+  const disposerId = createDisposer();
+  const reactionId = createReaction(
+    run.bind<Computation>({
+      fn,
+      value,
+      disposerId,
+    })
+  );
 
   onCleanup(() => {
     cancelReaction(reactionId);
     untrackReaction(reactionId);
     destroyReaction(reactionId);
-    flushDisposer(reactiveContext.disposerId);
+    flushDisposer(disposerId);
   });
 
-  computation.call(reactiveContext, reactionId);
+  runReaction(reactionId);
 }
