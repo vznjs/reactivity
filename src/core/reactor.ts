@@ -1,4 +1,4 @@
-import { runComputation } from "./reaction";
+import { runReaction } from "./reaction";
 
 import type { ReactionId } from "./reaction";
 import type { Task } from "./scheduler";
@@ -49,7 +49,7 @@ function performQueue() {
     order.shift();
 
     try {
-      runComputation(reactionId);
+      runReaction(reactionId);
     } catch (error) {
       setTimeout(() => {
         throw error;

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import {
   createReaction,
-  runComputation,
+  runReaction,
   destroyReaction,
 } from "../../src/core/reaction";
 
@@ -16,12 +16,12 @@ describe("createReaction", () => {
   });
 });
 
-describe("runComputation", () => {
+describe("runReaction", () => {
   it("returns registered computations", () => {
     const spy = vi.fn();
     const reaction1 = createReaction(spy);
 
-    runComputation(reaction1);
+    runReaction(reaction1);
     expect(spy.mock.calls.length).toBe(1);
   });
 });
@@ -33,7 +33,7 @@ describe("destroyReaction", () => {
 
     destroyReaction(reaction1);
 
-    runComputation(reaction1);
+    runReaction(reaction1);
     expect(spy.mock.calls.length).toBe(0);
   });
 });

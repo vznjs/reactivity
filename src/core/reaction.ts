@@ -7,7 +7,7 @@ const reactionsRegistry: { [key: ReactionId]: Computation | undefined } = {};
 
 export function createReaction(compute: Computation): ReactionId {
   const reactionId = ++ID;
-  reactionsRegistry[reactionId] = () => compute(reactionId);
+  reactionsRegistry[reactionId] = compute;
   return reactionId;
 }
 
@@ -15,6 +15,6 @@ export function destroyReaction(reactionId: ReactionId): void {
   delete reactionsRegistry[reactionId];
 }
 
-export function runComputation(reactionId: ReactionId): void {
+export function runReaction(reactionId: ReactionId): void {
   reactionsRegistry[reactionId]?.(reactionId);
 }
