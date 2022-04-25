@@ -1,6 +1,6 @@
 import { describe, it, vi, expect } from "vitest";
 import { runWithOwner, getOwner, createOwner } from "../../src/core/owner";
-import { createValue } from "../../src/reactive/value";
+import { createValue } from "../../src/state/value";
 import { reactive } from "../../src/utils/reactive";
 import { root } from "../../src/utils/root";
 import { freeze } from "../../src/utils/freeze";

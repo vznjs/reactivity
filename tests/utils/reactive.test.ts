@@ -6,7 +6,7 @@ import {
 } from "../../src/core/disposer";
 import { reactive } from "../../src/utils/reactive";
 import { createOwner, runWithOwner } from "../../src/core/owner";
-import { createValue } from "../../src/reactive/value";
+import { createValue } from "../../src/state/value";
 
 vi.useFakeTimers();
 

@@ -7,8 +7,8 @@ export * from "./core/reactor";
 export * from "./core/tracking";
 
 // reactive
-export * from "./reactive/value";
-export * from "./reactive/memo";
+export * from "./state/value";
+export * from "./state/memo";
 
 // utils
 export * from "./utils/concurrently";

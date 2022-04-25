@@ -1,7 +1,7 @@
 import { describe, it, vi, expect } from "vitest";
-import { createMemo } from "../../src/reactive/memo";
+import { createMemo } from "../../src/state/memo";
 import { reactive } from "../../src/utils/reactive";
-import { createValue } from "../../src/reactive/value";
+import { createValue } from "../../src/state/value";
 import {
   createDisposer,
   flushDisposer,
