@@ -3,7 +3,7 @@
   "version": "0.35.0",
   "name": "@vzn/reactivity",
   "description": "The VZN of perfect JS reactivity system",
-  "author": "Maciej Kwaśniak <kmaciek17@gmail.com>",
+  "author": "Maciej Kwaśniak <contact@exelord.com>",
   "license": "MIT",
   "repository": "https://github.com/vznjs/reactivity",
   "main": "dist/cjs/index.js",
