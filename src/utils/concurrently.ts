@@ -1,5 +1,5 @@
 import { Priority, runWithPriority } from "../core/reactor";
 
-export function concurrently(fn: () => any) {
+export function concurrently<T>(fn: () => T) {
   return runWithPriority(Priority.LowPriority, fn);
 }
