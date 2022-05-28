@@ -1,19 +1,11 @@
 import { runReaction } from "./reaction";
 
 import type { ReactionId } from "./reaction";
-import type { Task } from "./scheduler";
 
-export enum Priority {
-  NormalPriority = 3,
-  LowPriority = 4,
-}
-
-// const LOW_PRIORITY_TIMEOUT = 10000;
-const queue = new Map<ReactionId, Task | Priority>();
+const queue = new Set<ReactionId>();
 
 let isWorking = false;
-let scheduled = false;
-let taskPriority = Priority.NormalPriority;
+let isScheduled = false;
 let order: Array<ReactionId> = [];
 
 function findOrderPosition(value: number): number {
@@ -26,66 +18,35 @@ function findOrderPosition(value: number): number {
 }
 
 function scheduleWorker() {
-  scheduled = true;
+  isScheduled = true;
 
   queueMicrotask(() => {
     order = [...Uint32Array.from(queue.keys()).sort()];
 
     isWorking = true;
-    performQueue();
+
+    while (order.length > 0) {
+      const reactionId = order[0];
+      const isQueued = queue.has(reactionId);
+
+      if (!isQueued) continue;
+
+      queue.delete(reactionId);
+      order.shift();
+
+      try {
+        runReaction(reactionId);
+      } catch (error) {
+        setTimeout(() => {
+          throw error;
+        }, 0);
+      }
+    }
+
     isWorking = false;
 
-    scheduled = false;
+    isScheduled = false;
   });
-}
-
-function performQueue() {
-  while (order.length > 0) {
-    const reactionId = order[0];
-    const task = queue.get(reactionId);
-    if (!task || typeof task === "object") continue;
-
-    queue.delete(reactionId);
-    order.shift();
-
-    try {
-      runReaction(reactionId);
-    } catch (error) {
-      setTimeout(() => {
-        throw error;
-      }, 0);
-    }
-  }
-
-  // if (task === Priority.NormalPriority) {
-  // continue;
-  // }
-
-  // workingQueue.set(
-  //   reactionId,
-  //   requestCallback(
-  //     () => {
-  //       workingQueue.delete(reactionId);
-  //       runWithPriority(task, getComputation(reactionId));
-  //     },
-  //     { timeout: LOW_PRIORITY_TIMEOUT }
-  //   )
-  // );
-  // }
-}
-
-export function runWithPriority<T>(
-  priority: Priority,
-  fn?: () => T
-): T | undefined {
-  const prev = taskPriority;
-
-  try {
-    taskPriority = priority;
-    return fn?.();
-  } finally {
-    taskPriority = prev;
-  }
 }
 
 export function scheduleReactions(reactionsIds?: Array<ReactionId>): void {
@@ -93,28 +54,20 @@ export function scheduleReactions(reactionsIds?: Array<ReactionId>): void {
 
   for (let index = 0; index < reactionsIds.length; index++) {
     const reactionId = reactionsIds[index];
-    const task = queue.get(reactionId);
 
-    if (!task || (typeof task === "number" && task > taskPriority)) {
-      queue.set(reactionId, taskPriority);
-    }
+    if (queue.has(reactionId)) return;
 
-    if (task) return;
+    queue.add(reactionId);
 
     if (isWorking) {
       order.splice(findOrderPosition(reactionId), 0, reactionId);
-    } else {
-      order.push(reactionId);
     }
   }
 
-  if (!scheduled) scheduleWorker();
+  if (!isScheduled) scheduleWorker();
 }
 
 export function cancelReaction(reactionId: ReactionId): void {
-  // const task = reactorQueue.get(reactionId);
-  // if (task && typeof task === "object") cancelCallback(task);
-
   queue.delete(reactionId);
   order.splice(order.indexOf(reactionId), 1);
 }
