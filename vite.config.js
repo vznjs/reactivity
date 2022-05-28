@@ -1,9 +1,9 @@
 import path from "path";
 import { defineConfig } from "vite";
 
-module.exports = defineConfig({
+export default defineConfig({
   build: {
-    target: "es2020",
+    target: "esnext",
     minify: false,
     lib: {
       entry: path.resolve(__dirname, "src/index.ts"),
