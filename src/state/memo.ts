@@ -19,9 +19,11 @@ export function createMemo<T>(fn: () => T): MemoGetter<T> {
   const atomId = createAtom();
   const disposerId = createDisposer();
 
-  const reactionId = createReaction(() => {
-    scheduleReactions(getReactions(atomId));
-    ++nextIteration;
+  const reactionId = createReaction({
+    compute: () => {
+      scheduleReactions(getReactions(atomId));
+      ++nextIteration;
+    },
   });
 
   onCleanup(() => {
