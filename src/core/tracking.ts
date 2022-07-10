@@ -1,8 +1,35 @@
 import type { AtomId } from "./atom";
 import type { ReactionId } from "./reaction";
 
-const reactionsAtoms: { [key: ReactionId]: AtomId[] | undefined } = {};
-const atomsReactions: { [key: AtomId]: ReactionId[] | undefined } = {};
+type Collection = { [key: number]: AtomId[] | undefined };
+
+const reactionsAtoms: Collection = {};
+const atomsReactions: Collection = {};
+
+function untrackCollection(
+  id: number,
+  collection1: Collection,
+  collection2: Collection
+) {
+  const ci1 = collection1[id];
+  if (!ci1) return;
+
+  for (let index = 0; index < ci1.length; index++) {
+    const ci2 = ci1[index];
+    const reactionsIds = collection2[ci2];
+
+    if (reactionsIds) {
+      if (reactionsIds.length === 1 && reactionsIds[0] === id) {
+        delete collection2[ci2];
+      } else {
+        const index = reactionsIds.indexOf(id);
+        if (index > -1) reactionsIds.splice(index, 1);
+      }
+    }
+  }
+
+  delete collection1[id];
+}
 
 export function getAtoms(reactionId: ReactionId): AtomId[] | undefined {
   return reactionsAtoms[reactionId];
@@ -52,23 +79,11 @@ export function untrack(atomId: AtomId, reactionId: ReactionId): void {
   }
 }
 
-export function untrackReaction(reactionId: ReactionId): void {
-  const atomsIds = reactionsAtoms[reactionId];
-  if (!atomsIds) return;
+export function untrackReaction(reactionId: ReactionId, safe = false): void {
+  if (safe && reactionsAtoms[reactionId]?.[0]) return;
+  untrackCollection(reactionId, reactionsAtoms, atomsReactions);
+}
 
-  for (let index = 0; index < atomsIds.length; index++) {
-    const atomId = atomsIds[index];
-    const reactionsIds = atomsReactions[atomId];
-
-    if (reactionsIds) {
-      if (reactionsIds.length === 1 && reactionsIds[0] === reactionId) {
-        delete atomsReactions[atomId];
-      } else {
-        const index = reactionsIds.indexOf(reactionId);
-        if (index > -1) reactionsIds.splice(index, 1);
-      }
-    }
-  }
-
-  delete reactionsAtoms[reactionId];
+export function untrackAtom(atomId: AtomId): void {
+  untrackCollection(atomId, atomsReactions, reactionsAtoms);
 }

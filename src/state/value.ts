@@ -1,6 +1,6 @@
 import { createAtom } from "../core/atom";
 import { getOwner } from "../core/owner";
-import { getReactions, track } from "../core/tracking";
+import { getReactions, track, untrackAtom } from "../core/tracking";
 
 import type { AtomId } from "../core/atom";
 import { scheduleReactions } from "../core/reactor";
@@ -14,11 +14,17 @@ type ValueContext<T> = {
   compare?: undefined | boolean | ((prev: T | undefined, next: T) => boolean);
 };
 
+const registry = new FinalizationRegistry((id: AtomId) => untrackAtom(id));
+
 function valueGetter<T>(this: ValueContext<T>): T | undefined {
   const { reactionId } = getOwner();
 
   if (reactionId) {
-    this.atomId ??= createAtom();
+    if (!this.atomId) {
+      this.atomId = createAtom();
+      registry.register(this, this.atomId);
+    }
+
     track(this.atomId, reactionId);
   }
 
