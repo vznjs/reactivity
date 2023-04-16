@@ -6,15 +6,21 @@
   "author": "Maciej Kwaśniak <contact@exelord.com>",
   "license": "MIT",
   "repository": "https://github.com/vznjs/reactivity",
-  "main": "dist/cjs/index.js",
-  "module": "dist/es/index.js",
-  "browser": "dist/es/index.js",
-  "unpkg": "dist/es/index.js",
-  "source": "dist/src/index.js",
-  "types": "dist/types/index.d.ts",
-  "sideEffects": false,
+  "type": "module",
   "files": [
     "dist/"
+  ],
+  "source": "./dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/reactivity.js",
+      "require": "./dist/reactivity.cjs"
+    }
+  },
+  "workspaces": [
+    "/",
+    "tests/dummy"
   ],
   "scripts": {
     "prepublishOnly": "npm run build",
@@ -25,8 +31,7 @@
     "dev": "npm-run-all --parallel 'build:** -- --watch'",
     "build": "npm-run-all --parallel build:**",
     "build:js": "vite build",
-    "build:source": "tsc",
-    "build:types": "tsc --emitDeclarationOnly --declaration --outDir ./dist/types",
+    "build:source": "tsc --build",
     "release": "release-it",
     "bench": "node --allow-natives-syntax bench/bench.cjs"
   },
@@ -49,22 +54,18 @@
       ]
     }
   },
-  "workspaces": [
-    "/",
-    "tests/dummy"
-  ],
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^5.26.0",
-    "@typescript-eslint/parser": "^5.26.0",
-    "@vitest/ui": "^0.12.9",
-    "c8": "^7.11.3",
-    "eslint": "^8.16.0",
-    "eslint-config-prettier": "^8.5.0",
+    "@typescript-eslint/eslint-plugin": "^5.58.0",
+    "@typescript-eslint/parser": "^5.58.0",
+    "@vitest/ui": "^0.30.1",
+    "c8": "^7.13.0",
+    "eslint": "^8.38.0",
+    "eslint-config-prettier": "^8.8.0",
     "npm-run-all": "^4.1.5",
-    "prettier": "2.6.2",
-    "release-it": "^15.0.0",
-    "typescript": "^4.7.2",
-    "vite": "^2.9.9",
-    "vitest": "^0.11.0"
+    "prettier": "2.8.7",
+    "release-it": "^15.10.1",
+    "typescript": "^5.0.4",
+    "vite": "^4.2.1",
+    "vitest": "^0.30.1"
   }
 }
