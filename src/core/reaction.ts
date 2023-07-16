@@ -22,8 +22,14 @@ export function createReaction<T extends ReactionContext>(
   return id;
 }
 
-export function destroyReaction(reactionId: ReactionId): void {
+export function deleteReaction(reactionId: ReactionId): void {
   delete reactionsRegistry[reactionId];
+}
+
+export function getReaction(
+  reactionId: ReactionId
+): ReactionContext | undefined {
+  return reactionsRegistry[reactionId];
 }
 
 export function runReaction(reactionId: ReactionId): void {

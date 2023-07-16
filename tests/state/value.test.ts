@@ -3,14 +3,9 @@ import { createOwner, runWithOwner } from "../../src/core/owner";
 import { createValue } from "../../src/state/value";
 import { reactive } from "../../src/utils/reactive";
 import { root } from "../../src/utils/root";
-import {
-  createDisposer,
-  flushDisposer,
-  onCleanup,
-} from "../../src/core/disposer";
+import { createDisposer, flushDisposer } from "../../src/core/disposer";
 import { createReaction } from "../../src/core/reaction";
-
-vi.useFakeTimers();
+import { onCleanup } from "../../src/utils/on-cleanup";
 
 describe("createValue", () => {
   it("takes and returns an initial value", () => {
@@ -24,13 +19,13 @@ describe("createValue", () => {
     expect(getValue()).toBe(2);
   });
 
-  it("triggers reaction if values are not equal", () => {
+  it("triggers reaction if values are not equal", async () => {
     const spy = vi.fn();
-    const reactionId = createReaction(spy);
+    const reactionId = createReaction({ compute: spy });
     const [getAtom, setAtom] = createValue(false);
 
     runWithOwner(createOwner({ disposerId: undefined, reactionId }), () =>
-      getAtom()
+      getAtom(),
     );
 
     expect(spy.mock.calls.length).toBe(0);
@@ -40,19 +35,19 @@ describe("createValue", () => {
 
     expect(spy.mock.calls.length).toBe(0);
 
-    vi.runAllTimers();
+    await Promise.resolve();
 
     expect(spy.mock.calls.length).toBe(1);
     expect(getAtom()).toBe(true);
   });
 
-  it("triggers reaction if compare option is false and values are equal", () => {
+  it("triggers reaction if compare option is false and values are equal", async () => {
     const spy = vi.fn();
-    const reactionId = createReaction(spy);
+    const reactionId = createReaction({ compute: spy });
     const [getAtom, setAtom] = createValue(true, false);
 
     runWithOwner(createOwner({ disposerId: undefined, reactionId }), () =>
-      getAtom()
+      getAtom(),
     );
 
     expect(spy.mock.calls.length).toBe(0);
@@ -61,19 +56,19 @@ describe("createValue", () => {
 
     expect(spy.mock.calls.length).toBe(0);
 
-    vi.runAllTimers();
+    await Promise.resolve();
 
     expect(spy.mock.calls.length).toBe(1);
   });
 
   it("does not trigger reaction if set to equal value", () => {
     const spy = vi.fn();
-    const reactionId = createReaction(spy);
+    const reactionId = createReaction({ compute: spy });
     const [getAtom, setAtom] = createValue(false);
 
-    root(() => {
+    root(async () => {
       runWithOwner(createOwner({ disposerId: undefined, reactionId }), () =>
-        getAtom()
+        getAtom(),
       );
 
       expect(spy.mock.calls.length).toBe(0);
@@ -84,14 +79,14 @@ describe("createValue", () => {
       expect(spy.mock.calls.length).toBe(0);
       expect(getAtom()).toBe(false);
 
-      vi.runAllTimers();
+      await Promise.resolve();
 
       expect(spy.mock.calls.length).toBe(0);
       expect(getAtom()).toBe(false);
 
       setAtom(true);
 
-      vi.runAllTimers();
+      await Promise.resolve();
 
       expect(spy.mock.calls.length).toBe(1);
       expect(getAtom()).toBe(true);
@@ -100,33 +95,33 @@ describe("createValue", () => {
 
   it("can take an equality predicate", () => {
     const spy = vi.fn();
-    const reactionId = createReaction(spy);
+    const reactionId = createReaction({ compute: spy });
     const [getAtom, setAtom] = createValue([1], (a, b) => a[0] === b[0]);
 
-    root(() => {
+    root(async () => {
       runWithOwner(createOwner({ disposerId: undefined, reactionId }), () =>
-        getAtom()
+        getAtom(),
       );
 
       expect(spy.mock.calls.length).toBe(0);
 
       setAtom([1]);
 
-      vi.runAllTimers();
+      await Promise.resolve();
 
       expect(spy.mock.calls.length).toBe(0);
 
       setAtom([2]);
 
-      vi.runAllTimers();
+      await Promise.resolve();
 
       expect(spy.mock.calls.length).toBe(1);
     });
   });
 
-  it("removes subscriptions on cleanup", () => {
+  it("removes subscriptions on cleanup", async () => {
     const spy = vi.fn();
-    const reactionId = createReaction(spy);
+    const reactionId = createReaction({ compute: spy });
     const [getAtom, setAtom] = createValue(false);
     const disposerId = createDisposer();
 
@@ -136,7 +131,7 @@ describe("createValue", () => {
 
     expect(spy.mock.calls.length).toBe(0);
 
-    vi.runAllTimers();
+    await Promise.resolve();
 
     expect(spy.mock.calls.length).toBe(1);
     expect(getAtom()).toBe(true);
@@ -149,14 +144,14 @@ describe("createValue", () => {
     expect(getAtom()).toBe(false);
   });
 
-  it("ignores reaction with circular dependencies", () => {
+  it("ignores reaction with circular dependencies", async () => {
     const spy = vi.fn();
-    const reactionId = createReaction(spy);
+    const reactionId = createReaction({ compute: spy });
     const [getAtom, setAtom] = createValue(0);
     const disposerId = createDisposer();
 
     runWithOwner(createOwner({ disposerId, reactionId }), () =>
-      setAtom(getAtom() + 1)
+      setAtom(getAtom() + 1),
     );
 
     expect(spy.mock.calls.length).toBe(0);
@@ -164,13 +159,13 @@ describe("createValue", () => {
 
     setAtom(getAtom() + 1);
 
-    vi.runAllTimers();
+    await Promise.resolve();
 
     expect(spy.mock.calls.length).toBe(1);
     expect(getAtom()).toBe(2);
   });
 
-  it("uses global queue of updates (aka S.js subclocks)", () => {
+  it("uses global queue of updates (aka S.js subclocks)", async () => {
     const spy = vi.fn();
     const [getAtom, setAtom] = createValue(20);
 
@@ -186,12 +181,12 @@ describe("createValue", () => {
 
     expect(spy.mock.calls.length).toBe(1);
 
-    vi.runAllTimers();
+    await Promise.resolve();
 
     expect(spy.mock.calls.length).toBe(1);
 
     setAtom(5);
-    vi.runAllTimers();
+    await Promise.resolve();
 
     expect(spy.mock.calls.length).toBe(2);
   });
@@ -201,7 +196,7 @@ describe("createValue", () => {
     const [getData, setData] = createValue(2);
     const [getData2, setData2] = createValue(2);
 
-    root(() => {
+    root(async () => {
       reactive(() => {
         getData2();
         spy();
@@ -213,12 +208,12 @@ describe("createValue", () => {
 
       expect(spy.mock.calls.length).toBe(1);
 
-      vi.runAllTimers();
+      await Promise.resolve();
 
       expect(spy.mock.calls.length).toBe(2);
 
       setData(5);
-      vi.runAllTimers();
+      await Promise.resolve();
 
       expect(spy.mock.calls.length).toBe(3);
     });
@@ -230,7 +225,7 @@ describe("createValue", () => {
     const [getData, setData] = createValue(1);
     const disposerId = createDisposer();
 
-    root(() => {
+    root(async () => {
       reactive(() => {
         onCleanup(() => flushDisposer(disposerId));
         getData();
@@ -247,7 +242,7 @@ describe("createValue", () => {
       expect(spy.mock.calls.length).toBe(1);
       expect(spy2.mock.calls.length).toBe(1);
 
-      vi.runAllTimers();
+      await Promise.resolve();
 
       expect(spy.mock.calls.length).toBe(1);
       expect(spy2.mock.calls.length).toBe(1);
@@ -257,14 +252,14 @@ describe("createValue", () => {
       expect(spy.mock.calls.length).toBe(1);
       expect(spy2.mock.calls.length).toBe(1);
 
-      vi.runAllTimers();
+      await Promise.resolve();
 
       expect(spy.mock.calls.length).toBe(2);
       expect(spy2.mock.calls.length).toBe(1);
     });
   });
 
-  it("does not recompute reactions used after change", () => {
+  it("does not recompute reactions used after change", async () => {
     const spy = vi.fn();
     const [getAtom, setAtom] = createValue(false);
 
@@ -279,7 +274,7 @@ describe("createValue", () => {
 
     expect(spy.mock.calls.length).toBe(1);
 
-    vi.runAllTimers();
+    await Promise.resolve();
 
     expect(spy.mock.calls.length).toBe(1);
   });

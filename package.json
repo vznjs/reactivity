@@ -55,17 +55,18 @@
     }
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^5.58.0",
-    "@typescript-eslint/parser": "^5.58.0",
-    "@vitest/ui": "^0.30.1",
-    "c8": "^7.13.0",
-    "eslint": "^8.38.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "disposable-stack": "github:es-shims/DisposableStack",
+    "@vitest/ui": "^0.33.0",
+    "c8": "^8.0.0",
+    "eslint": "^8.45.0",
     "eslint-config-prettier": "^8.8.0",
     "npm-run-all": "^4.1.5",
-    "prettier": "2.8.7",
-    "release-it": "^15.10.1",
-    "typescript": "^5.0.4",
-    "vite": "^4.2.1",
-    "vitest": "^0.30.1"
+    "prettier": "3.0.0",
+    "release-it": "^16.1.2",
+    "typescript": "^5.2.0-beta",
+    "vite": "^4.4.4",
+    "vitest": "^0.33.0"
   }
 }

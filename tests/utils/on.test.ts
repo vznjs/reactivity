@@ -4,10 +4,8 @@ import { on } from "../../src/utils/on";
 import { root } from "../../src/utils/root";
 import { createValue } from "../../src/state/value";
 
-vi.useFakeTimers();
-
 describe("on", () => {
-  it("reruns only on dependencies change", () => {
+  it("reruns only on dependencies change", async () => {
     const spy = vi.fn();
     const [getAtom, setAtom] = createValue(1);
     const [getAtom2, setAtom2] = createValue(1);
@@ -17,7 +15,7 @@ describe("on", () => {
         on(getAtom, (value?: number) => {
           spy(value);
           return getAtom2();
-        })
+        }),
       );
     });
 
@@ -25,18 +23,18 @@ describe("on", () => {
     expect(spy.mock.calls[0][0]).toBe(undefined);
 
     setAtom2(2);
-    vi.runAllTimers();
+    await Promise.resolve();
 
     expect(spy.mock.calls.length).toBe(1);
 
     setAtom(2);
-    vi.runAllTimers();
+    await Promise.resolve();
 
     expect(spy.mock.calls.length).toBe(2);
     expect(spy.mock.calls[1][0]).toBe(1);
   });
 
-  it("does not run for the first time if defer is true", () => {
+  it("does not run for the first time if defer is true", async () => {
     const spy = vi.fn();
     const [getAtom, setAtom] = createValue(1);
     const [getAtom2, setAtom2] = createValue(1);
@@ -49,20 +47,20 @@ describe("on", () => {
             spy(value);
             return getAtom2();
           },
-          true
-        )
+          true,
+        ),
       );
     });
 
     expect(spy.mock.calls.length).toBe(0);
 
     setAtom2(2);
-    vi.runAllTimers();
+    await Promise.resolve();
 
     expect(spy.mock.calls.length).toBe(0);
 
     setAtom(2);
-    vi.runAllTimers();
+    await Promise.resolve();
 
     expect(spy.mock.calls.length).toBe(1);
   });

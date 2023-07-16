@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { createAtom } from "../../src/core/atom";
+import { createAtom } from "../../src";
 
 describe("createAtom", () => {
   it("creates atom id incrementally", () => {

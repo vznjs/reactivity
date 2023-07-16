@@ -2,14 +2,15 @@ import { describe, it, expect, vi } from "vitest";
 import {
   createReaction,
   runReaction,
-  destroyReaction,
-} from "../../src/core/reaction";
+  deleteReaction,
+  getReaction,
+} from "../../src";
 
 describe("createReaction", () => {
   it("returns unique id incrementally", () => {
     const spy = vi.fn();
-    const reaction1 = createReaction(spy);
-    const reaction2 = createReaction(spy);
+    const reaction1 = createReaction({ compute: spy });
+    const reaction2 = createReaction({ compute: spy });
 
     expect(reaction1).toBeGreaterThan(0);
     expect(reaction2).toBe(reaction1 + 1);
@@ -17,23 +18,24 @@ describe("createReaction", () => {
 });
 
 describe("runReaction", () => {
-  it("returns registered computations", () => {
+  it("runs created reaction", () => {
     const spy = vi.fn();
-    const reaction1 = createReaction(spy);
+    const reactionId = createReaction({ compute: spy });
 
-    runReaction(reaction1);
-    expect(spy.mock.calls.length).toBe(1);
+    expect(spy).toBeCalledTimes(0);
+    runReaction(reactionId);
+    expect(spy).toBeCalledTimes(1);
   });
 });
 
-describe("destroyReaction", () => {
-  it("destroys registered computations", () => {
+describe("deleteReaction", () => {
+  it("removes reaction", () => {
     const spy = vi.fn();
-    const reaction1 = createReaction(spy);
+    const reactionContext = { compute: spy };
+    const reactionId = createReaction(reactionContext);
 
-    destroyReaction(reaction1);
-
-    runReaction(reaction1);
-    expect(spy.mock.calls.length).toBe(0);
+    expect(getReaction(reactionId)).toBe(reactionContext);
+    deleteReaction(reactionId);
+    expect(getReaction(reactionId)).toBeUndefined();
   });
 });

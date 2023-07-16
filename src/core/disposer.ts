@@ -1,20 +1,30 @@
-import { getOwner } from "./owner";
+import "disposable-stack/auto";
 
-export type Disposable = () => void;
 export type DisposerId = number;
+export type DisposeCallback = Parameters<DisposableStack["defer"]>[0];
 
-let isFlushing = false;
+const globalDisposerId: DisposerId = 0;
 
 let ID: DisposerId = 0;
+let isFlushing = false;
+let isGlobalDisposerFlushScheduled = false;
 
-const disposersRegistry: {
-  [key: DisposerId]: Array<Disposable> | undefined;
+const disposers: {
+  [key: DisposerId]: DisposableStack | undefined;
 } = Object.create(null);
 
-const globalDisposerId: DisposerId = createDisposer();
+function scheduleGlobalDisposerFlush(): void {
+  if (isGlobalDisposerFlushScheduled) return;
 
-function flush(): void {
-  flushDisposer(globalDisposerId);
+  isGlobalDisposerFlushScheduled = true;
+
+  setTimeout(() => {
+    try {
+      flushDisposer(globalDisposerId);
+    } finally {
+      isGlobalDisposerFlushScheduled = false;
+    }
+  }, 0);
 }
 
 export function createDisposer(): DisposerId {
@@ -22,52 +32,40 @@ export function createDisposer(): DisposerId {
 }
 
 export function flushDisposer(disposerId: DisposerId): void {
-  const queue = disposersRegistry[disposerId];
-  if (!queue || !queue.length) return;
+  const disposer = disposers[disposerId];
+
+  if (!disposer) return;
 
   isFlushing = true;
 
-  for (const task of queue) {
-    try {
-      task?.();
-    } catch (error) {
-      setTimeout(() => {
-        throw error;
-      }, 0);
-    }
+  try {
+    disposer.dispose();
+    delete disposers[disposerId];
+  } finally {
+    isFlushing = false;
   }
-
-  isFlushing = false;
-
-  delete disposersRegistry[disposerId];
 }
 
-export function onCleanup(fn: Disposable): void {
+export function registerDisposable(
+  fn: DisposeCallback,
+  disposerId?: DisposerId
+): void {
   if (isFlushing) {
     fn();
     return;
   }
 
-  const { disposerId: disposerId } = getOwner();
-
-  if (disposerId) {
-    const queue = disposersRegistry[disposerId];
-
-    if (!queue) {
-      disposersRegistry[disposerId] = [fn];
-    } else if (!queue.includes(fn)) {
-      queue.push(fn);
-    }
-
-    return;
+  if (!disposerId) {
+    disposerId = globalDisposerId;
+    scheduleGlobalDisposerFlush();
   }
 
-  const globalQueue = disposersRegistry[globalDisposerId];
+  let disposer = disposers[disposerId];
 
-  if (!globalQueue) {
-    disposersRegistry[globalDisposerId] = [fn];
-    setTimeout(flush, 0);
-  } else if (!globalQueue.includes(fn)) {
-    globalQueue.push(fn);
+  if (!disposer) {
+    disposer = new DisposableStack();
+    disposers[disposerId] = disposer;
   }
+
+  disposer.defer(fn);
 }

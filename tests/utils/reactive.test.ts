@@ -1,18 +1,13 @@
 import { describe, it, vi, expect } from "vitest";
-import {
-  createDisposer,
-  flushDisposer,
-  onCleanup,
-} from "../../src/core/disposer";
+import { createDisposer, flushDisposer } from "../../src/core/disposer";
 import { reactive } from "../../src/utils/reactive";
 import { createOwner, runWithOwner } from "../../src/core/owner";
 import { createValue } from "../../src/state/value";
-
-vi.useFakeTimers();
+import { onCleanup } from "../../src/utils/on-cleanup";
 
 describe("reactive", () => {
-  it("reruns and cleanups on change", () => {
-    const [getAtom, setAtom] = createValue(1);
+  const [getAtom, setAtom] = createValue(1);
+  it("reruns and cleanups on change", async () => {
     const disposerId = createDisposer();
     const reactionSpy = vi.fn();
     const cleanupSpy = vi.fn();
@@ -29,13 +24,13 @@ describe("reactive", () => {
     expect(cleanupSpy.mock.calls.length).toBe(0);
 
     setAtom(2);
-    vi.runAllTimers();
+    await Promise.resolve();
 
     expect(reactionSpy.mock.calls.length).toBe(2);
     expect(cleanupSpy.mock.calls.length).toBe(1);
 
     setAtom(3);
-    vi.runAllTimers();
+    await Promise.resolve();
 
     expect(reactionSpy.mock.calls.length).toBe(3);
     expect(cleanupSpy.mock.calls.length).toBe(2);
@@ -46,13 +41,13 @@ describe("reactive", () => {
     expect(cleanupSpy.mock.calls.length).toBe(3);
 
     setAtom(4);
-    vi.runAllTimers();
+    await Promise.resolve();
 
     expect(reactionSpy.mock.calls.length).toBe(3);
     expect(cleanupSpy.mock.calls.length).toBe(3);
   });
 
-  it("works with built-in async batching", () => {
+  it("works with built-in async batching", async () => {
     const [getAtom, setAtom] = createValue("start");
 
     reactive(() => {
@@ -66,12 +61,12 @@ describe("reactive", () => {
 
     expect(getAtom()).toBe("order");
 
-    vi.runAllTimers();
+    await Promise.resolve();
 
     expect(getAtom()).toBe("reaction");
   });
 
-  it("is batching updates", () => {
+  it("is batching updates", async () => {
     const [getAtom, setAtom] = createValue("start");
     const spy = vi.fn();
 
@@ -90,13 +85,13 @@ describe("reactive", () => {
 
     expect(getAtom()).toBe("order");
 
-    vi.runAllTimers();
+    await Promise.resolve();
 
     expect(getAtom()).toBe("reaction2");
     expect(spy.mock.calls.length).toBe(2);
   });
 
-  it("works with nested unrelated reactions", () => {
+  it("works with nested unrelated reactions", async () => {
     const spy = vi.fn();
     const [getAtom1, setAtom1] = createValue(true);
     const [getAtom2, setAtom2] = createValue(true);
@@ -117,12 +112,12 @@ describe("reactive", () => {
     setAtom2(false);
     setAtom1(false);
 
-    vi.runAllTimers();
+    await Promise.resolve();
 
     expect(spy.mock.calls).toEqual([["upper"], ["sub"], ["upper"]]);
   });
 
-  it("works with nested related reactions", () => {
+  it("works with nested related reactions", async () => {
     const spy = vi.fn();
     const [getAtom, setAtom] = createValue(false);
 
@@ -135,18 +130,18 @@ describe("reactive", () => {
 
     setAtom(true);
 
-    vi.runAllTimers();
+    await Promise.resolve();
 
     expect(spy.mock.calls.length).toBe(1);
 
     setAtom(false);
 
-    vi.runAllTimers();
+    await Promise.resolve();
 
     expect(spy.mock.calls.length).toBe(1);
   });
 
-  it("does not run scheduled reaction after context cleanup", () => {
+  it("does not run scheduled reaction after context cleanup", async () => {
     const cleanupSpy = vi.fn();
     const reactionSpy = vi.fn();
     const disposerId = createDisposer();
@@ -172,7 +167,7 @@ describe("reactive", () => {
 
     expect(cleanupSpy.mock.calls.length).toBe(1);
 
-    vi.runAllTimers();
+    await Promise.resolve();
 
     expect(reactionSpy.mock.calls.length).toBe(1);
   });

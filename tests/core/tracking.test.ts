@@ -6,7 +6,7 @@ import { track, getAtoms, getReactions } from "../../src/core/tracking";
 describe("track", () => {
   it("tracks new atom and new reaction", async () => {
     const atom1 = createAtom();
-    const reaction1 = createReaction(vi.fn());
+    const reaction1 = createReaction({ compute: vi.fn() });
 
     expect(getReactions(atom1)).toBeUndefined();
     expect(getAtoms(reaction1)).toBeUndefined();
@@ -20,7 +20,7 @@ describe("track", () => {
   it("tracks new atom and used reaction", () => {
     const atom1 = createAtom();
     const atom2 = createAtom();
-    const reaction1 = createReaction(vi.fn());
+    const reaction1 = createReaction({ compute: vi.fn() });
 
     expect(getReactions(atom1)).toBeUndefined();
     expect(getAtoms(reaction1)).toBeUndefined();
@@ -34,7 +34,7 @@ describe("track", () => {
 
   it("tracks new atom and tracked reaction", () => {
     const atom1 = createAtom();
-    const reaction1 = createReaction(vi.fn());
+    const reaction1 = createReaction({ compute: vi.fn() });
 
     expect(getReactions(atom1)).toBeUndefined();
     expect(getAtoms(reaction1)).toBeUndefined();
@@ -48,8 +48,8 @@ describe("track", () => {
 
   it("tracks used atom and new reaction", () => {
     const atom1 = createAtom();
-    const reaction1 = createReaction(vi.fn());
-    const reaction2 = createReaction(vi.fn());
+    const reaction1 = createReaction({ compute: vi.fn() });
+    const reaction2 = createReaction({ compute: vi.fn() });
 
     expect(getReactions(atom1)).toBeUndefined();
     expect(getAtoms(reaction1)).toBeUndefined();
@@ -64,8 +64,8 @@ describe("track", () => {
   it("tracks used atom and used reaction", () => {
     const atom1 = createAtom();
     const atom2 = createAtom();
-    const reaction1 = createReaction(vi.fn());
-    const reaction2 = createReaction(vi.fn());
+    const reaction1 = createReaction({ compute: vi.fn() });
+    const reaction2 = createReaction({ compute: vi.fn() });
 
     expect(getReactions(atom1)).toBeUndefined();
     expect(getAtoms(reaction1)).toBeUndefined();
@@ -80,8 +80,8 @@ describe("track", () => {
 
   it("tracks used atom and tracked reaction", () => {
     const atom1 = createAtom();
-    const reaction1 = createReaction(vi.fn());
-    const reaction2 = createReaction(vi.fn());
+    const reaction1 = createReaction({ compute: vi.fn() });
+    const reaction2 = createReaction({ compute: vi.fn() });
 
     expect(getReactions(atom1)).toBeUndefined();
     expect(getAtoms(reaction1)).toBeUndefined();

@@ -1,13 +1,15 @@
-import { createDisposer, flushDisposer, onCleanup } from "../core/disposer";
+import { createDisposer, flushDisposer } from "../core/disposer";
 import { createAtom } from "../core/atom";
 import {
   cancelReaction,
   hasScheduledReaction,
   scheduleReactions,
 } from "../core/reactor";
-import { getOwner, runUpdate } from "../core/owner";
-import { createReaction, destroyReaction } from "../core/reaction";
+import { getOwner } from "../core/owner";
+import { createReaction, deleteReaction } from "../core/reaction";
 import { getReactions, track, untrackReaction } from "../core/tracking";
+import { onCleanup } from "../utils/on-cleanup";
+import { runUpdate } from "../utils/run-update";
 
 export type MemoGetter<T> = () => T;
 
@@ -29,7 +31,7 @@ export function createMemo<T>(fn: () => T): MemoGetter<T> {
   onCleanup(() => {
     cancelReaction(reactionId);
     untrackReaction(reactionId);
-    destroyReaction(reactionId);
+    deleteReaction(reactionId);
     flushDisposer(disposerId);
   });
 

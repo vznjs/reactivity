@@ -11,7 +11,9 @@ export * from "./state/value";
 export * from "./state/memo";
 
 // utils
-export * from "./utils/freeze";
 export * from "./utils/on";
-export * from "./utils/reactive";
+export * from "./utils/on-cleanup";
 export * from "./utils/root";
+export * from "./utils/freeze";
+export * from "./utils/reactive";
+export * from "./utils/run-update";

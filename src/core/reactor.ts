@@ -27,9 +27,8 @@ function scheduleWorker() {
 
     while (order.length > 0) {
       const reactionId = order[0];
-      const isQueued = queue.has(reactionId);
 
-      if (!isQueued) continue;
+      if (!queue.has(reactionId)) continue;
 
       queue.delete(reactionId);
       order.shift();

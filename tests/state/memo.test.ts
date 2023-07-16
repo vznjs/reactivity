@@ -2,15 +2,10 @@ import { describe, it, vi, expect } from "vitest";
 import { createMemo } from "../../src/state/memo";
 import { reactive } from "../../src/utils/reactive";
 import { createValue } from "../../src/state/value";
-import {
-  createDisposer,
-  flushDisposer,
-  onCleanup,
-} from "../../src/core/disposer";
+import { createDisposer, flushDisposer } from "../../src/core/disposer";
 import { createOwner, runWithOwner } from "../../src/core/owner";
-import { root } from "../../src";
-
-vi.useFakeTimers();
+import { onCleanup } from "../../src/utils/on-cleanup";
+import { root } from "../../src/utils/root";
 
 describe("createMemo", () => {
   it("does recompute once only if changed", () => {
@@ -46,7 +41,7 @@ describe("createMemo", () => {
 
     expect(spy.mock.calls.length).toBe(0);
 
-    root(() => {
+    root(async () => {
       const getMemo = createMemo(() => {
         getValue();
         spy();
@@ -61,7 +56,7 @@ describe("createMemo", () => {
       setValue(2);
       setValue(3);
 
-      vi.runAllTimers();
+      await Promise.resolve();
 
       expect(spy.mock.calls.length).toBe(2);
     });
@@ -73,7 +68,7 @@ describe("createMemo", () => {
 
     expect(spy.mock.calls.length).toBe(0);
 
-    root(() => {
+    root(async () => {
       const getMemo = createMemo(() => {
         getValue();
         spy();
@@ -85,7 +80,7 @@ describe("createMemo", () => {
 
       expect(spy.mock.calls.length).toBe(1);
 
-      vi.runAllTimers();
+      await Promise.resolve();
 
       expect(spy.mock.calls.length).toBe(1);
 
@@ -96,13 +91,13 @@ describe("createMemo", () => {
 
       expect(spy.mock.calls.length).toBe(2);
 
-      vi.runAllTimers();
+      await Promise.resolve();
 
       expect(spy.mock.calls.length).toBe(2);
 
       setValue(4);
 
-      vi.runAllTimers();
+      await Promise.resolve();
 
       expect(spy.mock.calls.length).toBe(3);
 
@@ -117,33 +112,36 @@ describe("createMemo", () => {
     const disposerId = createDisposer();
     const spy = vi.fn();
 
-    runWithOwner(createOwner({ disposerId, reactionId: undefined }), () => {
-      expect(spy.mock.calls.length).toBe(0);
+    runWithOwner(
+      createOwner({ disposerId, reactionId: undefined }),
+      async () => {
+        expect(spy.mock.calls.length).toBe(0);
 
-      const getMemo = createMemo(() => {
-        spy();
-        return getAtom();
-      });
+        const getMemo = createMemo(() => {
+          spy();
+          return getAtom();
+        });
 
-      expect(spy.mock.calls.length).toBe(0);
+        expect(spy.mock.calls.length).toBe(0);
 
-      reactive(() => {
+        reactive(() => {
+          getMemo();
+        });
+
+        expect(spy.mock.calls.length).toBe(1);
+
+        setAtom(2);
+        setAtom(3);
+
+        await Promise.resolve();
+
+        expect(spy.mock.calls.length).toBe(2);
+
         getMemo();
-      });
 
-      expect(spy.mock.calls.length).toBe(1);
-
-      setAtom(2);
-      setAtom(3);
-
-      vi.runAllTimers();
-
-      expect(spy.mock.calls.length).toBe(2);
-
-      getMemo();
-
-      expect(spy.mock.calls.length).toBe(2);
-    });
+        expect(spy.mock.calls.length).toBe(2);
+      },
+    );
   });
 
   it("cleanups with each reaction", () => {

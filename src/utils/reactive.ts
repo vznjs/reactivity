@@ -1,20 +1,16 @@
-import {
-  createDisposer,
-  DisposerId,
-  flushDisposer,
-  onCleanup,
-} from "../core/disposer";
+import { createDisposer, DisposerId, flushDisposer } from "../core/disposer";
 import {
   Computation,
   createReaction,
-  destroyReaction,
+  deleteReaction,
   ReactionContext,
   ReactionId,
   runReaction,
 } from "../core/reaction";
-import { runUpdate } from "../core/owner";
 import { cancelReaction } from "../core/reactor";
 import { untrackReaction } from "../core/tracking";
+import { onCleanup } from "./on-cleanup";
+import { runUpdate } from "./run-update";
 
 interface ReactiveContext<T> extends ReactionContext {
   value: T | undefined;
@@ -26,7 +22,7 @@ interface ReactiveContext<T> extends ReactionContext {
 function compute<T>(this: ReactiveContext<T>, reactionId: ReactionId) {
   runUpdate(
     { disposerId: this.disposerId, reactionId },
-    () => (this.value = this.fn(this.value))
+    () => (this.value = this.fn(this.value)),
   );
   // this.value = this.fn(this.value);
 }
@@ -45,7 +41,7 @@ export function reactive<T>(fn: (v?: T) => T, value?: T): void {
   onCleanup(() => {
     cancelReaction(reactionId);
     untrackReaction(reactionId);
-    destroyReaction(reactionId);
+    deleteReaction(reactionId);
     flushDisposer(disposerId);
   });
 

@@ -1,55 +1,64 @@
 import { describe, it, vi, expect } from "vitest";
-import {
-  createDisposer,
-  flushDisposer,
-  onCleanup,
-} from "../../src/core/disposer";
-import { createOwner, runWithOwner } from "../../src/core/owner";
-import { root } from "../../src/utils/root";
+import { createDisposer, flushDisposer, registerDisposable } from "../../src";
 
 vi.useFakeTimers();
 
-describe("onCleanup", () => {
-  it("schedules disposer and calls it on flush", () => {
+describe("disposer", () => {
+  it("schedules disposer and calls it only on flush", () => {
     const disposerId = createDisposer();
     const cleanupMock = vi.fn();
 
-    runWithOwner(createOwner({ disposerId, reactionId: undefined }), () => {
-      onCleanup(cleanupMock);
-    });
+    registerDisposable(cleanupMock, disposerId);
 
-    expect(cleanupMock.mock.calls.length).toBe(0);
+    vi.runAllTimers();
+
+    expect(cleanupMock).toBeCalledTimes(0);
 
     flushDisposer(disposerId);
 
-    expect(cleanupMock.mock.calls.length).toBe(1);
+    expect(cleanupMock).toBeCalledTimes(1);
   });
 
-  it("supports nested cleanups", () => {
-    const spy = vi.fn();
-
-    root((dispose) => {
-      onCleanup(() => {
-        onCleanup(spy);
-        spy();
-      });
-      dispose();
-    });
-
-    vi.runAllTimers();
-
-    expect(spy.mock.calls.length).toBe(2);
-  });
-
-  it("does not run onCleanup if there is no reaction", () => {
+  it("flushes immediately if inside of cleanup", () => {
+    const disposerId = createDisposer();
     const cleanupMock = vi.fn();
 
-    root(() => onCleanup(cleanupMock));
-
-    expect(cleanupMock.mock.calls.length).toBe(0);
+    registerDisposable(() => {
+      registerDisposable(cleanupMock);
+      expect(cleanupMock).toBeCalledTimes(1);
+    }, disposerId);
 
     vi.runAllTimers();
 
-    expect(cleanupMock.mock.calls.length).toBe(0);
+    expect(cleanupMock).toBeCalledTimes(0);
+
+    flushDisposer(disposerId);
+
+    expect(cleanupMock).toBeCalledTimes(1);
+  });
+
+  it("schedules global disposer if disposer not specified, and flush it", () => {
+    const cleanupMock = vi.fn();
+
+    registerDisposable(cleanupMock);
+
+    expect(cleanupMock).toBeCalledTimes(0);
+
+    vi.runAllTimers();
+
+    expect(cleanupMock).toBeCalledTimes(1);
+  });
+
+  it("does not run disposables if not disposed", () => {
+    const disposerId = createDisposer();
+    const cleanupMock = vi.fn();
+
+    registerDisposable(cleanupMock, disposerId);
+
+    expect(cleanupMock).toBeCalledTimes(0);
+
+    vi.runAllTimers();
+
+    expect(cleanupMock).toBeCalledTimes(0);
   });
 });
