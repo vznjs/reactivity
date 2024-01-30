@@ -34,6 +34,10 @@ VZN makes your code reactive. It does things when other things change. When you 
 
 🦴 **Independent** - No big company behind, no dependencies. Bare bones.
 
+# Design
+
+<img src="https://raw.githubusercontent.com/vznjs/reactivity/master/design.png" alt="VZN Architecture Design" />
+
 # Compatibility
 
 - Node v14 and above
