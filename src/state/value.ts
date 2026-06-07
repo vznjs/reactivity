@@ -32,14 +32,9 @@ function valueGetter<T>(this: ValueContext<T>): T | undefined {
 }
 
 function valueSetter<T>(this: ValueContext<T>, newValue: T): void {
-  if (typeof this.compare === "function" && this.compare(this.value, newValue))
-    return;
+  if (typeof this.compare === "function" && this.compare(this.value, newValue)) return;
 
-  if (
-    (this.compare === undefined || this.compare === true) &&
-    this.value === newValue
-  )
-    return;
+  if ((this.compare === undefined || this.compare === true) && this.value === newValue) return;
 
   this.value = newValue;
 
@@ -49,11 +44,11 @@ function valueSetter<T>(this: ValueContext<T>, newValue: T): void {
 export function createValue<T>(): [ValueGetter<T | undefined>, ValueSetter<T>];
 export function createValue<T>(
   value: T,
-  compare?: boolean | ((prev: T, next: T) => boolean)
+  compare?: boolean | ((prev: T, next: T) => boolean),
 ): [ValueGetter<T>, ValueSetter<T>];
 export function createValue<T>(
   value?: T,
-  compare?: boolean | ((prev: T | undefined, next: T) => boolean)
+  compare?: boolean | ((prev: T | undefined, next: T) => boolean),
 ): [ValueGetter<T | undefined>, ValueSetter<T>] {
   const valueContext: ValueContext<T> = { value, compare };
 

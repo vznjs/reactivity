@@ -1,11 +1,4 @@
-import {
-  Owner,
-  getAtoms,
-  untrackReaction,
-  flushDisposer,
-  runWithOwner,
-  track,
-} from "..";
+import { type Owner, getAtoms, untrackReaction, flushDisposer, runWithOwner, track } from "..";
 
 export function runUpdate<T>(owner: Owner, fn: () => T): T {
   let atomsIds;

@@ -1,4 +1,4 @@
-import { describe, it, vi, expect } from "vitest";
+import { describe, it, vi, expect } from "vite-plus/test";
 import { createDisposer, flushDisposer } from "../../src/core/disposer";
 import { reactive } from "../../src/utils/reactive";
 import { createOwner, runWithOwner } from "../../src/core/owner";

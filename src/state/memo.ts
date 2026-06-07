@@ -1,10 +1,6 @@
 import { createDisposer, flushDisposer } from "../core/disposer";
 import { createAtom } from "../core/atom";
-import {
-  cancelReaction,
-  hasScheduledReaction,
-  scheduleReactions,
-} from "../core/reactor";
+import { cancelReaction, hasScheduledReaction, scheduleReactions } from "../core/reactor";
 import { getOwner } from "../core/owner";
 import { createReaction, deleteReaction } from "../core/reaction";
 import { getReactions, track, untrackReaction } from "../core/tracking";
@@ -39,10 +35,7 @@ export function createMemo<T>(fn: () => T): MemoGetter<T> {
     if (currentIteration < nextIteration) {
       runUpdate({ disposerId, reactionId }, () => (memoValue = fn()));
       currentIteration = nextIteration;
-    } else if (
-      currentIteration === nextIteration &&
-      hasScheduledReaction(reactionId)
-    ) {
+    } else if (currentIteration === nextIteration && hasScheduledReaction(reactionId)) {
       runUpdate({ disposerId, reactionId }, () => (memoValue = fn()));
       currentIteration = nextIteration + 1;
     }

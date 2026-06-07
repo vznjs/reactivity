@@ -1,4 +1,4 @@
-import { describe, it, vi, expect } from "vitest";
+import { describe, it, vi, expect } from "vite-plus/test";
 import { createMemo } from "../../src/state/memo";
 import { reactive } from "../../src/utils/reactive";
 import { createValue } from "../../src/state/value";
@@ -35,13 +35,13 @@ describe("createMemo", () => {
     expect(spy.mock.calls.length).toBe(2);
   });
 
-  it("schedules only one reaction", () => {
+  it("schedules only one reaction", async () => {
     const [getValue, setValue] = createValue(1);
     const spy = vi.fn();
 
     expect(spy.mock.calls.length).toBe(0);
 
-    root(async () => {
+    await root(async () => {
       const getMemo = createMemo(() => {
         getValue();
         spy();
@@ -62,13 +62,13 @@ describe("createMemo", () => {
     });
   });
 
-  it("schedules only one reaction even when using getter", () => {
+  it("schedules only one reaction even when using getter", async () => {
     const [getValue, setValue] = createValue(1);
     const spy = vi.fn();
 
     expect(spy.mock.calls.length).toBe(0);
 
-    root(async () => {
+    await root(async () => {
       const getMemo = createMemo(() => {
         getValue();
         spy();
@@ -107,41 +107,38 @@ describe("createMemo", () => {
     });
   });
 
-  it("does recompute on every change in reaction", () => {
+  it("does recompute on every change in reaction", async () => {
     const [getAtom, setAtom] = createValue(1);
     const disposerId = createDisposer();
     const spy = vi.fn();
 
-    runWithOwner(
-      createOwner({ disposerId, reactionId: undefined }),
-      async () => {
-        expect(spy.mock.calls.length).toBe(0);
+    await runWithOwner(createOwner({ disposerId, reactionId: undefined }), async () => {
+      expect(spy.mock.calls.length).toBe(0);
 
-        const getMemo = createMemo(() => {
-          spy();
-          return getAtom();
-        });
+      const getMemo = createMemo(() => {
+        spy();
+        return getAtom();
+      });
 
-        expect(spy.mock.calls.length).toBe(0);
+      expect(spy.mock.calls.length).toBe(0);
 
-        reactive(() => {
-          getMemo();
-        });
-
-        expect(spy.mock.calls.length).toBe(1);
-
-        setAtom(2);
-        setAtom(3);
-
-        await Promise.resolve();
-
-        expect(spy.mock.calls.length).toBe(2);
-
+      reactive(() => {
         getMemo();
+      });
 
-        expect(spy.mock.calls.length).toBe(2);
-      },
-    );
+      expect(spy.mock.calls.length).toBe(1);
+
+      setAtom(2);
+      setAtom(3);
+
+      await Promise.resolve();
+
+      expect(spy.mock.calls.length).toBe(2);
+
+      getMemo();
+
+      expect(spy.mock.calls.length).toBe(2);
+    });
   });
 
   it("cleanups with each reaction", () => {

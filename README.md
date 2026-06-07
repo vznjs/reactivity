@@ -55,13 +55,7 @@ This example shows off some of the capabilities of VZN | Reactivity.
 The most important thing to learn here is that you need to wrap your "app" with `root()`, otherwise, all reactivity will be one-time only.
 
 ```js
-import {
-  root,
-  createValue,
-  createMemo,
-  reactive,
-  onCleanup,
-} from "@vzn/reactivity";
+import { root, createValue, createMemo, reactive, onCleanup } from "@vzn/reactivity";
 
 root((dispose) => {
   console.log("Reactivity is turned on!");
@@ -231,9 +225,7 @@ reactive(() => {
 
 // LOG: VZN
 
-setName(
-  "This will not trigger the reaction as getName() was not tracked in the reaction"
-);
+setName("This will not trigger the reaction as getName() was not tracked in the reaction");
 ```
 
 ## `on`

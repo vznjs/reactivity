@@ -1,5 +1,5 @@
 import { getOwner } from "..";
-import { DisposeCallback, registerDisposable } from "../core/disposer";
+import { type DisposeCallback, registerDisposable } from "../core/disposer";
 
 export function onCleanup(disposable: DisposeCallback): void {
   registerDisposable(disposable, getOwner().disposerId);

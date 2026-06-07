@@ -1,40 +1,47 @@
 {
-  "private": false,
-  "version": "0.37.0",
   "name": "@vzn/reactivity",
+  "version": "0.37.0",
+  "private": false,
   "description": "The VZN of perfect JS reactivity system",
-  "author": "Maciej Kwaśniak <contact@exelord.com>",
   "license": "MIT",
+  "author": "Maciej Kwaśniak <contact@exelord.com>",
   "repository": "https://github.com/vznjs/reactivity",
-  "type": "module",
-  "files": [
-    "dist/"
-  ],
-  "source": "./dist/src/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/types/index.d.ts",
-      "import": "./dist/reactivity.js",
-      "require": "./dist/reactivity.cjs"
-    }
-  },
   "workspaces": [
-    "/",
     "tests/dummy"
   ],
-  "scripts": {
-    "prepublishOnly": "npm run build",
-    "test": "vitest",
-    "coverage": "vitest run --coverage",
-    "lint": "prettier --check . && eslint .",
-    "lint:fix": "prettier --write .",
-    "dev": "npm-run-all --parallel 'build:** -- --watch'",
-    "build": "npm-run-all --parallel build:**",
-    "build:js": "vite build",
-    "build:source": "tsc --build",
-    "release": "release-it",
-    "bench": "node --allow-natives-syntax bench/bench.cjs"
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./dist/index.mjs",
+    "./package.json": "./package.json"
   },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "vp pack",
+    "dev": "vp pack --watch",
+    "test": "vp test",
+    "check": "vp check",
+    "coverage": "vp test run --coverage",
+    "prepublishOnly": "npm run build",
+    "release": "release-it"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.2",
+    "@typescript/native-preview": "latest",
+    "release-it": "^20.2.0",
+    "typescript": "^6.0.3",
+    "vite-plus": "latest"
+  },
+  "overrides": {
+    "vite": "npm:@voidzero-dev/vite-plus-core@latest",
+    "vitest": "npm:@voidzero-dev/vite-plus-test@latest"
+  },
+  "packageManager": "npm@11.16.0",
   "release-it": {
     "git": {
       "commitMessage": "v${version}",
@@ -49,24 +56,9 @@
     },
     "hooks": {
       "before:init": [
-        "npm run lint",
-        "npm test -- --run"
+        "npm run check",
+        "npm run test"
       ]
     }
-  },
-  "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^7.0.2",
-    "@typescript-eslint/parser": "^7.0.2",
-    "disposable-stack": "github:es-shims/DisposableStack",
-    "@vitest/ui": "^1.3.1",
-    "c8": "^9.1.0",
-    "eslint": "^8.56.0",
-    "eslint-config-prettier": "^9.1.0",
-    "npm-run-all": "^4.1.5",
-    "prettier": "3.2.5",
-    "release-it": "^17.1.1",
-    "typescript": "^5.3.3",
-    "vite": "^5.1.4",
-    "vitest": "^1.3.1"
   }
 }

@@ -3,7 +3,7 @@ import { freeze } from "./freeze";
 export function on<T>(
   atom: Array<() => any> | (() => any),
   fn: (value?: T) => T,
-  defer = false
+  defer = false,
 ): (value?: T) => T | undefined {
   const isArray = Array.isArray(atom);
 
