@@ -1,4 +1,4 @@
-import { describe, it, vi, expect } from "vitest";
+import { describe, it, vi, expect } from "vite-plus/test";
 import { reactive } from "../../src/utils/reactive";
 import { on } from "../../src/utils/on";
 import { root } from "../../src/utils/root";

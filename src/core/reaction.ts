@@ -6,17 +6,14 @@ export interface ReactionContext {
 
 export type Computation<T extends ReactionContext = any> = (
   this: T,
-  reactionId: ReactionId
+  reactionId: ReactionId,
 ) => void;
 
 let ID: ReactionId = 0;
 
-const reactionsRegistry: { [key: ReactionId]: ReactionContext | undefined } =
-  {};
+const reactionsRegistry: { [key: ReactionId]: ReactionContext | undefined } = {};
 
-export function createReaction<T extends ReactionContext>(
-  context: T
-): ReactionId {
+export function createReaction<T extends ReactionContext>(context: T): ReactionId {
   const id = ++ID;
   reactionsRegistry[id] = context;
   return id;
@@ -26,9 +23,7 @@ export function deleteReaction(reactionId: ReactionId): void {
   delete reactionsRegistry[reactionId];
 }
 
-export function getReaction(
-  reactionId: ReactionId
-): ReactionContext | undefined {
+export function getReaction(reactionId: ReactionId): ReactionContext | undefined {
   return reactionsRegistry[reactionId];
 }
 

@@ -1,10 +1,5 @@
-import { describe, it, expect, vi } from "vitest";
-import {
-  createReaction,
-  runReaction,
-  deleteReaction,
-  getReaction,
-} from "../../src";
+import { describe, it, expect, vi } from "vite-plus/test";
+import { createReaction, runReaction, deleteReaction, getReaction } from "../../src";
 
 describe("createReaction", () => {
   it("returns unique id incrementally", () => {

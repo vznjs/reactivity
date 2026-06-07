@@ -1,5 +1,3 @@
-import "disposable-stack/auto";
-
 export type DisposerId = number;
 export type DisposeCallback = Parameters<DisposableStack["defer"]>[0];
 
@@ -46,10 +44,7 @@ export function flushDisposer(disposerId: DisposerId): void {
   }
 }
 
-export function registerDisposable(
-  fn: DisposeCallback,
-  disposerId?: DisposerId
-): void {
+export function registerDisposable(fn: DisposeCallback, disposerId?: DisposerId): void {
   if (isFlushing) {
     fn();
     return;

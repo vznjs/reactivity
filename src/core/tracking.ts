@@ -6,11 +6,7 @@ type Collection = { [key: number]: AtomId[] | undefined };
 const reactionsAtoms: Collection = {};
 const atomsReactions: Collection = {};
 
-function untrackCollection(
-  id: number,
-  collection1: Collection,
-  collection2: Collection
-) {
+function untrackCollection(id: number, collection1: Collection, collection2: Collection) {
   const ci1 = collection1[id];
   if (!ci1) return;
 

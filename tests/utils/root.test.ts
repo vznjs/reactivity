@@ -1,11 +1,11 @@
-import { describe, it, vi, expect } from "vitest";
+import { describe, it, vi, expect } from "vite-plus/test";
 import { createValue } from "../../src/state/value";
 import { reactive } from "../../src/utils/reactive";
 import { root } from "../../src/utils/root";
 
 describe("root", () => {
-  it("allows subreactions to escape their parents", () => {
-    root(async () => {
+  it("allows subreactions to escape their parents", async () => {
+    await root(async () => {
       const [getOuterAtom, setOuterAtom] = createValue(0);
       const [getInnerAtom, setInnerAtom] = createValue(0);
       const outerSpy = vi.fn();
@@ -44,10 +44,10 @@ describe("root", () => {
     });
   });
 
-  it("allows to dispose all nested reactions", () => {
+  it("allows to dispose all nested reactions", async () => {
     const spy = vi.fn();
 
-    root(async (dispose) => {
+    await root(async (dispose) => {
       const [getAtom, setAtom] = createValue(1);
 
       reactive(() => {

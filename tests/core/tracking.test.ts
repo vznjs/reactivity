@@ -1,4 +1,4 @@
-import { describe, it, vi, expect } from "vitest";
+import { describe, it, vi, expect } from "vite-plus/test";
 import { createAtom } from "../../src/core/atom";
 import { createReaction } from "../../src/core/reaction";
 import { track, getAtoms, getReactions } from "../../src/core/tracking";

@@ -1,4 +1,4 @@
-import { describe, it, vi, expect } from "vitest";
+import { describe, it, vi, expect } from "vite-plus/test";
 import { scheduleReactions, cancelReaction } from "../../src/core/reactor";
 import { createReaction } from "../../src/core/reaction";
 

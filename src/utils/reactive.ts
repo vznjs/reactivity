@@ -1,10 +1,10 @@
-import { createDisposer, DisposerId, flushDisposer } from "../core/disposer";
+import { createDisposer, type DisposerId, flushDisposer } from "../core/disposer";
 import {
-  Computation,
+  type Computation,
   createReaction,
   deleteReaction,
-  ReactionContext,
-  ReactionId,
+  type ReactionContext,
+  type ReactionId,
   runReaction,
 } from "../core/reaction";
 import { cancelReaction } from "../core/reactor";
@@ -20,10 +20,7 @@ interface ReactiveContext<T> extends ReactionContext {
 }
 
 function compute<T>(this: ReactiveContext<T>, reactionId: ReactionId) {
-  runUpdate(
-    { disposerId: this.disposerId, reactionId },
-    () => (this.value = this.fn(this.value)),
-  );
+  runUpdate({ disposerId: this.disposerId, reactionId }, () => (this.value = this.fn(this.value)));
   // this.value = this.fn(this.value);
 }
 

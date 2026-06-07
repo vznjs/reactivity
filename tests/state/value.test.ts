@@ -1,4 +1,4 @@
-import { describe, it, vi, expect } from "vitest";
+import { describe, it, vi, expect } from "vite-plus/test";
 import { createOwner, runWithOwner } from "../../src/core/owner";
 import { createValue } from "../../src/state/value";
 import { reactive } from "../../src/utils/reactive";
@@ -24,9 +24,7 @@ describe("createValue", () => {
     const reactionId = createReaction({ compute: spy });
     const [getAtom, setAtom] = createValue(false);
 
-    runWithOwner(createOwner({ disposerId: undefined, reactionId }), () =>
-      getAtom(),
-    );
+    runWithOwner(createOwner({ disposerId: undefined, reactionId }), () => getAtom());
 
     expect(spy.mock.calls.length).toBe(0);
     expect(getAtom()).toBe(false);
@@ -46,9 +44,7 @@ describe("createValue", () => {
     const reactionId = createReaction({ compute: spy });
     const [getAtom, setAtom] = createValue(true, false);
 
-    runWithOwner(createOwner({ disposerId: undefined, reactionId }), () =>
-      getAtom(),
-    );
+    runWithOwner(createOwner({ disposerId: undefined, reactionId }), () => getAtom());
 
     expect(spy.mock.calls.length).toBe(0);
 
@@ -61,15 +57,13 @@ describe("createValue", () => {
     expect(spy.mock.calls.length).toBe(1);
   });
 
-  it("does not trigger reaction if set to equal value", () => {
+  it("does not trigger reaction if set to equal value", async () => {
     const spy = vi.fn();
     const reactionId = createReaction({ compute: spy });
     const [getAtom, setAtom] = createValue(false);
 
-    root(async () => {
-      runWithOwner(createOwner({ disposerId: undefined, reactionId }), () =>
-        getAtom(),
-      );
+    await root(async () => {
+      runWithOwner(createOwner({ disposerId: undefined, reactionId }), () => getAtom());
 
       expect(spy.mock.calls.length).toBe(0);
       expect(getAtom()).toBe(false);
@@ -93,15 +87,13 @@ describe("createValue", () => {
     });
   });
 
-  it("can take an equality predicate", () => {
+  it("can take an equality predicate", async () => {
     const spy = vi.fn();
     const reactionId = createReaction({ compute: spy });
     const [getAtom, setAtom] = createValue([1], (a, b) => a[0] === b[0]);
 
-    root(async () => {
-      runWithOwner(createOwner({ disposerId: undefined, reactionId }), () =>
-        getAtom(),
-      );
+    await root(async () => {
+      runWithOwner(createOwner({ disposerId: undefined, reactionId }), () => getAtom());
 
       expect(spy.mock.calls.length).toBe(0);
 
@@ -150,9 +142,7 @@ describe("createValue", () => {
     const [getAtom, setAtom] = createValue(0);
     const disposerId = createDisposer();
 
-    runWithOwner(createOwner({ disposerId, reactionId }), () =>
-      setAtom(getAtom() + 1),
-    );
+    runWithOwner(createOwner({ disposerId, reactionId }), () => setAtom(getAtom() + 1));
 
     expect(spy.mock.calls.length).toBe(0);
     expect(getAtom()).toBe(1);
@@ -191,12 +181,12 @@ describe("createValue", () => {
     expect(spy.mock.calls.length).toBe(2);
   });
 
-  it("works with cross-updates", () => {
+  it("works with cross-updates", async () => {
     const spy = vi.fn();
     const [getData, setData] = createValue(2);
     const [getData2, setData2] = createValue(2);
 
-    root(async () => {
+    await root(async () => {
       reactive(() => {
         getData2();
         spy();
@@ -219,13 +209,13 @@ describe("createValue", () => {
     });
   });
 
-  it("works with nested updates and cleanups", () => {
+  it("works with nested updates and cleanups", async () => {
     const spy = vi.fn();
     const spy2 = vi.fn();
     const [getData, setData] = createValue(1);
     const disposerId = createDisposer();
 
-    root(async () => {
+    await root(async () => {
       reactive(() => {
         onCleanup(() => flushDisposer(disposerId));
         getData();
