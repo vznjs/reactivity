@@ -6,9 +6,6 @@
   "license": "MIT",
   "author": "Maciej Kwaśniak <contact@exelord.com>",
   "repository": "https://github.com/vznjs/reactivity",
-  "workspaces": [
-    "tests/dummy"
-  ],
   "files": [
     "dist"
   ],
@@ -31,12 +28,12 @@
     "release": "release-it"
   },
   "dependencies": {
-    "@vitest/coverage-v8": "^4.1.8",
     "alien-signals": "^3.2.1"
   },
   "devDependencies": {
     "@types/node": "^25.9.2",
     "@typescript/native-preview": "latest",
+    "@vitest/coverage-v8": "^4.1.8",
     "reactive-framework-test-suite": "^0.0.2",
     "release-it": "^20.2.0",
     "typescript": "^6.0.3",
