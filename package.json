@@ -1,6 +1,6 @@
 {
   "name": "@vzn/reactivity",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": false,
   "description": "The VZN of perfect JS reactivity system",
   "license": "MIT",
