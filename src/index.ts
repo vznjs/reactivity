@@ -48,6 +48,7 @@ type Cleanups = CleanupFn | CleanupFn[] | undefined;
 // owners. Scopes have no extra fields beyond the owner base.
 interface OwnerNode extends ReactiveNode {
   cleanups: Cleanups;
+  context: Record<symbol, unknown>; // VZN: context map, inherited from the parent owner
 }
 
 // VZN: an opaque handle to a reactive owner, for `getOwner` / `runWithOwner`.
@@ -77,6 +78,11 @@ let syncMode = false; // VZN: inside `flushSync(fn)`, writes flush per-write
 let activeSub: ReactiveNode | undefined;
 let activeOwner: OwnerNode | undefined; // VZN
 let globalOwner: OwnerNode | undefined; // VZN: collects un-rooted work
+
+// VZN: the shared empty base context map (Solid's `defaultContext`). Every owner's
+// `context` starts here, so reads never need a null check; `setContext` spreads a
+// fresh map and never mutates it.
+const defaultContext: Record<symbol, unknown> = {};
 
 const queued: (EffectNode | undefined)[] = [];
 const { link, unlink, propagate, checkDirty, shallowPropagate } = createReactiveSystem({
@@ -162,6 +168,7 @@ function disposeGlobalOwner(): void {
 function makeScope(): OwnerNode {
   return {
     cleanups: undefined,
+    context: activeOwner?.context ?? defaultContext, // VZN: inherit from the lexical parent
     deps: undefined,
     depsTail: undefined,
     subs: undefined,
@@ -292,6 +299,7 @@ export function computed<T>(getter: (previousValue?: T) => T): () => T {
   return computedOper.bind({
     value: undefined,
     cleanups: undefined, // VZN
+    context: activeOwner?.context ?? defaultContext, // VZN: inherit from the lexical parent
     subs: undefined,
     subsTail: undefined,
     deps: undefined,
@@ -309,6 +317,7 @@ export function effect(fn: () => void | (() => void)): () => void {
   const e: EffectNode = {
     fn,
     cleanups: undefined,
+    context: activeOwner?.context ?? defaultContext, // VZN: inherit from the lexical parent
     subs: undefined,
     subsTail: undefined,
     deps: undefined,
@@ -378,6 +387,39 @@ export function runWithOwner<T>(owner: Owner | undefined, fn: () => T): T {
     activeSub = prevSub;
     activeOwner = prevOwner;
   }
+}
+
+// VZN: a typed context key. Solid's model — context flows down the owner tree by
+// each owner inheriting its parent's map at creation (no runtime tree walk).
+export interface Context<T> {
+  readonly id: symbol;
+  readonly defaultValue: T | undefined;
+}
+
+// VZN: create a context key with an optional default and debug description.
+export function createContext<T>(defaultValue?: T, description?: string): Context<T> {
+  return { id: Symbol(description), defaultValue };
+}
+
+// VZN: read a context value from `owner` (defaults to the active owner). Returns
+// the default when no value was provided up the tree (or there is no owner).
+export function getContext<T>(
+  context: Context<T>,
+  owner: Owner | undefined = activeOwner,
+): T | undefined {
+  const map = owner?.context ?? defaultContext;
+  return context.id in map ? (map[context.id] as T) : context.defaultValue;
+}
+
+// VZN: provide a context value on `owner` (defaults to the active owner) for the
+// owners created beneath it. A fresh map is used, so the parent is never mutated.
+export function setContext<T>(
+  context: Context<T>,
+  value: T,
+  owner: Owner | undefined = activeOwner,
+): void {
+  const o = ownerFor(owner);
+  o.context = { ...o.context, [context.id]: value };
 }
 
 /**

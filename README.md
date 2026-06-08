@@ -242,21 +242,62 @@ queueMicrotask(() => {
 });
 ```
 
+### `createContext` / `getContext` / `setContext`
+
+Pass values down the owner tree without threading them through every call — Solid's context model (inherit-at-creation, no runtime tree walk). `setContext` provides a value for everything created beneath the current owner; `getContext` reads the nearest provided value, or the default.
+
+```ts
+import { createContext, getContext, setContext, root, effect } from "@vzn/reactivity";
+
+const Theme = createContext("light");
+
+root(() => {
+  setContext(Theme, "dark");
+
+  effect(() => {
+    console.log(getContext(Theme)); // "dark" — inherited from the root
+  });
+});
+
+effect(() => console.log(getContext(Theme))); // "light" — falls back to the default
+```
+
+A nested `root` (or any owner) can `setContext` again to override for its own subtree without affecting the parent. Both `getContext` and `setContext` take an optional owner argument, so they compose with `getOwner` / `runWithOwner` for async re-attach.
+
 ## API summary
 
-| Export                      | Signature                                            | Description                                                |
-| --------------------------- | ---------------------------------------------------- | ---------------------------------------------------------- |
-| `signal`                    | `signal<T>(initial?) → (() => T) & ((v: T) => void)` | A reactive value; read with `()`, write with `(v)`.        |
-| `computed`                  | `computed<T>(getter) → () => T`                      | Lazy, cached derivation; an owner.                         |
-| `effect`                    | `effect(fn) → () => void`                            | Side effect that re-runs; returns a disposer.              |
-| `trigger`                   | `trigger(fn) → void`                                 | Invalidate the signals read in `fn` without changing them. |
-| `root`                      | `root(fn) → () => void`                              | Ownership scope; returns its disposer.                     |
-| `onCleanup`                 | `onCleanup(fn) → void`                               | Register teardown on the current owner.                    |
-| `untrack`                   | `untrack(fn) → T`                                    | Run `fn` without tracking reads.                           |
-| `batch`                     | `batch(fn) → T`                                      | Defer effects until `fn` returns, then flush.              |
-| `flushSync`                 | `flushSync()` / `flushSync(fn)`                      | Drain now / run `fn` with synchronous scheduling.          |
-| `getOwner` / `runWithOwner` | —                                                    | Capture / restore the active owner.                        |
-| `CleanupFn`, `Owner`        | types                                                | Public types.                                              |
+| Export                                      | Signature                                            | Description                                                |
+| ------------------------------------------- | ---------------------------------------------------- | ---------------------------------------------------------- |
+| `signal`                                    | `signal<T>(initial?) → (() => T) & ((v: T) => void)` | A reactive value; read with `()`, write with `(v)`.        |
+| `computed`                                  | `computed<T>(getter) → () => T`                      | Lazy, cached derivation; an owner.                         |
+| `effect`                                    | `effect(fn) → () => void`                            | Side effect that re-runs; returns a disposer.              |
+| `trigger`                                   | `trigger(fn) → void`                                 | Invalidate the signals read in `fn` without changing them. |
+| `root`                                      | `root(fn) → () => void`                              | Ownership scope; returns its disposer.                     |
+| `onCleanup`                                 | `onCleanup(fn) → void`                               | Register teardown on the current owner.                    |
+| `untrack`                                   | `untrack(fn) → T`                                    | Run `fn` without tracking reads.                           |
+| `batch`                                     | `batch(fn) → T`                                      | Defer effects until `fn` returns, then flush.              |
+| `flushSync`                                 | `flushSync()` / `flushSync(fn)`                      | Drain now / run `fn` with synchronous scheduling.          |
+| `getOwner` / `runWithOwner`                 | —                                                    | Capture / restore the active owner.                        |
+| `createContext` / `getContext`/`setContext` | —                                                    | Owner-tree context (Solid's model).                        |
+| `CleanupFn`, `Owner`, `Context`             | types                                                | Public types.                                              |
+
+## Scope — a core, not a framework
+
+alien-signals is a minimal signal _core_; Solid is a full reactive _runtime_. VZN sits in between: alien's engine plus a Solid-style **owner tree** and async scheduling. It gives you the primitives and stays out of everything above them.
+
+**Included:** signals, computeds, effects, `root` ownership + `onCleanup` + un-rooted auto-dispose, async batching with `batch` / `flushSync` escapes, `trigger`, `untrack`, owner-tree **context** (`createContext`/`getContext`/`setContext`), and owner capture (`getOwner` / `runWithOwner`).
+
+**Deliberately not included** (and how to live without it):
+
+| Solid has                             | VZN             | Notes                                                                       |
+| ------------------------------------- | --------------- | --------------------------------------------------------------------------- |
+| List reconciliation (`mapArray`)      | ✗ — _buildable_ | compose on `root`; returns a value + disposer in userland                   |
+| Stores / deep reactivity              | ✗               | out of scope — compose signals yourself                                     |
+| Async / Suspense / transitions        | ✗               | out of scope                                                                |
+| Error boundaries                      | ✗               | you still get cleanup-on-throw, just no boundary/fallback                   |
+| Per-signal custom equality (`equals`) | ✗               | VZN compares strictly (`!==`); use [`trigger`](#trigger) to force an update |
+
+vs **alien-signals**, VZN adds ownership, context, async batching, and flexible cleanup. vs **Solid**, VZN is the core — no JSX, stores, or resources — but it ships the ownership essentials (context included) and leaves the rest buildable on its owner tree. See [`docs/COMPARISON.md`](docs/COMPARISON.md) for the full breakdown.
 
 ## How it works
 

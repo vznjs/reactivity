@@ -68,8 +68,9 @@ Where they differ:
 - **Ordering vs sync-ness.** Solid's lever for control is **effect lanes** — `createRenderEffect` (render lane) runs before `createEffect` (user lane) within the same flush. That's _ordering_ control. VZN has a single effect type and instead offers _sync-ness_ control via `flushSync(fn)` (a scoped synchronous scheduler) and `batch`. Neither Solid nor alien has a per-region sync scheduler.
 - **`trigger`.** VZN (via alien) can force-invalidate the subscribers of signals read in a function without changing any value — handy for in-place mutation. Solid has no direct equivalent.
 - **`batch`.** Solid omits an explicit `batch` (async coalescing makes it largely redundant). VZN keeps `batch` because it provides _synchronous settling at the boundary_, a different guarantee from mere coalescing.
+- **Context.** VZN ships Solid's owner-tree context model — `createContext` / `getContext` / `setContext`, inherited at owner creation, no runtime tree walk. The bigger Solid pieces (stores, resources, transitions/Suspense, error boundaries) remain out of scope.
 
-If you know Solid, VZN will feel familiar: `root` ≈ `createRoot`, `signal` ≈ `createSignal` (single-callable instead of a tuple), `computed` ≈ `createMemo`, `effect` ≈ `createEffect`, `onCleanup`/`untrack` are the same names.
+If you know Solid, VZN will feel familiar: `root` ≈ `createRoot`, `signal` ≈ `createSignal` (single-callable instead of a tuple), `computed` ≈ `createMemo`, `effect` ≈ `createEffect`, and `onCleanup` / `untrack` / `getContext` / `setContext` are the same names.
 
 ## Scheduling models, side by side
 
