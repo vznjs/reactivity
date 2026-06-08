@@ -39,7 +39,7 @@ VZN adds Solid-style ownership: `root` scopes that cascade-dispose, `onCleanup` 
 
 alien cleanup is **return-based only**: an effect returns a teardown function, stored in a single `cleanup` slot. Computeds have no cleanup.
 
-VZN supports **both** styles — return a teardown _and/or_ call `onCleanup` (any number of times, even nested or inside `untracked`) — and extends cleanup to **computeds** (run on recompute and when the memo is unwatched) and to the **throw path** (cleanups registered before a throw still run).
+VZN supports **both** styles — return a teardown _and/or_ call `onCleanup` (any number of times, even nested or inside `untrack`) — and extends cleanup to **computeds** (run on recompute and when the memo is unwatched) and to the **throw path** (cleanups registered before a throw still run).
 
 ### What VZN drops
 
@@ -69,7 +69,7 @@ Where they differ:
 - **`trigger`.** VZN (via alien) can force-invalidate the subscribers of signals read in a function without changing any value — handy for in-place mutation. Solid has no direct equivalent.
 - **`batch`.** Solid omits an explicit `batch` (async coalescing makes it largely redundant). VZN keeps `batch` because it provides _synchronous settling at the boundary_, a different guarantee from mere coalescing.
 
-If you know Solid, VZN will feel familiar: `root` ≈ `createRoot`, `signal` ≈ `createSignal` (single-callable instead of a tuple), `computed` ≈ `createMemo`, `effect` ≈ `createEffect`, `onCleanup`/`untracked` are the same names.
+If you know Solid, VZN will feel familiar: `root` ≈ `createRoot`, `signal` ≈ `createSignal` (single-callable instead of a tuple), `computed` ≈ `createMemo`, `effect` ≈ `createEffect`, `onCleanup`/`untrack` are the same names.
 
 ## Scheduling models, side by side
 

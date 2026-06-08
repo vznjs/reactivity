@@ -214,20 +214,20 @@ trigger(list); // ...so tell its subscribers to refresh anyway
 
 ## Utilities
 
-### `untracked`
+### `untrack`
 
 Read reactive values without subscribing the current computation to them.
 
 ```ts
-import { untracked } from "@vzn/reactivity";
+import { untrack } from "@vzn/reactivity";
 
 effect(() => {
   const live = tracked(); // a dependency
-  const snapshot = untracked(() => other()); // read without tracking
+  const snapshot = untrack(() => other()); // read without tracking
 });
 ```
 
-`onCleanup` registered inside `untracked` still belongs to the current owner.
+`onCleanup` registered inside `untrack` still belongs to the current owner.
 
 ### `getOwner` / `runWithOwner`
 
@@ -252,7 +252,7 @@ queueMicrotask(() => {
 | `trigger`                   | `trigger(fn) → void`                                 | Invalidate the signals read in `fn` without changing them. |
 | `root`                      | `root(fn) → () => void`                              | Ownership scope; returns its disposer.                     |
 | `onCleanup`                 | `onCleanup(fn) → void`                               | Register teardown on the current owner.                    |
-| `untracked`                 | `untracked(fn) → T`                                  | Run `fn` without tracking reads.                           |
+| `untrack`                   | `untrack(fn) → T`                                    | Run `fn` without tracking reads.                           |
 | `batch`                     | `batch(fn) → T`                                      | Defer effects until `fn` returns, then flush.              |
 | `flushSync`                 | `flushSync()` / `flushSync(fn)`                      | Drain now / run `fn` with synchronous scheduling.          |
 | `getOwner` / `runWithOwner` | —                                                    | Capture / restore the active owner.                        |
@@ -262,7 +262,7 @@ queueMicrotask(() => {
 
 VZN runs its own instance of alien-signals' `createReactiveSystem` engine and layers a thin ownership model on top. The reactive operators are kept **as close to alien's `index.ts` as possible** — functions that are byte-for-byte identical (modulo flag literals) are marked `// Alien: VERBATIM` in the source, and every VZN-specific change is marked `// VZN:`. The whole library lives in a single `src/index.ts`.
 
-Why a custom layer instead of using alien directly? Because alien is synchronous and has no ownership model. VZN reimplements just the write path (`scheduleFlush` instead of a synchronous `flush`) for async-default batching, and decouples the cleanup **owner** from the tracking **subscriber** so that `onCleanup` survives `untracked`, works inside memos, and cascades through `root`. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the full breakdown and [`docs/COMPARISON.md`](docs/COMPARISON.md) for a detailed comparison with alien-signals and Solid.
+Why a custom layer instead of using alien directly? Because alien is synchronous and has no ownership model. VZN reimplements just the write path (`scheduleFlush` instead of a synchronous `flush`) for async-default batching, and decouples the cleanup **owner** from the tracking **subscriber** so that `onCleanup` survives `untrack`, works inside memos, and cascades through `root`. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the full breakdown and [`docs/COMPARISON.md`](docs/COMPARISON.md) for a detailed comparison with alien-signals and Solid.
 
 ## Contributing
 

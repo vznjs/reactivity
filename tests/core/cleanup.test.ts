@@ -1,6 +1,6 @@
 import { describe, it, vi, expect } from "vite-plus/test";
 import { signal, effect, computed, root, onCleanup } from "../../src/index";
-import { untracked } from "../../src/index";
+import { untrack } from "../../src/index";
 
 describe("onCleanup", () => {
   describe("lazy storage (0 → 1 → many)", () => {
@@ -57,10 +57,10 @@ describe("onCleanup", () => {
       expect(order).toEqual(["root"]);
     });
 
-    it("still registers when called inside untracked", () => {
+    it("still registers when called inside untrack", () => {
       const cleanup = vi.fn();
       const disposeRoot = root(() => {
-        untracked(() => onCleanup(cleanup));
+        untrack(() => onCleanup(cleanup));
       });
       expect(cleanup).toHaveBeenCalledTimes(0);
       disposeRoot();

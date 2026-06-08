@@ -1,10 +1,10 @@
 import { describe, it, vi, expect } from "vite-plus/test";
 import { signal, computed, effect, root, onCleanup } from "../../src/index";
-import { untracked } from "../../src/index";
+import { untrack } from "../../src/index";
 
-describe("untracked", () => {
+describe("untrack", () => {
   it("returns the value produced by its function", () => {
-    expect(untracked(() => 42)).toBe(42);
+    expect(untrack(() => 42)).toBe(42);
   });
 
   it("reads inside do not create a dependency", async () => {
@@ -14,7 +14,7 @@ describe("untracked", () => {
     root(() => {
       effect(() => {
         tracked();
-        untracked(() => noise());
+        untrack(() => noise());
         spy();
       });
     });
@@ -32,7 +32,7 @@ describe("untracked", () => {
     let read: number | undefined;
     root(() => {
       effect(() => {
-        read = untracked(() => s());
+        read = untrack(() => s());
       });
     });
     expect(read).toBe(7);
@@ -44,7 +44,7 @@ describe("untracked", () => {
     const b = signal(1);
     root(() => {
       effect(() => {
-        untracked(() => a());
+        untrack(() => a());
         b();
         spy();
       });
@@ -60,9 +60,9 @@ describe("untracked", () => {
     const b = signal(1);
     root(() => {
       effect(() => {
-        untracked(() => {
+        untrack(() => {
           a();
-          untracked(() => b());
+          untrack(() => b());
         });
         spy();
       });
@@ -79,17 +79,17 @@ describe("untracked", () => {
     let value: number | undefined;
     root(() => {
       effect(() => {
-        value = untracked(() => c());
+        value = untrack(() => c());
       });
     });
     expect(value).toBe(1);
   });
 
-  it("onCleanup inside untracked still registers", () => {
+  it("onCleanup inside untrack still registers", () => {
     const cleanup = vi.fn();
     const disposeRoot = root(() => {
       effect(() => {
-        untracked(() => onCleanup(cleanup));
+        untrack(() => onCleanup(cleanup));
       });
     });
     disposeRoot();

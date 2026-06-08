@@ -16,10 +16,10 @@
 //   * effects, scopes AND computeds are owners: they support imperative
 //     `onCleanup`, run before each re-run, on dispose, and when the body throws;
 //   * cleanup ownership (`activeOwner`) is decoupled from tracking (`activeSub`)
-//     so `onCleanup` keeps working inside `untracked`;
+//     so `onCleanup` keeps working inside `untrack`;
 //   * un-rooted reactivity is collected by a `globalOwner` disposed on the next
 //     macrotask (so top-level reactivity is one-shot unless wrapped in `root`);
-//   * `untracked` runs without tracking.
+//   * `untrack` runs without tracking.
 
 // ReactiveFlags — alien's node-state bitflags, hardcoded as literals (the
 // toolchain's erasable-syntax rule forbids `enum`/`const enum`; literals also
@@ -399,7 +399,7 @@ export function onCleanup(disposable: CleanupFn): void {
 
 // VZN: run `fn` without tracking reactive reads against the current computation.
 // Cleanups registered inside still belong to the current owner.
-export function untracked<T>(fn: () => T): T {
+export function untrack<T>(fn: () => T): T {
   const prevSub = setActiveSub(undefined);
   try {
     return fn();

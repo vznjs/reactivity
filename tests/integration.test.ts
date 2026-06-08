@@ -1,6 +1,6 @@
 import { describe, it, vi, expect } from "vite-plus/test";
 import { signal, trigger, computed, effect, root, onCleanup, flushSync } from "../src/index";
-import { untracked } from "../src/index";
+import { untrack } from "../src/index";
 import { batch } from "../src/index";
 
 describe("integration / mix-and-match", () => {
@@ -43,7 +43,7 @@ describe("integration / mix-and-match", () => {
     expect(spy).toHaveBeenCalledTimes(2);
   });
 
-  it("untracked + cleanup compose inside an effect", async () => {
+  it("untrack + cleanup compose inside an effect", async () => {
     const log: string[] = [];
     const dep = signal(0);
     const noise = signal(0);
@@ -51,14 +51,14 @@ describe("integration / mix-and-match", () => {
     const disposeRoot = root(() => {
       effect(() => {
         dep(); // tracked dependency
-        const snapshot = untracked(() => noise()); // read untracked
+        const snapshot = untrack(() => noise()); // read without tracking
         log.push(`run:${snapshot}`);
         onCleanup(() => log.push("cleanup"));
       });
     });
 
     expect(log).toEqual(["run:0"]);
-    noise(5); // read via untracked → not a dependency
+    noise(5); // read via untrack → not a dependency
     await Promise.resolve();
     expect(log).toEqual(["run:0"]);
     dep(1);

@@ -7,7 +7,7 @@ VZN is a single file: [`src/index.ts`](../src/index.ts). It runs its own instanc
 alien-signals gives us a fast, glitch-free push-pull dependency graph but is **synchronous** and has **no ownership model**. VZN keeps alien's graph and operators almost verbatim, and changes only two things:
 
 1. **The write path is async.** Instead of flushing effects synchronously on every write, VZN schedules a microtask (`scheduleFlush`) so synchronous writes coalesce.
-2. **A cleanup _owner_ is tracked alongside the tracking _subscriber_.** This one decoupling is what gives VZN `root` scopes, `onCleanup` (in effects _and_ memos), cleanup-on-throw, `untracked`-safe cleanup, and auto-disposal of un-rooted work.
+2. **A cleanup _owner_ is tracked alongside the tracking _subscriber_.** This one decoupling is what gives VZN `root` scopes, `onCleanup` (in effects _and_ memos), cleanup-on-throw, `untrack`-safe cleanup, and auto-disposal of un-rooted work.
 
 Everything else — `link`/`unlink`/`propagate`/`checkDirty`, the flag transitions, the diamond/glitch handling — is alien's, unchanged.
 
@@ -60,16 +60,16 @@ The VZN addition is `OwnerNode` — anything that can hold `onCleanup` callbacks
 
 This is the heart of VZN.
 
-- **`activeSub`** — the node that reactive _reads_ subscribe to. Set during tracking, cleared by `untracked`.
+- **`activeSub`** — the node that reactive _reads_ subscribe to. Set during tracking, cleared by `untrack`.
 - **`activeOwner`** — the node that `onCleanup` _attaches_ to. Set whenever an owner runs.
 
 alien has only `activeSub` (it uses it for both tracking and parent-linking). By splitting them, VZN gets:
 
-- **`onCleanup` survives `untracked`** — `untracked` clears `activeSub` but leaves `activeOwner`, so a cleanup registered inside still belongs to the surrounding owner.
+- **`onCleanup` survives `untrack`** — `untrack` clears `activeSub` but leaves `activeOwner`, so a cleanup registered inside still belongs to the surrounding owner.
 - **`onCleanup` inside a memo** — a computed sets `activeOwner = self` while evaluating, so cleanups attach to the memo and run on recompute / unwatch.
 - **Cleanup that outlives tracking** — async callbacks can `runWithOwner(owner, …)` to register against a captured owner.
 
-During a normal effect/computed run, `activeSub === activeOwner === self`. They only diverge inside `untracked`.
+During a normal effect/computed run, `activeSub === activeOwner === self`. They only diverge inside `untrack`.
 
 ## Ownership & disposal
 
@@ -80,7 +80,7 @@ disposeOper(owner):
   flags = 0
   disposeAllDepsInReverse(owner)   // tear down children (LIFO, depth-first)
   unlink(owner.subs)               // detach from anyone watching it
-  runCleanups(owner)               // run onCleanup callbacks (LIFO), untracked
+  runCleanups(owner)               // run onCleanup callbacks (LIFO), untrack
 ```
 
 `runCleanups` nulls the cleanup storage after running, which makes `dispose` **idempotent** for free — no guard flag needed.
@@ -142,7 +142,7 @@ The source marks every fully-identical function `// Alien: VERBATIM` and every c
 
 **VZN rewrites of an alien function**: `effect` (owned, async, imperative + return cleanup), `updateComputed` & `unwatched` (memo cleanups), `runCleanups` (lazy storage), `disposeOper` (merges alien's `effectOper` + `effectScopeOper`).
 
-**VZN-only**: `root`, `onCleanup`, `untracked`, `flushSync`, `batch`, `scheduleFlush`, `getOwner`, `runWithOwner`, `ownerFor`, `makeScope`, the `globalOwner` machinery.
+**VZN-only**: `root`, `onCleanup`, `untrack`, `flushSync`, `batch`, `scheduleFlush`, `getOwner`, `runWithOwner`, `ownerFor`, `makeScope`, the `globalOwner` machinery.
 
 **Dropped from alien**: `effectScope` (replaced by `root`), `getActiveSub`, `getBatchDepth`, the `isSignal`/`isComputed`/`isEffect`/`isEffectScope` brand checks.
 
@@ -151,4 +151,4 @@ The source marks every fully-identical function `// Alien: VERBATIM` and every c
 VZN is verified two ways:
 
 - **Conformance** — it passes the cross-framework `reactive-framework-test-suite` (179 cases covering graph propagation, dynamic deps, diamonds, glitch-freedom, effect lifecycle, error handling, GC). The adapter runs each case inside `flushSync(fn)` so VZN's async writes settle synchronously to match the suite's sync assumptions; pure `s(v)` writes need no per-call flushing.
-- **Own suite** — 130+ tests covering signals, computeds, effects, roots, cleanup ordering (LIFO/depth-first), scheduling, `untracked`, `trigger`, and ports of alien's own `effect.spec` / `effectScope.spec` / `trigger.spec`. (Over 300 tests in total, conformance included.)
+- **Own suite** — 130+ tests covering signals, computeds, effects, roots, cleanup ordering (LIFO/depth-first), scheduling, `untrack`, `trigger`, and ports of alien's own `effect.spec` / `effectScope.spec` / `trigger.spec`. (Over 300 tests in total, conformance included.)

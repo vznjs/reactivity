@@ -5,7 +5,7 @@ import {
   setExpect,
   type ReactiveFramework,
 } from "reactive-framework-test-suite";
-import { signal, computed, effect, root, batch, flushSync, untracked } from "../src/index";
+import { signal, computed, effect, root, batch, flushSync, untrack } from "../src/index";
 
 setExpect(expect);
 
@@ -21,7 +21,7 @@ const framework: ReactiveFramework = {
   effect,
   run: (fn) => flushSync(() => root(fn)),
   batch,
-  untracked,
+  untracked: untrack,
 };
 
 for (const { section, cases } of testSuite) {
