@@ -1,19 +1,633 @@
-// core
-export * from "./core/atom";
-export * from "./core/owner";
-export * from "./core/disposer";
-export * from "./core/reaction";
-export * from "./core/reactor";
-export * from "./core/tracking";
+// VZN | Reactivity — the whole library in one file.
+//
+// alien-signals' `index.ts` (the node operators over its `createReactiveSystem`
+// engine) held as close to the original as possible, keeping alien's names. The
+// only changes are marked `// VZN:`. They restore VZN's ownership/disposal model
+// on top of alien's graph:
+//
+//   * `signal` is alien's verbatim; `trigger(fn)` invalidates the signals read
+//     inside `fn` without changing their values (forcing subscribers to refresh);
+//   * writes schedule effects on a microtask (async batching); `flushSync` /
+//     `batch` / `flushSync` are the synchronous escapes;
+//   * effects take a `() => void | (() => void)` — register cleanups via `onCleanup`
+//     and/or by returning a teardown fn; disposal flows through ownership (a `root`,
+//     or the auto-disposed global owner), and they ALSO return a disposer that tears
+//     the effect down early (running its cleanups);
+//   * effects, scopes AND computeds are owners: they support imperative
+//     `onCleanup`, run before each re-run, on dispose, and when the body throws;
+//   * cleanup ownership (`activeOwner`) is decoupled from tracking (`activeSub`)
+//     so `onCleanup` keeps working inside `untracked`;
+//   * un-rooted reactivity is collected by a `globalOwner` disposed on the next
+//     macrotask (so top-level reactivity is one-shot unless wrapped in `root`);
+//   * `untracked` runs without tracking.
 
-// reactive
-export * from "./state/value";
-export * from "./state/memo";
+// ReactiveFlags — alien's node-state bitflags, hardcoded as literals (the
+// toolchain's erasable-syntax rule forbids `enum`/`const enum`; literals also
+// inline like alien's compiled output, e.g. `flags & 16`). Legend:
+//
+//   0   None           no state
+//   1   Mutable        can produce/recompute a value (signals, computeds)
+//   2   Watching       is an effect/watcher — gets queued & notified on change
+//   4   RecursedCheck  currently running (its tracking window) — re-entrancy guard
+//   8   Recursed       reached again while already pending — needs a re-check
+//   16  Dirty          known stale — must recompute
+//   32  Pending        maybe stale (a transitive dep changed) — confirm via checkDirty
+//   64  HasChildEffect parent (effect/scope/computed) owns at least one child effect
 
-// utils
-export * from "./utils/on";
-export * from "./utils/on-cleanup";
-export * from "./utils/root";
-export * from "./utils/freeze";
-export * from "./utils/reactive";
-export * from "./utils/run-update";
+import { createReactiveSystem } from "alien-signals/system";
+
+import type { ReactiveNode } from "alien-signals/system";
+
+export type CleanupFn = () => void;
+
+// VZN: cleanups are stored lazily (Solid v2 style): undefined → a single fn →
+// an array. 0 or 1 cleanups (the common case) allocate no array.
+type Cleanups = CleanupFn | CleanupFn[] | undefined;
+
+// VZN: an owner holds imperative cleanups. Effects, scopes, and computeds are all
+// owners. Scopes have no extra fields beyond the owner base.
+interface OwnerNode extends ReactiveNode {
+  cleanups: Cleanups;
+}
+
+// VZN: an opaque handle to a reactive owner, for `getOwner` / `runWithOwner`.
+export type Owner = OwnerNode;
+
+interface EffectNode extends OwnerNode {
+  fn(): void | (() => void); // VZN: may return a teardown fn (registered like onCleanup)
+}
+
+interface ComputedNode<T = unknown> extends OwnerNode {
+  value: T | undefined;
+  getter: (previousValue?: T) => T;
+}
+
+interface SignalNode<T = unknown> extends ReactiveNode {
+  currentValue: T;
+  pendingValue: T;
+}
+
+let cycle = 0;
+let runDepth = 0;
+let batchDepth = 0;
+let notifyIndex = 0;
+let queuedLength = 0;
+let flushScheduled = false; // VZN
+let syncMode = false; // VZN: inside `flushSync(fn)`, writes flush per-write
+let activeSub: ReactiveNode | undefined;
+let activeOwner: OwnerNode | undefined; // VZN
+let globalOwner: OwnerNode | undefined; // VZN: collects un-rooted work
+
+const queued: (EffectNode | undefined)[] = [];
+const { link, unlink, propagate, checkDirty, shallowPropagate } = createReactiveSystem({
+  // Alien: VERBATIM
+  update(node: SignalNode | ComputedNode | OwnerNode): boolean {
+    if ("getter" in node) {
+      return updateComputed(node);
+    }
+    if ("currentValue" in node) {
+      return updateSignal(node);
+    }
+    node.flags = 1;
+    return true;
+  },
+  // Alien: VERBATIM except the loop — alien's `do { } while (true)` is written as
+  // `for (;;)` (`while (true)` trips oxlint's no-constant-condition; identical logic).
+  notify(effect: EffectNode) {
+    let insertIndex = queuedLength;
+    let firstInsertedIndex = insertIndex;
+
+    for (;;) {
+      queued[insertIndex++] = effect;
+      effect.flags &= ~2;
+      effect = effect.subs?.sub as EffectNode;
+      if (effect === undefined || !(effect.flags & 2)) {
+        break;
+      }
+    }
+
+    queuedLength = insertIndex;
+
+    while (firstInsertedIndex < --insertIndex) {
+      const left = queued[firstInsertedIndex];
+      queued[firstInsertedIndex++] = queued[insertIndex];
+      queued[insertIndex] = left;
+    }
+  },
+  unwatched(node: SignalNode | ComputedNode | EffectNode | OwnerNode) {
+    if ("getter" in node) {
+      if (node.depsTail !== undefined) {
+        node.flags = 1 | 16;
+        disposeAllDepsInReverse(node);
+      }
+      if (node.cleanups) runCleanups(node); // VZN: memo cleanups on dispose
+    } else if ("currentValue" in node) {
+      // Nothing to do for signals.
+    } else {
+      disposeOper.call(node as OwnerNode); // effect or scope
+    }
+  },
+});
+
+// Alien: VERBATIM
+function setActiveSub(sub?: ReactiveNode): ReactiveNode | undefined {
+  const prevSub = activeSub;
+  activeSub = sub;
+  return prevSub;
+}
+
+function setActiveOwner(owner?: OwnerNode): OwnerNode | undefined {
+  const prevOwner = activeOwner;
+  activeOwner = owner;
+  return prevOwner;
+}
+
+// VZN: the owner a newly-created owner should attach to for cascade disposal —
+// the active owner, or a lazily-created global owner disposed next macrotask.
+function ownerFor(parent: OwnerNode | undefined): OwnerNode {
+  if (parent !== undefined) return parent;
+  if (globalOwner === undefined) {
+    globalOwner = makeScope();
+    setTimeout(disposeGlobalOwner, 0);
+  }
+  return globalOwner;
+}
+
+function disposeGlobalOwner(): void {
+  const owner = globalOwner!;
+  globalOwner = undefined;
+  disposeOper.call(owner);
+}
+
+function makeScope(): OwnerNode {
+  return {
+    cleanups: undefined,
+    deps: undefined,
+    depsTail: undefined,
+    subs: undefined,
+    subsTail: undefined,
+    flags: 1,
+  };
+}
+
+// Alien: VERBATIM (kept internal — `batch` is the public entry point)
+function startBatch(): void {
+  ++batchDepth;
+}
+
+// Alien: VERBATIM (kept internal — `batch` is the public entry point)
+function endBatch(): void {
+  if (!--batchDepth) {
+    flush();
+  }
+}
+
+// VZN: synchronous flushing. (alien's internal drain is `flush`; this public name
+// follows React.)
+//   flushSync()    — drain pending scheduled effects now (no-op inside an open batch).
+//   flushSync(fn)  — run `fn` with synchronous scheduling: each write inside flushes
+//                    its effects immediately (per-write, not deferred-to-the-end),
+//                    returning `fn`'s result. A scoped sync scheduler. Writes still
+//                    defer inside an enclosing `batch`.
+export function flushSync(): void;
+export function flushSync<T>(fn: () => T): T;
+export function flushSync<T>(fn?: () => T): T | void {
+  if (fn !== undefined) {
+    const prev = syncMode;
+    syncMode = true;
+    try {
+      return fn();
+    } finally {
+      syncMode = prev;
+    }
+  }
+  if (batchDepth) return;
+  flushScheduled = false;
+  flush();
+}
+
+/** Run `fn`, deferring effect flushes until it returns. */
+export function batch<T>(fn: () => T): T {
+  startBatch();
+  try {
+    return fn();
+  } finally {
+    endBatch();
+  }
+}
+
+// VZN: schedule the queued effects. Inside `flushSync(fn)` (syncMode) they run now,
+// per-write; otherwise they are coalesced onto the next microtask.
+function scheduleFlush(): void {
+  if (batchDepth) {
+    return;
+  }
+  if (syncMode) {
+    flush();
+    return;
+  }
+  if (flushScheduled) {
+    return;
+  }
+  flushScheduled = true;
+  queueMicrotask(() => {
+    flushScheduled = false;
+    flush();
+  });
+}
+
+// Alien: VERBATIM
+export function signal<T>(): {
+  (): T | undefined;
+  (value: T | undefined): void;
+};
+export function signal<T>(initialValue: T): {
+  (): T;
+  (value: T): void;
+};
+export function signal<T>(initialValue?: T): {
+  (): T | undefined;
+  (value: T | undefined): void;
+} {
+  return signalOper.bind({
+    currentValue: initialValue,
+    pendingValue: initialValue,
+    subs: undefined,
+    subsTail: undefined,
+    flags: 1,
+  }) as () => T | undefined;
+}
+
+// Invalidate the signals read inside `fn` without changing their values, forcing
+// their subscribers to recompute — e.g. after mutating an object held in a signal.
+// The common form is `trigger(mySignal)`; `trigger(() => { a(); b(); })` invalidates
+// several at once.
+// Alien: VERBATIM except the final flush — VZN schedules it (async) via
+// `scheduleFlush()` instead of alien's synchronous `flush()`.
+export function trigger(fn: () => void): void {
+  const sub: ReactiveNode = { deps: undefined, depsTail: undefined, flags: 2 };
+  const prevSub = setActiveSub(sub);
+  try {
+    fn();
+  } finally {
+    activeSub = prevSub;
+    sub.flags = 0;
+    let link = sub.deps;
+    while (link !== undefined) {
+      const dep = link.dep;
+      link = unlink(link, sub);
+      const subs = dep.subs;
+      if (subs !== undefined) {
+        propagate(subs, !!runDepth);
+        shallowPropagate(subs);
+      }
+    }
+    if (!batchDepth) scheduleFlush();
+  }
+}
+
+// A lazy, cached derivation. VZN: it is an owner — `onCleanup` inside it runs
+// before each recompute and when the memo is disposed (loses all subscribers).
+export function computed<T>(getter: (previousValue?: T) => T): () => T {
+  return computedOper.bind({
+    value: undefined,
+    cleanups: undefined, // VZN
+    subs: undefined,
+    subsTail: undefined,
+    deps: undefined,
+    depsTail: undefined,
+    flags: 0,
+    getter: getter as (previousValue?: unknown) => unknown,
+  }) as () => T;
+}
+
+// VZN: effects register cleanups imperatively via `onCleanup` and/or by returning
+// a teardown fn (React/alien style). An effect runs once immediately. It is owned
+// (a `root`, or the global owner) so it is torn down with its owner, AND it returns
+// a disposer — calling it runs the effect's cleanups and removes it early.
+export function effect(fn: () => void | (() => void)): () => void {
+  const e: EffectNode = {
+    fn,
+    cleanups: undefined,
+    subs: undefined,
+    subsTail: undefined,
+    deps: undefined,
+    depsTail: undefined,
+    flags: 2 | 4,
+  };
+  const prevSub = activeSub;
+  const prevOwner = activeOwner;
+  const owner = ownerFor(prevOwner); // VZN: attach for cascade disposal
+  link(e, owner, 0);
+  owner.flags |= 64;
+  activeSub = e;
+  activeOwner = e;
+  try {
+    ++runDepth;
+    const cleanup = e.fn();
+    if (cleanup) onCleanup(cleanup); // VZN: a returned teardown joins the cleanups
+  } catch (error) {
+    runCleanups(e); // VZN: release on throw
+    throw error;
+  } finally {
+    --runDepth;
+    activeSub = prevSub;
+    activeOwner = prevOwner;
+    e.flags &= ~4;
+  }
+  return disposeOper.bind(e);
+}
+
+// VZN: a root owns a reactivity tree and returns its `dispose`. It escapes any
+// enclosing owner (not linked), so it is not torn down when a parent re-runs.
+// (alien's `effectScope`, but detached from the parent and with throw-cleanup.)
+export function root(fn: () => void): () => void {
+  const node = makeScope();
+  const prevSub = activeSub;
+  const prevOwner = activeOwner;
+  activeSub = node;
+  activeOwner = node;
+  try {
+    fn();
+  } catch (error) {
+    disposeOper.call(node); // VZN: release what was set up before the throw
+    throw error;
+  } finally {
+    activeSub = prevSub;
+    activeOwner = prevOwner;
+  }
+  return disposeOper.bind(node);
+}
+
+// VZN: the current owner (effect, scope, or memo), or undefined at the top level.
+// Useful for re-attaching async work or building patterns like `createSubRoot`.
+export function getOwner(): Owner | undefined {
+  return activeOwner;
+}
+
+// VZN: run `fn` with `owner` as the active owner (and tracking context), e.g. to
+// register an `onCleanup` against a captured owner. Restores afterwards.
+export function runWithOwner<T>(owner: Owner | undefined, fn: () => T): T {
+  const prevSub = activeSub;
+  const prevOwner = activeOwner;
+  activeSub = owner;
+  activeOwner = owner;
+  try {
+    return fn();
+  } finally {
+    activeSub = prevSub;
+    activeOwner = prevOwner;
+  }
+}
+
+/**
+ * VZN: schedule a task to run before the current owner (effect, scope, or memo)
+ * recomputes or is disposed. Outside a root it attaches to the global owner,
+ * which is disposed on the next macrotask.
+ */
+export function onCleanup(disposable: CleanupFn): void {
+  const owner = ownerFor(activeOwner);
+  const existing = owner.cleanups;
+  if (existing === undefined) {
+    owner.cleanups = disposable; // first: store the fn directly, no array
+  } else if (typeof existing === "function") {
+    owner.cleanups = [existing, disposable]; // second: promote to an array
+  } else {
+    existing.push(disposable);
+  }
+}
+
+// VZN: run `fn` without tracking reactive reads against the current computation.
+// Cleanups registered inside still belong to the current owner.
+export function untracked<T>(fn: () => T): T {
+  const prevSub = setActiveSub(undefined);
+  try {
+    return fn();
+  } finally {
+    setActiveSub(prevSub);
+  }
+}
+
+function updateComputed(c: ComputedNode): boolean {
+  if (c.flags & 64) {
+    let link = c.depsTail;
+    while (link !== undefined) {
+      const prev = link.prevDep;
+      const dep = link.dep;
+      if (!("getter" in dep) && !("currentValue" in dep)) {
+        unlink(link, c);
+      }
+      link = prev;
+    }
+  }
+  if (c.cleanups) runCleanups(c); // VZN: run the memo's cleanups before recompute
+  c.depsTail = undefined;
+  c.flags = 1 | 4;
+  const prevSub = activeSub;
+  const prevOwner = activeOwner; // VZN
+  activeSub = c;
+  activeOwner = c;
+  try {
+    ++cycle;
+    const oldValue = c.value;
+    return oldValue !== (c.value = c.getter(oldValue));
+  } catch (error) {
+    runCleanups(c); // VZN
+    throw error;
+  } finally {
+    activeSub = prevSub;
+    activeOwner = prevOwner; // VZN
+    c.flags &= ~4;
+    purgeDeps(c);
+  }
+}
+
+// Alien: VERBATIM
+function updateSignal(s: SignalNode): boolean {
+  s.flags = 1;
+  return s.currentValue !== (s.currentValue = s.pendingValue);
+}
+
+function run(e: EffectNode): void {
+  const flags = e.flags;
+  if (flags & 16 || (flags & 32 && checkDirty(e.deps!, e))) {
+    if (flags & 64) {
+      let link = e.depsTail;
+      while (link !== undefined) {
+        const prev = link.prevDep;
+        const dep = link.dep;
+        if (!("getter" in dep) && !("currentValue" in dep)) {
+          unlink(link, e);
+        }
+        link = prev;
+      }
+    }
+    if (e.cleanups) {
+      runCleanups(e);
+      if (!e.flags) {
+        return;
+      }
+    }
+    e.depsTail = undefined;
+    e.flags = 2 | 4;
+    const prevSub = activeSub;
+    const prevOwner = activeOwner; // VZN
+    activeSub = e;
+    activeOwner = e;
+    try {
+      ++cycle;
+      ++runDepth;
+      const cleanup = e.fn();
+      if (cleanup) onCleanup(cleanup); // VZN: a returned teardown joins the cleanups
+    } catch (error) {
+      runCleanups(e); // VZN: release on throw
+      throw error;
+    } finally {
+      --runDepth;
+      activeSub = prevSub;
+      activeOwner = prevOwner; // VZN
+      e.flags &= ~4;
+      purgeDeps(e);
+    }
+  } else if (e.deps !== undefined) {
+    e.flags = 2 | (flags & 64);
+  }
+}
+
+// Alien: VERBATIM
+function flush(): void {
+  try {
+    while (notifyIndex < queuedLength) {
+      const effect = queued[notifyIndex]!;
+      queued[notifyIndex++] = undefined;
+      run(effect);
+    }
+  } finally {
+    while (notifyIndex < queuedLength) {
+      const effect = queued[notifyIndex]!;
+      queued[notifyIndex++] = undefined;
+      effect.flags |= 2 | 8;
+    }
+    notifyIndex = 0;
+    queuedLength = 0;
+  }
+}
+
+function computedOper(this: ComputedNode): unknown {
+  const flags = this.flags;
+  if (
+    flags & 16 ||
+    (flags & 32 && (checkDirty(this.deps!, this) || ((this.flags = flags & ~32), false)))
+  ) {
+    if (updateComputed(this)) {
+      const subs = this.subs;
+      if (subs !== undefined) {
+        shallowPropagate(subs);
+      }
+    }
+  } else if (!flags) {
+    this.flags = 1 | 4;
+    const prevSub = setActiveSub(this);
+    const prevOwner = setActiveOwner(this); // VZN
+    try {
+      this.value = this.getter();
+    } catch (error) {
+      runCleanups(this); // VZN
+      throw error;
+    } finally {
+      activeSub = prevSub;
+      activeOwner = prevOwner; // VZN
+      this.flags &= ~4;
+    }
+  }
+  const sub = activeSub;
+  if (sub !== undefined) {
+    link(this, sub, cycle);
+  }
+  return this.value!;
+}
+
+function signalOper(this: SignalNode, ...value: [unknown?]): unknown {
+  if (value.length) {
+    if (this.pendingValue !== (this.pendingValue = value[0])) {
+      this.flags = 1 | 16;
+      const subs = this.subs;
+      if (subs !== undefined) {
+        propagate(subs, !!runDepth);
+        if (!batchDepth) {
+          scheduleFlush(); // VZN: async instead of a synchronous flush
+        }
+      }
+    }
+  } else {
+    if (this.flags & 16) {
+      if (updateSignal(this)) {
+        const subs = this.subs;
+        if (subs !== undefined) {
+          shallowPropagate(subs);
+        }
+      }
+    }
+    const sub = activeSub;
+    if (sub !== undefined) {
+      link(this, sub, cycle);
+    }
+    return this.currentValue;
+  }
+}
+
+// VZN: run an owner's imperative cleanups (LIFO), untracked.
+function runCleanups(e: OwnerNode): void {
+  const cleanups = e.cleanups;
+  if (cleanups === undefined) {
+    return;
+  }
+  e.cleanups = undefined;
+  const prevSub = activeSub;
+  const prevOwner = activeOwner;
+  activeSub = undefined;
+  activeOwner = undefined;
+  try {
+    if (typeof cleanups === "function") {
+      cleanups();
+    } else {
+      for (let index = cleanups.length - 1; index >= 0; index--) cleanups[index]();
+    }
+  } finally {
+    activeSub = prevSub;
+    activeOwner = prevOwner;
+  }
+}
+
+// VZN: dispose an owner (effect or scope) — tear down its child reactions, unlink
+// it from observers, then run its onCleanup callbacks.
+function disposeOper(this: OwnerNode): void {
+  this.flags = 0;
+  disposeAllDepsInReverse(this);
+  const sub = this.subs;
+  if (sub !== undefined) {
+    unlink(sub);
+  }
+  if (this.cleanups) {
+    runCleanups(this);
+  }
+}
+
+// Alien: VERBATIM
+function disposeAllDepsInReverse(sub: ReactiveNode): void {
+  let link = sub.depsTail;
+  while (link !== undefined) {
+    const prev = link.prevDep;
+    unlink(link, sub);
+    link = prev;
+  }
+}
+
+// Alien: VERBATIM
+function purgeDeps(sub: ReactiveNode): void {
+  const depsTail = sub.depsTail;
+  let dep = depsTail !== undefined ? depsTail.nextDep : sub.deps;
+  while (dep !== undefined) {
+    dep = unlink(dep, sub);
+  }
+}
