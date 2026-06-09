@@ -40,6 +40,9 @@ import type { ReactiveNode } from "alien-signals/system";
 
 export type CleanupFn = () => void;
 
+// VZN: an error handler. Always receives a normalized `Error` (see `castError`).
+export type ErrorHandler = (error: Error) => void;
+
 // VZN: cleanups are stored lazily (Solid v2 style): undefined → a single fn →
 // an array. 0 or 1 cleanups (the common case) allocate no array.
 type Cleanups = CleanupFn | CleanupFn[] | undefined;
@@ -83,6 +86,11 @@ let globalOwner: OwnerNode | undefined; // VZN: collects un-rooted work
 // `context` starts here, so reads never need a null check; `setContext` spreads a
 // fresh map and never mutates it.
 const defaultContext: Record<symbol, unknown> = {};
+
+// VZN: the private context key under which `onError` stores the active error
+// handler. Storing it in the context map means it flows down the owner tree exactly
+// like any context value — no parent pointers, no runtime walk.
+const ERROR_HANDLER = Symbol("vzn-error-handler");
 
 const queued: (EffectNode | undefined)[] = [];
 const { link, unlink, propagate, checkDirty, shallowPropagate } = createReactiveSystem({
@@ -337,7 +345,7 @@ export function effect(fn: () => void | (() => void)): () => void {
     if (cleanup) onCleanup(cleanup); // VZN: a returned teardown joins the cleanups
   } catch (error) {
     runCleanups(e); // VZN: release on throw
-    throw error;
+    handleError(error, e); // VZN: route to the nearest onError, else rethrow
   } finally {
     --runDepth;
     activeSub = prevSub;
@@ -360,7 +368,7 @@ export function root(fn: () => void): () => void {
     fn();
   } catch (error) {
     disposeOper.call(node); // VZN: release what was set up before the throw
-    throw error;
+    handleError(error, node); // VZN: route to the nearest onError, else rethrow
   } finally {
     activeSub = prevSub;
     activeOwner = prevOwner;
@@ -437,6 +445,58 @@ export function onCleanup(disposable: CleanupFn): void {
   } else {
     existing.push(disposable);
   }
+}
+
+// VZN: register an error handler on the current owner — the internal primitive
+// behind `catchError`. Stores the handler in the owner's context map so it flows down
+// to descendants like any context value; nested handlers override, and a handler that
+// itself throws bubbles to the next one up (the previous value, captured here).
+function onError(handler: ErrorHandler): void {
+  const owner = ownerFor(activeOwner);
+  const parent = owner.context[ERROR_HANDLER] as ErrorHandler | undefined;
+  owner.context = {
+    ...owner.context,
+    [ERROR_HANDLER]:
+      parent === undefined
+        ? handler
+        : (error: Error) => {
+            try {
+              handler(error);
+            } catch (rethrown) {
+              // VZN: a throwing handler bubbles (normalized) to the outer boundary —
+              // Solid PR #1774, "Propagate errors to parents in nested catchError".
+              parent(castError(rethrown));
+            }
+          },
+  };
+}
+
+// VZN: run `fn` inside a child owner guarded by `handler` (Solid's `catchError`). A
+// throw from `fn` — synchronously, or later from an effect/memo created within it —
+// is routed to `handler` instead of propagating, and `fn`'s result is returned (or
+// `undefined` when it threw). Nesting scopes error handling to a subtree; a handler
+// that itself throws bubbles to the next `catchError`/`onError` out. Built on
+// `onError`, so it shares one routing path.
+export function catchError<T>(fn: () => T, handler: ErrorHandler): T | undefined {
+  const node = makeScope();
+  const owner = ownerFor(activeOwner);
+  link(node, owner, 0); // VZN: owned by the parent — torn down with it
+  owner.flags |= 64;
+  const prevSub = activeSub;
+  const prevOwner = activeOwner;
+  activeSub = node;
+  activeOwner = node;
+  try {
+    onError(handler);
+    return fn();
+  } catch (error) {
+    disposeOper.call(node); // VZN: release what `fn` set up before the throw
+    handleError(error, node);
+  } finally {
+    activeSub = prevSub;
+    activeOwner = prevOwner;
+  }
+  return undefined;
 }
 
 // VZN: run `fn` without tracking reactive reads against the current computation.
@@ -523,7 +583,7 @@ function run(e: EffectNode): void {
       if (cleanup) onCleanup(cleanup); // VZN: a returned teardown joins the cleanups
     } catch (error) {
       runCleanups(e); // VZN: release on throw
-      throw error;
+      handleError(error, e); // VZN: route to the nearest onError, else rethrow
     } finally {
       --runDepth;
       activeSub = prevSub;
@@ -615,6 +675,37 @@ function signalOper(this: SignalNode, ...value: [unknown?]): unknown {
       link(this, sub, cycle);
     }
     return this.currentValue;
+  }
+}
+
+// VZN: normalize a thrown value into an `Error`, preserving the original as `cause`,
+// so handlers can always rely on `.message`/`.stack`. (Ported from Solid PR #1530 —
+// "Cast string into error while handling errors".)
+function castError(error: unknown): Error {
+  if (error instanceof Error) return error;
+  return new Error(typeof error === "string" ? error : "Unknown error", { cause: error });
+}
+
+// VZN: route an error thrown by `owner`'s computation to the nearest `onError`
+// handler carried in its (inherited) context map; rethrow when none is registered.
+// The error is normalized to an `Error` first. The handler runs untracked and
+// un-owned, so its writes don't subscribe the failed computation and its cleanups
+// don't attach to it.
+function handleError(error: unknown, owner: OwnerNode): void {
+  const handler = owner.context[ERROR_HANDLER] as ErrorHandler | undefined;
+  const casted = castError(error);
+  if (handler === undefined) {
+    throw casted;
+  }
+  const prevSub = activeSub;
+  const prevOwner = activeOwner;
+  activeSub = undefined;
+  activeOwner = undefined;
+  try {
+    handler(casted);
+  } finally {
+    activeSub = prevSub;
+    activeOwner = prevOwner;
   }
 }
 
