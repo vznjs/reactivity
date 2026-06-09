@@ -144,3 +144,83 @@ describe("computed error status", () => {
     expect(seen).toEqual([3]); // memo recovered → effect re-ran with the value
   });
 });
+
+// Proof that node-status is REQUIRED, not just nice-to-have. These hit the path the
+// plain "re-throw on every read" model corrupts: a computed whose getter throws while
+// it is being refreshed *inside* the engine's `checkDirty` re-validation walk.
+//
+// `checkDirty` is called in `run`'s `if` condition — OUTSIDE its try/catch — and the
+// engine's walk has no try/finally. So in the plain model that throw:
+//   (a) bypasses the boundary entirely (it never reaches the effect body's catch), and
+//   (b) unwinds out of `flush` mid-loop, so sibling effects queued in the same flush
+//       never run, and the error is uncaught.
+// node-status makes `updateComputed` catch-and-store (returning "changed") so the throw
+// never enters the engine; it surfaces later at the *read*, inside the effect, where it
+// routes to the boundary normally.
+//
+// To force the `checkDirty` path (not the shallow Dirty path), the effect must reach the
+// throwing memo *transitively* (effect → b → a → signal), so the effect is left Pending
+// and `run` must call `checkDirty` to confirm.
+describe("computed error status — required for checkDirty re-validation safety", () => {
+  it("delivers a throw raised during checkDirty to the boundary (would leak without it)", async () => {
+    const s = signal(0);
+    const handler = vi.fn();
+    let siblingRuns = 0;
+    root(() => {
+      catchError(() => {
+        const a = computed((): number => {
+          if (s() > 0) throw new Error("deep-boom");
+          return s();
+        });
+        const b = computed(() => a()); // indirection: forces effect through checkDirty
+        effect(() => {
+          b();
+        });
+      }, handler);
+      // a sibling subscriber of the SAME signal, queued in the same flush as the chain
+      effect(() => {
+        s();
+        siblingRuns++;
+      });
+    });
+    expect(handler).not.toHaveBeenCalled();
+    expect(siblingRuns).toBe(1);
+
+    s(1); // async → both effects queued; `a` throws inside checkDirty during the flush
+    await Promise.resolve();
+
+    expect(handler).toHaveBeenCalledTimes(1); // routed to the boundary, not leaked
+    expect((handler.mock.calls[0]![0] as Error).message).toBe("deep-boom");
+    expect(siblingRuns).toBe(2); // flush completed — the sibling still ran
+  });
+
+  it("keeps the graph consistent and recovers after a checkDirty-path error", async () => {
+    const s = signal(0);
+    const seen: number[] = [];
+    const errors: string[] = [];
+    root(() => {
+      catchError(
+        () => {
+          const a = computed((): number => {
+            if (s() > 0) throw new Error("boom");
+            return s();
+          });
+          const b = computed(() => a() + 1);
+          effect(() => {
+            seen.push(b());
+          });
+        },
+        (e) => errors.push(e.message),
+      );
+    });
+    expect(seen).toEqual([1]); // s=0 → a=0 → b=1
+
+    s(5); // throws during checkDirty re-validation
+    await Promise.resolve();
+    expect(errors).toEqual(["boom"]);
+
+    s(0); // dependency clears → chain must recompute cleanly (no stuck Pending)
+    await Promise.resolve();
+    expect(seen).toEqual([1, 1]); // recovered: a=0 → b=1, effect re-ran
+  });
+});
