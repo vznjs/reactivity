@@ -14,6 +14,8 @@ Companion to [`ARCHITECTURE.md`](./ARCHITECTURE.md). Where VZN sits relative to 
 | Return-teardown             |               ✅                |              ✅              | ❌ (cleanup via owner) |
 | `onCleanup` inside a memo   |               ✅                |              ❌              |           ✅           |
 | Cleanups run if body throws |               ✅                |              ❌              |           ✅           |
+| Error boundaries            |         ✅ `catchError`         |              ❌              |  ✅ (status-unified)   |
+| Suspense / async status     |               ❌                |              ❌              |           ✅           |
 | Force-invalidate            |          ✅ `trigger`           |         ✅ `trigger`         |           ❌           |
 | Synchronous flush           |          `flushSync()`          |        (always sync)         |       `flush()`        |
 | Scoped sync scheduler       |       ✅ `flushSync(fn)`        |             n/a              |           ❌           |
@@ -68,9 +70,10 @@ Where they differ:
 - **Ordering vs sync-ness.** Solid's lever for control is **effect lanes** — `createRenderEffect` (render lane) runs before `createEffect` (user lane) within the same flush. That's _ordering_ control. VZN has a single effect type and instead offers _sync-ness_ control via `flushSync(fn)` (a scoped synchronous scheduler) and `batch`. Neither Solid nor alien has a per-region sync scheduler.
 - **`trigger`.** VZN (via alien) can force-invalidate the subscribers of signals read in a function without changing any value — handy for in-place mutation. Solid has no direct equivalent.
 - **`batch`.** Solid omits an explicit `batch` (async coalescing makes it largely redundant). VZN keeps `batch` because it provides _synchronous settling at the boundary_, a different guarantee from mere coalescing.
-- **Context.** VZN ships Solid's owner-tree context model — `createContext` / `getContext` / `setContext`, inherited at owner creation, no runtime tree walk. The bigger Solid pieces (stores, resources, transitions/Suspense, error boundaries) remain out of scope.
+- **Context.** VZN ships Solid's owner-tree context model — `createContext` / `getContext` / `setContext`, inherited at owner creation, no runtime tree walk.
+- **Error handling.** Both have error boundaries, reached differently. Solid v2 **unifies errors and suspense** into one propagating status (`STATUS_ERROR` / `STATUS_PENDING`): a throw becomes node status that flows down the graph, and `NotReadyError` is just the loading variant. VZN's `catchError` covers the **error** half with two cooperating mechanisms — an errored `computed` remembers its error and rethrows it on read (propagating through the derived graph, like Solid's status), while an errored `effect` is routed up to the boundary via the owner tree. VZN normalizes thrown values to `Error` (original kept as `.cause`) and bubbles a throwing handler to the outer boundary — matching Solid's own behavior (Solid PRs #1530, #1774). What VZN does **not** have is the **pending/suspense** half: that needs a status axis orthogonal to value-change, which the alien engine's `update`→boolean contract can't express. So `catchError` ≈ Solid's error boundary; Suspense/transitions remain out of scope. The bigger Solid pieces (stores, resources) are also out of scope.
 
-If you know Solid, VZN will feel familiar: `root` ≈ `createRoot`, `signal` ≈ `createSignal` (single-callable instead of a tuple), `computed` ≈ `createMemo`, `effect` ≈ `createEffect`, and `onCleanup` / `untrack` / `getContext` / `setContext` are the same names.
+If you know Solid, VZN will feel familiar: `root` ≈ `createRoot`, `signal` ≈ `createSignal` (single-callable instead of a tuple), `computed` ≈ `createMemo`, `effect` ≈ `createEffect`, `catchError` is the same name, and `onCleanup` / `untrack` / `getContext` / `setContext` match too.
 
 ## Scheduling models, side by side
 

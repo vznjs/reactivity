@@ -138,17 +138,26 @@ The source marks every fully-identical function `// Alien: VERBATIM` and every c
 
 **Verbatim from alien** (only flag literals / formatting differ): `update`, `notify`, `setActiveSub`, `startBatch`, `endBatch`, `signal`, `updateSignal`, `flush`, `disposeAllDepsInReverse`, `purgeDeps`. (`notify` differs only in spelling `do/while(true)` as `for(;;)` to satisfy the linter; `trigger` is verbatim except its final flush is async.)
 
-**alien body + a small marked VZN delta**: `computed` (adds the `cleanups` field), `signalOper` (`flush` → `scheduleFlush`), `run` & `computedOper` (add `activeOwner` save/restore + cleanup-on-throw; `run` also registers a returned teardown via `onCleanup`). (`trigger` is counted as verbatim above — its only change is the same async flush.)
+**alien body + a small marked VZN delta**: `computed` (adds the `cleanups`, `context`, and `error` fields), `signalOper` (`flush` → `scheduleFlush`), `run` & `computedOper` (add `activeOwner` save/restore + cleanup-on-throw; `run` routes a throw via `handleError`, `computedOper` catch-and-stores the error as node state and rethrows it on read; `run` also registers a returned teardown via `onCleanup`). (`trigger` is counted as verbatim above — its only change is the same async flush.)
 
-**VZN rewrites of an alien function**: `effect` (owned, async, imperative + return cleanup), `updateComputed` & `unwatched` (memo cleanups), `runCleanups` (lazy storage), `disposeOper` (merges alien's `effectOper` + `effectScopeOper`).
+**VZN rewrites of an alien function**: `effect` (owned, async, imperative + return cleanup), `updateComputed` (memo cleanups + error catch-and-store) & `unwatched` (memo cleanups), `runCleanups` (lazy storage), `disposeOper` (merges alien's `effectOper` + `effectScopeOper`).
 
-**VZN-only**: `root`, `onCleanup`, `untrack`, `flushSync`, `batch`, `scheduleFlush`, `getOwner`, `runWithOwner`, `ownerFor`, `makeScope`, the `globalOwner` machinery.
+**VZN-only**: `root`, `onCleanup`, `untrack`, `flushSync`, `batch`, `scheduleFlush`, `getOwner`, `runWithOwner`, `ownerFor`, `makeScope`, the `globalOwner` machinery, the context API (`createContext` / `getContext` / `setContext`), and the error API (`catchError` + internal `onError` / `handleError` / `castError`).
 
 **Dropped from alien**: `effectScope` (replaced by `root`), `getActiveSub`, `getBatchDepth`, the `isSignal`/`isComputed`/`isEffect`/`isEffectScope` brand checks.
+
+## Error handling
+
+VZN catches errors in two cooperating places — one per node kind — and surfaces both at a single boundary, `catchError`.
+
+- **Computeds carry the error as node state.** When a getter throws, `updateComputed` / `computedOper` _catch and store_ the (normalized) error on the node's `error` slot and rethrow it on read, rather than letting it escape. This is required, not cosmetic: the engine's `checkDirty` walk calls `update(dep)` mid-traversal with **no `try`/`finally`**, so a throw escaping `update` would unwind out of `checkDirty` (and out of `flush`), bypassing the boundary and stranding sibling effects queued in the same flush. Storing the error keeps the throw out of the engine; it surfaces later, at the _read_. A stored error also propagates and coheres through the derived graph (a memo reading an errored memo is itself errored) and clears on the next successful recompute. This mirrors Solid, whose `runComputation` try/catches every computation's update for the same reason.
+- **Effects deliver up to the boundary.** An effect is a sink — nothing reads it — so its throw can't propagate down a subscriber edge. Instead `run` catches it and `handleError` routes it _up_ the **owner** tree to the nearest handler, stored in the owner's context map under a private key (so it inherits exactly like a context value — no parent pointers, no walk). `catchError` registers that handler; a throwing handler bubbles to the next boundary out.
+
+Thrown values are normalized to `Error` (original kept as `.cause`) before delivery. Suspense would need a third status (pending) propagated _orthogonally to value-change_, which alien's `update`→boolean contract can't carry — so it stays out of scope.
 
 ## Correctness
 
 VZN is verified two ways:
 
 - **Conformance** — it passes the cross-framework `reactive-framework-test-suite` (179 cases covering graph propagation, dynamic deps, diamonds, glitch-freedom, effect lifecycle, error handling, GC). The adapter runs each case inside `flushSync(fn)` so VZN's async writes settle synchronously to match the suite's sync assumptions; pure `s(v)` writes need no per-call flushing.
-- **Own suite** — 130+ tests covering signals, computeds, effects, roots, cleanup ordering (LIFO/depth-first), scheduling, `untrack`, `trigger`, and ports of alien's own `effect.spec` / `effectScope.spec` / `trigger.spec`. (Over 300 tests in total, conformance included.)
+- **Own suite** — 170+ tests covering signals, computeds, effects, roots, cleanup ordering (LIFO/depth-first), scheduling, `untrack`, `trigger`, context, error handling (including `checkDirty`-safety proofs), and ports of alien's own `effect.spec` / `effectScope.spec` / `trigger.spec`. (Over 350 tests in total, conformance included.)
