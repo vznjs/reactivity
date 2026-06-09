@@ -64,12 +64,11 @@ interface EffectNode extends OwnerNode {
 interface ComputedNode<T = unknown> extends OwnerNode {
   value: T | undefined;
   getter: (previousValue?: T) => T;
-  // VZN: error status as node state — 0 = ok, 1 = errored. An errored memo remembers
-  // its (normalized) error and rethrows it on read, so the error propagates and
-  // coheres downstream like a value, instead of being re-derived by re-running the
-  // getter on every read. `updateComputed` catches-and-stores rather than throwing,
-  // so a throw never escapes into the engine's `checkDirty` traversal.
-  status: number;
+  // VZN: error as node state — an errored memo stores its (normalized) error here and
+  // rethrows it on read (cleared on the next successful recompute). The error then
+  // propagates and coheres downstream like a value, instead of being re-derived by
+  // re-running the getter on every read. `updateComputed` catches-and-stores rather
+  // than throwing, so a throw never escapes into the engine's `checkDirty` traversal.
   error: Error | undefined;
 }
 
@@ -315,8 +314,7 @@ export function computed<T>(getter: (previousValue?: T) => T): () => T {
     value: undefined,
     cleanups: undefined, // VZN
     context: activeOwner?.context ?? defaultContext, // VZN: inherit from the lexical parent
-    status: 0, // VZN: ok until the getter throws
-    error: undefined, // VZN
+    error: undefined, // VZN: set when the getter throws, rethrown on read
     subs: undefined,
     subsTail: undefined,
     deps: undefined,
@@ -538,16 +536,15 @@ function updateComputed(c: ComputedNode): boolean {
   const prevOwner = activeOwner; // VZN
   activeSub = c;
   activeOwner = c;
-  const wasErrored = c.status !== 0; // VZN: recovering from an error is itself a change
+  const wasErrored = c.error !== undefined; // VZN: recovering from an error is itself a change
   try {
     ++cycle;
     const oldValue = c.value;
-    c.status = 0; // VZN: assume success — the catch flips it back
+    c.error = undefined; // VZN: assume success — the catch sets it again on throw
     return (c.value = c.getter(oldValue)) !== oldValue || wasErrored;
   } catch (error) {
     runCleanups(c); // VZN
-    c.status = 1; // VZN: remember the error; reads rethrow it (don't throw into the engine)
-    c.error = castError(error);
+    c.error = castError(error); // VZN: remember the error; reads rethrow it (don't throw into the engine)
     return true; // VZN: an errored memo counts as changed, so dependents refresh
   } finally {
     activeSub = prevSub;
@@ -645,12 +642,11 @@ function computedOper(this: ComputedNode): unknown {
     const prevSub = setActiveSub(this);
     const prevOwner = setActiveOwner(this); // VZN
     try {
-      this.status = 0; // VZN
+      this.error = undefined; // VZN
       this.value = this.getter();
     } catch (error) {
       runCleanups(this); // VZN
-      this.status = 1; // VZN: remember the error; reads rethrow it
-      this.error = castError(error);
+      this.error = castError(error); // VZN: remember the error; reads rethrow it
     } finally {
       activeSub = prevSub;
       activeOwner = prevOwner; // VZN
@@ -661,7 +657,7 @@ function computedOper(this: ComputedNode): unknown {
   if (sub !== undefined) {
     link(this, sub, cycle); // VZN: subscribe BEFORE rethrowing, so the reader re-runs once the error clears
   }
-  if (this.status !== 0) {
+  if (this.error !== undefined) {
     throw this.error; // VZN: surface the remembered error to the reader
   }
   return this.value!;
