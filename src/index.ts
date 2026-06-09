@@ -64,6 +64,13 @@ interface EffectNode extends OwnerNode {
 interface ComputedNode<T = unknown> extends OwnerNode {
   value: T | undefined;
   getter: (previousValue?: T) => T;
+  // VZN: error status as node state — 0 = ok, 1 = errored. An errored memo remembers
+  // its (normalized) error and rethrows it on read, so the error propagates and
+  // coheres downstream like a value, instead of being re-derived by re-running the
+  // getter on every read. `updateComputed` catches-and-stores rather than throwing,
+  // so a throw never escapes into the engine's `checkDirty` traversal.
+  status: number;
+  error: Error | undefined;
 }
 
 interface SignalNode<T = unknown> extends ReactiveNode {
@@ -308,6 +315,8 @@ export function computed<T>(getter: (previousValue?: T) => T): () => T {
     value: undefined,
     cleanups: undefined, // VZN
     context: activeOwner?.context ?? defaultContext, // VZN: inherit from the lexical parent
+    status: 0, // VZN: ok until the getter throws
+    error: undefined, // VZN
     subs: undefined,
     subsTail: undefined,
     deps: undefined,
@@ -529,13 +538,17 @@ function updateComputed(c: ComputedNode): boolean {
   const prevOwner = activeOwner; // VZN
   activeSub = c;
   activeOwner = c;
+  const wasErrored = c.status !== 0; // VZN: recovering from an error is itself a change
   try {
     ++cycle;
     const oldValue = c.value;
-    return oldValue !== (c.value = c.getter(oldValue));
+    c.status = 0; // VZN: assume success — the catch flips it back
+    return (c.value = c.getter(oldValue)) !== oldValue || wasErrored;
   } catch (error) {
     runCleanups(c); // VZN
-    throw error;
+    c.status = 1; // VZN: remember the error; reads rethrow it (don't throw into the engine)
+    c.error = castError(error);
+    return true; // VZN: an errored memo counts as changed, so dependents refresh
   } finally {
     activeSub = prevSub;
     activeOwner = prevOwner; // VZN
@@ -632,10 +645,12 @@ function computedOper(this: ComputedNode): unknown {
     const prevSub = setActiveSub(this);
     const prevOwner = setActiveOwner(this); // VZN
     try {
+      this.status = 0; // VZN
       this.value = this.getter();
     } catch (error) {
       runCleanups(this); // VZN
-      throw error;
+      this.status = 1; // VZN: remember the error; reads rethrow it
+      this.error = castError(error);
     } finally {
       activeSub = prevSub;
       activeOwner = prevOwner; // VZN
@@ -644,7 +659,10 @@ function computedOper(this: ComputedNode): unknown {
   }
   const sub = activeSub;
   if (sub !== undefined) {
-    link(this, sub, cycle);
+    link(this, sub, cycle); // VZN: subscribe BEFORE rethrowing, so the reader re-runs once the error clears
+  }
+  if (this.status !== 0) {
+    throw this.error; // VZN: surface the remembered error to the reader
   }
   return this.value!;
 }
