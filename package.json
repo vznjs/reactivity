@@ -35,7 +35,7 @@
     "@typescript/native-preview": "latest",
     "@vitest/coverage-v8": "^4.1.8",
     "reactive-framework-test-suite": "^0.0.2",
-    "release-it": "^20.2.0",
+    "release-it": "^21.0.1",
     "typescript": "^6.0.3",
     "vite-plus": "latest"
   },
