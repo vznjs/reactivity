@@ -3,7 +3,17 @@
 // imperative `onCleanup` and detached `root` (alien's `effect` returns a disposer
 // and uses return-based cleanup; its `effectScope` is a linked scope).
 import { describe, it, vi, expect } from "vite-plus/test";
-import { signal, computed, effect, root, onCleanup, trigger, flushSync } from "../src/index";
+import {
+  signal,
+  computed,
+  effect,
+  root,
+  onCleanup,
+  trigger,
+  flushSync,
+  getOwner,
+  catchError,
+} from "../src/index";
 
 describe("nested effect cleanup ordering (alien effect.spec)", () => {
   it("outer re-run: inner cleanup before outer cleanup, before new run", () => {
@@ -134,6 +144,74 @@ describe("nested effect cleanup ordering (alien effect.spec)", () => {
     flushSync();
     expect(log).toEqual(["inner:cleanup", "computed:eval", "inner:run"]);
   });
+
+  it("supports a custom recurse effect (clearing RecursedCheck)", () => {
+    const src = signal(0);
+    let triggers = 0;
+    flushSync(() =>
+      root(() => {
+        effect(() => {
+          // alien reaches the node via getActiveSub(); in VZN the running effect is
+          // also the active owner. 4 = RecursedCheck.
+          getOwner()!.flags &= ~4;
+          triggers++;
+          src(Math.min(src() + 1, 5));
+        });
+      }),
+    );
+    expect(triggers).toBe(6);
+  });
+
+  it("cleanup order is correct on outer re-run after a prior inner-only re-run", () => {
+    const a = signal(0);
+    const b = signal(0);
+    const log: string[] = [];
+    root(() => {
+      effect(() => {
+        a();
+        log.push("outer:run");
+        effect(() => {
+          b();
+          log.push("inner:run");
+          onCleanup(() => log.push("inner:cleanup"));
+        });
+        onCleanup(() => log.push("outer:cleanup"));
+      });
+    });
+    b(1); // inner re-runs alone; outer is touched via the notify chain
+    flushSync();
+    log.length = 0;
+    a(1);
+    flushSync();
+    expect(log).toEqual(["inner:cleanup", "outer:cleanup", "outer:run", "inner:run"]);
+  });
+
+  // https://github.com/stackblitz/alien-signals/issues/115
+  it("outer effect keeps responding to its own dep after inner re-runs", () => {
+    const a = signal(0);
+    const b = signal(0);
+    let outerRuns = 0;
+    let innerRuns = 0;
+    root(() => {
+      effect(() => {
+        a();
+        outerRuns++;
+        effect(() => {
+          b();
+          innerRuns++;
+        });
+      });
+    });
+    expect(outerRuns).toBe(1);
+    expect(innerRuns).toBe(1);
+    b(1);
+    flushSync();
+    expect(outerRuns).toBe(1);
+    expect(innerRuns).toBe(2);
+    a(1);
+    flushSync();
+    expect(outerRuns).toBe(2);
+  });
 });
 
 describe("scope dispose ordering (alien effectScope.spec, via root)", () => {
@@ -169,6 +247,33 @@ describe("scope dispose ordering (alien effectScope.spec, via root)", () => {
     });
     disposeRoot();
     expect(log).toEqual(["grandchild:cleanup", "child:cleanup"]);
+  });
+
+  it("scope as intermediate parent: cleanup order respects nesting", () => {
+    // alien's linked `effectScope` inside an effect; VZN's linked scope is `catchError`
+    // (a `root` is detached by design, so it would survive the outer re-run).
+    const a = signal(0);
+    const log: string[] = [];
+    root(() => {
+      effect(() => {
+        a();
+        log.push("outer:run");
+        catchError(
+          () => {
+            effect(() => {
+              log.push("inner:run");
+              onCleanup(() => log.push("inner:cleanup"));
+            });
+          },
+          () => {},
+        );
+        onCleanup(() => log.push("outer:cleanup"));
+      });
+    });
+    log.length = 0;
+    a(1);
+    flushSync();
+    expect(log).toEqual(["inner:cleanup", "outer:cleanup", "outer:run", "inner:run"]);
   });
 });
 
@@ -235,5 +340,53 @@ describe("trigger (alien trigger.spec)", () => {
       }),
     ).not.toThrow();
     flushSync();
+  });
+  it("allows writing a signal after reading it", () => {
+    const src1 = signal(1);
+    trigger(() => {
+      src1();
+      src1(src1() + 1);
+    });
+    expect(src1()).toBe(2);
+  });
+
+  it("reruns an effect once when writing a signal after reading it", () => {
+    const src1 = signal(1);
+    let triggers = 0;
+    root(() => {
+      effect(() => {
+        triggers++;
+        src1();
+      });
+    });
+    expect(triggers).toBe(1);
+    trigger(() => {
+      src1();
+      src1(src1() + 1);
+    });
+    flushSync();
+    expect(triggers).toBe(2);
+    expect(src1()).toBe(2);
+  });
+
+  // alien flushes synchronously, so its spec above covers the crash path; in VZN the
+  // same path is reached under `flushSync(fn)`, where each write flushes per-write.
+  it("writing after reading inside trigger does not crash under flushSync(fn)", () => {
+    const src1 = signal(1);
+    let triggers = 0;
+    root(() => {
+      effect(() => {
+        triggers++;
+        src1();
+      });
+    });
+    flushSync(() =>
+      trigger(() => {
+        src1();
+        src1(src1() + 1);
+      }),
+    );
+    expect(triggers).toBe(2);
+    expect(src1()).toBe(2);
   });
 });

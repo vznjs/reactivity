@@ -7,8 +7,8 @@
 //
 //   * `signal` is alien's verbatim; `trigger(fn)` invalidates the signals read
 //     inside `fn` without changing their values (forcing subscribers to refresh);
-//   * writes schedule effects on a microtask (async batching); `flushSync` /
-//     `batch` / `flushSync` are the synchronous escapes;
+//   * writes schedule effects on a microtask (async batching); `batch` /
+//     `flushSync` are the synchronous escapes;
 //   * effects take a `() => void | (() => void)` — register cleanups via `onCleanup`
 //     and/or by returning a teardown fn; disposal flows through ownership (a `root`,
 //     or the auto-disposed global owner), and they ALSO return a disposer that tears
@@ -283,11 +283,13 @@ export function signal<T>(initialValue?: T): {
 // their subscribers to recompute — e.g. after mutating an object held in a signal.
 // The common form is `trigger(mySignal)`; `trigger(() => { a(); b(); })` invalidates
 // several at once.
-// Alien: VERBATIM except the final flush — VZN schedules it (async) via
-// `scheduleFlush()` instead of alien's synchronous `flush()`.
+// Alien: VERBATIM (alien-signals main, 9daa5c3 — RecursedCheck + batched body) except
+// the final flush — VZN schedules it (async) via `scheduleFlush()` instead of alien's
+// synchronous `flush()`.
 export function trigger(fn: () => void): void {
-  const sub: ReactiveNode = { deps: undefined, depsTail: undefined, flags: 2 };
+  const sub: ReactiveNode = { deps: undefined, depsTail: undefined, flags: 2 | 4 };
   const prevSub = setActiveSub(sub);
+  ++batchDepth;
   try {
     fn();
   } finally {
@@ -303,7 +305,7 @@ export function trigger(fn: () => void): void {
         shallowPropagate(subs);
       }
     }
-    if (!batchDepth) scheduleFlush();
+    if (!--batchDepth) scheduleFlush();
   }
 }
 

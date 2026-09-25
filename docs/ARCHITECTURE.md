@@ -136,7 +136,7 @@ Precedence: `batch` always wins (defers regardless of `syncMode`); `flushSync()`
 
 The source marks every fully-identical function `// Alien: VERBATIM` and every change `// VZN:`.
 
-**Verbatim from alien** (only flag literals / formatting differ): `update`, `notify`, `setActiveSub`, `startBatch`, `endBatch`, `signal`, `updateSignal`, `flush`, `disposeAllDepsInReverse`, `purgeDeps`. (`notify` differs only in spelling `do/while(true)` as `for(;;)` to satisfy the linter; `trigger` is verbatim except its final flush is async.)
+**Verbatim from alien** (only flag literals / formatting differ): `update`, `notify`, `setActiveSub`, `startBatch`, `endBatch`, `signal`, `updateSignal`, `flush`, `disposeAllDepsInReverse`, `purgeDeps`. (`notify` differs only in spelling `do/while(true)` as `for(;;)` to satisfy the linter; `trigger` is verbatim — tracking alien-signals main past 3.2.1, whose fix marks the trigger node `RecursedCheck` and batches its body so a write after a read inside `fn` neither queues the trigger node as an effect nor re-runs effects twice — except its final flush is async.)
 
 **alien body + a small marked VZN delta**: `computed` (adds the `cleanups`, `context`, and `error` fields), `signalOper` (`flush` → `scheduleFlush`), `run` & `computedOper` (add `activeOwner` save/restore + cleanup-on-throw; `run` routes a throw via `handleError`, `computedOper` catch-and-stores the error as node state and rethrows it on read; `run` also registers a returned teardown via `onCleanup`). (`trigger` is counted as verbatim above — its only change is the same async flush.)
 
@@ -159,5 +159,5 @@ Thrown values are normalized to `Error` (original kept as `.cause`) before deliv
 
 VZN is verified two ways:
 
-- **Conformance** — it passes the cross-framework `reactive-framework-test-suite` (179 cases covering graph propagation, dynamic deps, diamonds, glitch-freedom, effect lifecycle, error handling, GC). The adapter runs each case inside `flushSync(fn)` so VZN's async writes settle synchronously to match the suite's sync assumptions; pure `s(v)` writes need no per-call flushing.
-- **Own suite** — 170+ tests covering signals, computeds, effects, roots, cleanup ordering (LIFO/depth-first), scheduling, `untrack`, `trigger`, context, error handling (including `checkDirty`-safety proofs), and ports of alien's own `effect.spec` / `effectScope.spec` / `trigger.spec`. (Over 350 tests in total, conformance included.)
+- **Conformance** — it passes the cross-framework `reactive-framework-test-suite` (196 cases covering graph propagation, dynamic deps, diamonds, glitch-freedom, effect lifecycle, error handling, GC). The adapter runs each case inside `flushSync(fn)` so VZN's async writes settle synchronously to match the suite's sync assumptions; pure `s(v)` writes need no per-call flushing.
+- **Own suite** — 180+ tests covering signals, computeds, effects, roots, cleanup ordering (LIFO/depth-first), scheduling, `untrack`, `trigger`, context, error handling (including `checkDirty`-safety proofs), and ports of alien's own `effect.spec` / `effectScope.spec` / `trigger.spec`. (Over 370 tests in total, conformance included.)

@@ -14,7 +14,7 @@ You get three best-in-class ideas in one tiny package:
 - 🌳 **Solid-style ownership** — `root` scopes, cascading disposal, `onCleanup` that even works inside memos, and un-rooted reactivity that auto-disposes so you never leak by accident.
 - ⏱️ **Async-by-default scheduling** — writes coalesce onto a microtask automatically, with surgical synchronous escapes when you need them.
 
-It passes the cross-framework [reactive-framework-test-suite](https://www.npmjs.com/package/reactive-framework-test-suite) (179 conformance cases) — over 350 tests in total, including its own suite.
+It passes the cross-framework [reactive-framework-test-suite](https://www.npmjs.com/package/reactive-framework-test-suite) (196 conformance cases) — over 370 tests in total, including its own suite.
 
 ## Why VZN?
 
