@@ -161,3 +161,43 @@ VZN is verified two ways:
 
 - **Conformance** — it passes the cross-framework `reactive-framework-test-suite` (196 cases covering graph propagation, dynamic deps, diamonds, glitch-freedom, effect lifecycle, error handling, GC). The adapter runs each case inside `flushSync(fn)` so VZN's async writes settle synchronously to match the suite's sync assumptions; pure `s(v)` writes need no per-call flushing.
 - **Own suite** — 180+ tests covering signals, computeds, effects, roots, cleanup ordering (LIFO/depth-first), scheduling, `untrack`, `trigger`, context, error handling (including `checkDirty`-safety proofs), and ports of alien's own `effect.spec` / `effectScope.spec` / `trigger.spec`. (Over 370 tests in total, conformance included.)
+
+## Known issues (open)
+
+Found while syncing with alien-signals (2026-09-25). Both were reproduced with a probe; neither is fixed yet because each changes public behaviour.
+
+### `runWithOwner` also tracks reads
+
+`runWithOwner(owner, fn)` sets **both** cursors to `owner` — `activeOwner` (wanted: `onCleanup` / context attach to it) and `activeSub` (unwanted). So a signal read inside `fn`, e.g. in async code re-attached to a captured effect, subscribes that effect to the signal: the effect re-runs when it changes even though its own body never read it. The stray dependency lasts until the effect's next run re-tracks.
+
+```ts
+let o;
+root(() =>
+  effect(() => {
+    a();
+    o = getOwner();
+  }),
+);
+runWithOwner(o, () => late()); // effect now depends on `late`
+late(1); // effect re-runs
+```
+
+Proposed fix: set `activeSub = undefined` inside `runWithOwner` (Solid clears `Listener` there). One line; add a test that the captured effect does not re-run on `late(1)`.
+
+### An uncaught effect error drops sibling effects in the same flush
+
+When an effect throws with no `catchError` boundary, the error escapes `flush`, whose `finally` (alien-verbatim) dequeues the remaining effects and re-marks them `Watching | Recursed`. They do not run for this change; they catch up only on their next dependency change.
+
+```ts
+root(() => {
+  effect(() => {
+    if (s() === 1) throw new Error("boom");
+  }); // A
+  effect(() => {
+    s(); /* B */
+  });
+});
+s(1); // A throws → B never sees 1; B next runs on s(2)
+```
+
+Computeds already avoid this by storing their error as node state (see Error handling); effects under a `catchError` are unaffected (the handler catches inside `run`). Proposed fix: have `flush` keep draining after an uncaught effect error and rethrow the first error once the queue is empty. This departs from alien's verbatim `flush`, so it needs a deliberate decision; the alternative is to document the behaviour as intended.
